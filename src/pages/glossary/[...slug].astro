@@ -1,0 +1,105 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Hero from "../../components/Hero.astro";
+import PortableText from "../../components/PortableText.astro";
+import SectionHeading from "../../components/SectionHeading.astro";
+import { getGlossaryTerms, getGlossaryTerm } from "../../lib/sanity";
+import { formatPostDate } from "../../lib/date";
+import {
+  buildBreadcrumbList,
+  normalizeSiteUrl,
+  type StructuredData,
+} from "../../lib/jsonld";
+
+export async function getStaticPaths() {
+  const terms = await getGlossaryTerms() ?? [];
+  return terms.map( ( term: { slug: { current: string } }) => ({
+    params: { slug: term.slug.current },
+  }) );
+}
+
+const { slug } = Astro.params;
+const term = await getGlossaryTerm( slug! );
+if( !term ) return Astro.redirect( "/glossary" );
+
+const siteUrl = Astro.site?.toString() ?? "https://www.nw-local.com";
+const baseUrl = normalizeSiteUrl( siteUrl );
+const structuredData: StructuredData[] = [
+  buildBreadcrumbList( [
+    { name: "Home", url: `${baseUrl}/` },
+    { name: "Glossary", url: `${baseUrl}/glossary/` },
+    { name: term.term, url: `${baseUrl}/glossary/${term.slug.current}/` },
+  ] ),
+];
+
+const mentions = term.mentionedIn ?? [];
+---
+
+<Layout title={term.term} description={term.shortDefinition} structuredData={structuredData}>
+  <Hero title={term.term}>
+    <p class="glossary-lede">{term.shortDefinition}</p>
+  </Hero>
+
+  <div class="glossary-entry">
+    {term.body && <PortableText value={term.body} />}
+
+    {mentions.length > 0 && (
+      <section style="margin-top:3rem;">
+        <SectionHeading title="Mentioned in" />
+        <ul class="glossary-mentions">
+          {mentions.map( mention => (
+            <li>
+              <a href={`/blog/${mention.slug.current}`}>{mention.title}</a>
+              <span class="glossary-mention-date">{formatPostDate( mention.publishedAt )}</span>
+            </li>
+          ) )}
+        </ul>
+      </section>
+    )}
+
+    <p class="glossary-back"><a href="/glossary">← All terms</a></p>
+  </div>
+</Layout>
+
+<style>
+  .glossary-lede {
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+    font-size: 1.1rem;
+    max-width: 600px;
+  }
+
+  .glossary-entry {
+    /* Aligns left with the full-width Hero above. */
+    max-width: var(--content-width);
+    margin: 0;
+  }
+
+  .glossary-mentions {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .glossary-mentions li {
+    padding: 0.85rem 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+
+  .glossary-mention-date {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .glossary-back {
+    margin-top: 2.5rem;
+    font-size: 0.9rem;
+  }
+</style>

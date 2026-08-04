@@ -1,0 +1,88 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Hero from "../../components/Hero.astro";
+import { getGlossaryTerms } from "../../lib/sanity";
+import {
+  buildBreadcrumbList,
+  normalizeSiteUrl,
+  type StructuredData,
+} from "../../lib/jsonld";
+
+const terms = await getGlossaryTerms() ?? [];
+
+const siteUrl = Astro.site?.toString() ?? "https://www.nw-local.com";
+const baseUrl = normalizeSiteUrl( siteUrl );
+const structuredData: StructuredData[] = [
+  buildBreadcrumbList( [
+    { name: "Home", url: `${baseUrl}/` },
+    { name: "Glossary", url: `${baseUrl}/glossary/` },
+  ] ),
+];
+---
+
+<Layout
+  title="Glossary"
+  description="Definitions for the cannabis cultivation and science terms used across Northwest Local Cannabis."
+  structuredData={structuredData}
+>
+  <Hero title="Glossary" subtitle="Plain-language definitions for the terms we use." />
+
+  {terms.length > 0 ? (
+    <dl class="glossary-index">
+      {terms.map( term => (
+        <div class="glossary-index-entry">
+          <dt>
+            <a href={`/glossary/${term.slug.current}`}>{term.term}</a>
+          </dt>
+          <dd>{term.shortDefinition}</dd>
+        </div>
+      ) )}
+    </dl>
+  ) : (
+    <p style="text-align:center;margin-top:2rem;">No terms yet. Check back soon.</p>
+  )}
+
+  <p class="glossary-index-aside">
+    Looking for terpenes? They have <a href="/terpenes">their own section</a>.
+  </p>
+</Layout>
+
+<style>
+  .glossary-index {
+    /* Constrain the measure for readability, but align left with the Hero
+       above rather than centering — the Hero is full-width on this page. */
+    max-width: var(--content-width);
+    margin: 0;
+  }
+
+  .glossary-index-entry {
+    padding: 1.25rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .glossary-index-entry dt {
+    font-weight: 700;
+    font-size: 1.05rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .glossary-index-entry dt a {
+    color: var(--text-primary);
+  }
+
+  .glossary-index-entry dt a:hover {
+    color: var(--accent);
+  }
+
+  .glossary-index-entry dd {
+    margin: 0;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  .glossary-index-aside {
+    max-width: var(--content-width);
+    margin: 2rem 0 0;
+    font-size: 0.9rem;
+  }
+</style>
