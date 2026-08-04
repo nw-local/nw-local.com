@@ -262,11 +262,38 @@ export interface GlossaryTermSummary {
   shortDefinition: string;
 }
 
+// The document types a glossary term can be cited from. Restricted to types
+// that have their own slug-addressed page — `product` bodies can carry a
+// glossaryRef, but products render on a single /products index with no per-item
+// URL, so a backlink would have nowhere to point.
+export type GlossaryMentionType = "blogPost" | "strain" | "terpene";
+
+export const GLOSSARY_MENTION_TYPES: readonly GlossaryMentionType[] = [
+  "blogPost",
+  "strain",
+  "terpene",
+];
+
+// Each mention type resolves to its own route. Keyed by type so adding a type to
+// GLOSSARY_MENTION_TYPES without giving it a route is a compile error, not a
+// link to nowhere.
+const GLOSSARY_MENTION_ROUTES: Record<GlossaryMentionType, string> = {
+  blogPost: "/blog",
+  strain: "/strains",
+  terpene: "/terpenes",
+};
+
+export function glossaryMentionHref( mention: GlossaryTermMention ): string {
+  return `${GLOSSARY_MENTION_ROUTES[ mention._type ]}/${mention.slug.current}`;
+}
+
 export interface GlossaryTermMention {
   _id: string;
+  _type: GlossaryMentionType;
   title: string;
   slug: SanitySlug;
-  publishedAt: string;
+  // Only blogPost carries a publish date; the others sort by title.
+  publishedAt?: string;
 }
 
 export interface GlossaryTerm extends GlossaryTermSummary {
@@ -287,11 +314,13 @@ export async function getGlossaryTerm( slug: string ) {
     `*[_type == "glossaryTerm" && slug.current == $slug][0] {
       _id, term, slug, shortDefinition,
       body[] ${PORTABLE_TEXT_PROJECTION},
-      "mentionedIn": *[_type == "blogPost" && references(^._id)] | order(publishedAt desc) {
-        _id, title, slug, publishedAt
+      "mentionedIn": *[_type in $mentionTypes && references(^._id)]
+        | order(coalesce(publishedAt, "") desc, coalesce(title, name) asc) {
+        _id, _type, slug, publishedAt,
+        "title": coalesce(title, name)
       }
     }`,
-    { slug },
+    { slug, mentionTypes: GLOSSARY_MENTION_TYPES },
   );
 }
 
