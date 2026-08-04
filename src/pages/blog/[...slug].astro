@@ -3,6 +3,7 @@ import Layout from "../../layouts/Layout.astro";
 import PortableText from "../../components/PortableText.astro";
 import { getBlogPosts, getBlogPost, getSiteSettings } from "../../lib/sanity";
 import { urlFor } from "../../lib/image";
+import { formatPostDate } from "../../lib/date";
 import {
   buildArticle,
   buildBreadcrumbList,
@@ -21,11 +22,7 @@ const { slug } = Astro.params;
 const post = await getBlogPost( slug! );
 if( !post ) return Astro.redirect( "/blog" );
 
-const formattedDate = new Date( post.publishedAt ).toLocaleDateString( "en-US", {
-  year: "numeric",
-  month: "long",
-  day: "numeric",
-});
+const formattedDate = formatPostDate( post.publishedAt );
 const ogImage = post.heroImage?.asset ? urlFor( post.heroImage ).width( 1200 ).height( 630 ).format( "jpg" ).url() : undefined;
 
 const settings = await getSiteSettings();

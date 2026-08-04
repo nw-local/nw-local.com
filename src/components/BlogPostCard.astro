@@ -1,15 +1,12 @@
 ---
 import { urlFor } from "../lib/image";
+import { formatPostDate } from "../lib/date";
 import type { BlogPostSummary } from "../lib/sanity";
 
 type Props = BlogPostSummary;
 
 const { title, slug, description, publishedAt, heroImage } = Astro.props;
-const formattedDate = new Date( publishedAt ).toLocaleDateString( "en-US", {
-  year: "numeric",
-  month: "long",
-  day: "numeric",
-});
+const formattedDate = formatPostDate( publishedAt );
 ---
 
 <a href={`/blog/${slug.current}`} class="card">
