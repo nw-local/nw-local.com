@@ -2,6 +2,16 @@ name: Audit (reusable)
 
 on:
   workflow_call:
+    inputs:
+      check-external-links:
+        description: >-
+          Verify links to third-party sites as well as internal ones. Off for
+          pull requests: an unrelated PR should not fail because someone
+          else's site is slow. The nightly run against main turns it on, so a
+          genuinely dead external link still fails loudly — just not in a
+          contributor's way.
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -60,15 +70,32 @@ jobs:
         with:
           name: dist
           path: dist/
-      # Our own origin is excluded: every page carries a self-referencing
-      # <link rel="canonical"> pointing at production, which cannot resolve until
-      # after the PR that introduces the page has merged. Checking it externally
-      # fails every new-page PR, and made the home page canonical look like a
-      # flaky 503. Root-relative internal links are still verified against
-      # --root-dir, which is the stronger check.
-      - uses: lycheeverse/lychee-action@v2
+      # --offline resolves every root-relative link against the built output and
+      # skips the network entirely, so this is deterministic: it fails only when a
+      # link in this repo is genuinely broken.
+      - name: Check internal links
+        if: ${{ !inputs.check-external-links }}
+        uses: lycheeverse/lychee-action@v2
         with:
-          args: --root-dir "${{ github.workspace }}/dist" --accept 200,202,301,302,403,429 --exclude '^https?://(www\.)?nw-local\.com' --no-progress --max-concurrency 8 'dist/**/*.html'
+          args: --offline --root-dir "${{ github.workspace }}/dist" --no-progress --max-concurrency 8 'dist/**/*.html'
+          fail: true
+
+      # Two exclusions, for different reasons:
+      #
+      # nw-local.com — every page carries a self-referencing <link rel="canonical">
+      # pointing at production, which cannot resolve until after the PR that
+      # introduces the page has merged.
+      #
+      # relentless-genetics.com — reachable and fast from a normal network (HEAD
+      # returns 200 in ~0.3s, with or without a browser user-agent) but times out
+      # from GitHub-hosted runners, so its CDN appears to filter datacenter
+      # traffic. Not a broken link, and not verifiable from CI at all — leaving it
+      # in would fail the nightly run every night and train us to ignore it.
+      - name: Check internal and external links
+        if: ${{ inputs.check-external-links }}
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --root-dir "${{ github.workspace }}/dist" --accept 200,202,301,302,403,429 --exclude '^https?://(www\.)?nw-local\.com' --exclude '^https?://(www\.)?relentless-genetics\.com' --no-progress --max-concurrency 8 'dist/**/*.html'
           fail: true
 
   lighthouse:

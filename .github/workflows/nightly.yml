@@ -14,4 +14,8 @@ jobs:
   audit:
     name: Audit
     uses: ./.github/workflows/audit.yml
+    with:
+      # Third-party links are checked here rather than on pull requests, so a
+      # slow or dead external site fails this run instead of blocking a merge.
+      check-external-links: true
     secrets: inherit
