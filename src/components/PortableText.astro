@@ -1,9 +1,19 @@
 ---
 import { PortableText as PT } from "astro-portabletext";
+import PortableTextImage from "./PortableTextImage.astro";
 
 const { value } = Astro.props;
+
+// astro-portabletext ships no renderer for custom types, and its fallback emits
+// a display:none div — so without this mapping every inline image in a body
+// field disappears silently.
+const components = {
+  type: {
+    image: PortableTextImage,
+  },
+};
 ---
 
 <div class="portable-text">
-  <PT value={value} />
+  <PT value={value} components={components} />
 </div>
