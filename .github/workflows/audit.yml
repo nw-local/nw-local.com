@@ -60,9 +60,15 @@ jobs:
         with:
           name: dist
           path: dist/
+      # Our own origin is excluded: every page carries a self-referencing
+      # <link rel="canonical"> pointing at production, which cannot resolve until
+      # after the PR that introduces the page has merged. Checking it externally
+      # fails every new-page PR, and made the home page canonical look like a
+      # flaky 503. Root-relative internal links are still verified against
+      # --root-dir, which is the stronger check.
       - uses: lycheeverse/lychee-action@v2
         with:
-          args: --root-dir "${{ github.workspace }}/dist" --accept 200,202,301,302,403,429 --no-progress --max-concurrency 8 'dist/**/*.html'
+          args: --root-dir "${{ github.workspace }}/dist" --accept 200,202,301,302,403,429 --exclude '^https?://(www\.)?nw-local\.com' --no-progress --max-concurrency 8 'dist/**/*.html'
           fail: true
 
   lighthouse:
