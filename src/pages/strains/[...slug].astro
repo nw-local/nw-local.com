@@ -31,6 +31,8 @@ const products = await getProductsByStrain( strain._id ) ?? [];
 const ogImage = strain.heroImage?.asset ? urlFor( strain.heroImage ).width( 1200 ).height( 630 ).format( "jpg" ).url() : undefined;
 
 const lightboxImages = ( strain.gallery ?? [] ).map( ( image: { asset: unknown; alt?: string }) => ({
+  // Width only, deliberately: constraining height as well would letterbox
+  // portrait gallery shots. Unconstrained, each image keeps its natural ratio.
   url: urlFor( image ).width( 1600 ).format( "webp" ).url(),
   alt: image.alt ?? strain.name,
 }) );

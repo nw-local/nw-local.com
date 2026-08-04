@@ -38,6 +38,11 @@ No test framework is configured.
 - **Strict env vars pattern** — established in `src/lib/sanity.ts` and `src/components/BaseHead.astro`. Assert at module level so the app fails fast on misconfiguration rather than rendering with broken data.
 - **Use central data types** — card components (`StrainCard`, `ProductCard`, `BlogPostCard`, `RetailerCard`) import their `Props` from `src/lib/sanity.ts` rather than redeclaring inline shapes. This keeps the Sanity schema, data layer, and component layer in lockstep — when a field is added or renamed in `sanity.ts`, type errors surface in every consumer instead of silently drifting.
 - **Whitespace inside parens** — codebase style is `function name( arg )` and `if( condition )` with spaces inside parens; ESLint enforces this, so `make format` will rewrite tight-paren code automatically
+- **Accent green is for emphasis, not surface** — `--accent` (#00ff88) is reserved for CTAs, links, and interactive states. It is never a background for large areas; the dark surfaces carry the layout and the photography carries the visual weight.
+
+## Invariants
+
+- **`prep-images` dedup depends on byte-identical conversion output.** SHA-1 is computed on the converted JPG, not the source file, and matched against `sha1hash` on Sanity's image assets. The `sips -s formatOptions 90` setting in `scripts/prep-images.sh` is therefore part of the dedup contract — changing it silently invalidates every existing hash, and duplicate uploads start slipping through.
 
 ## Sanity Content Model
 

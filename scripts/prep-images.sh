@@ -105,6 +105,9 @@ for img in "${IMAGES[@]}"; do
     cp "$img" "$OUTPUT_PATH"
   else
     echo "Converting $BASENAME → $OUTPUT_NAME"
+    # Dedup hashes the CONVERTED JPG bytes, not the source file, so this quality
+    # setting is part of the dedup contract. Changing 90 changes every hash, every
+    # already-uploaded image starts reading as new, and duplicates upload silently.
     sips -s format jpeg -s formatOptions 90 "$img" --out "$OUTPUT_PATH" >/dev/null 2>&1
   fi
 
