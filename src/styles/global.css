@@ -717,13 +717,31 @@ footer {
   color: var(--text-secondary);
 }
 
+/* The card sits below the term with a gap that belongs to neither element, so
+   travelling into the card would drop :hover and dismiss it before the pointer
+   arrived. This invisible bridge spans that gap and, being a descendant of
+   .glossary, keeps the card open on the way down. */
+.glossary-tip::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -0.5rem;
+  height: 0.5rem;
+}
+
 .glossary-tip-cta {
-  display: block;
+  display: inline-block;
   margin-top: 0.6rem;
   font-size: 0.75rem;
   color: var(--accent);
   text-transform: uppercase;
   letter-spacing: 1px;
+}
+
+.glossary-tip-cta:hover {
+  color: var(--accent-hover);
+  text-decoration: underline;
 }
 
 /* --- Animations --- */

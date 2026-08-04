@@ -45,7 +45,9 @@ const tipId = `glossary-tip-${node.markKey}`;
     <span class="glossary-tip" id={tipId} role="tooltip">
       {term.label && <span class="glossary-tip-label">{term.label}</span>}
       <span class="glossary-tip-summary">{term.summary}</span>
-      <span class="glossary-tip-cta">Full entry →</span>
+      <a href={href} class="glossary-tip-cta" tabindex="-1" aria-hidden="true">
+        Full entry →
+      </a>
     </span>
   )}
 </span>
