@@ -32,3 +32,8 @@ studio/dist/
 
 # playwright mcp artifacts
 .playwright-mcp/
+
+# claude code worktrees
+# EnterWorktree creates linked worktrees here. Untracked and unignored, a
+# `git add -A` in the main checkout would commit an entire worktree tree.
+.claude/worktrees/
