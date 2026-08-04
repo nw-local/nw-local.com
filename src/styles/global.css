@@ -595,6 +595,23 @@ footer {
 }
 .portable-text img { border-radius: 8px; margin: 1.5rem 0; }
 .portable-text a { color: var(--accent); }
+.portable-text figure { margin: 2rem 0; }
+.portable-text figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0;
+  /* Figures are diagrams on a light plate; the dark page would otherwise
+     leave them floating with no edge. */
+  background: #f8f6f9;
+}
+.portable-text figcaption {
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  text-align: center;
+}
 .portable-text code {
   background: var(--bg-surface);
   padding: 0.15em 0.4em;
