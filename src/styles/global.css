@@ -9,8 +9,15 @@
   --max-width: 1200px;
   --content-width: 720px;
   --font-heading: "Arial Black", "Arial Bold", Gadget, sans-serif;
-  --heading-scale-x: 1.35;
-  --heading-scale-y: 1.3;
+  /* Headings are drawn oversized and stretched horizontally. The vertical part
+     of that used to be a `transform: scale()`, but a transform paints outside
+     the layout box without resizing it, so a tall heading overlapped whatever
+     sat above and below it. The vertical scale now lives in font-size, where the
+     line box grows with it; only the residual horizontal stretch is a transform.
+     --heading-stretch-x is the old 1.35 horizontal scale relative to the 1.3
+     that moved into font-size (1.35 / 1.3). */
+  --heading-size-boost: 1.3;
+  --heading-stretch-x: 1.0385;
   --heading-letter-spacing: -0.05em;
 }
 
@@ -43,18 +50,21 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 800;
 }
 
+/* Set --heading-base-size on an h1/h2 rule rather than font-size directly, so
+   the boost is applied in exactly one place and never leaks onto h3-h6. */
 h1, h2 {
   font-family: var(--font-heading);
   font-weight: 900;
-  transform: scale(var(--heading-scale-x), var(--heading-scale-y));
+  font-size: calc(var(--heading-base-size) * var(--heading-size-boost));
+  transform: scaleX(var(--heading-stretch-x));
   transform-origin: left center;
   letter-spacing: var(--heading-letter-spacing);
-  -webkit-text-stroke: 0.5px;
-  max-width: calc(100% / var(--heading-scale-x));
+  -webkit-text-stroke: 0.65px;
+  max-width: calc(100% / var(--heading-stretch-x));
 }
 
-h1 { font-size: 3rem; }
-h2 { font-size: 2rem; }
+h1 { --heading-base-size: 3rem; }
+h2 { --heading-base-size: 2rem; }
 h3 { font-size: 1.5rem; }
 h4 { font-size: 1.125rem; }
 
@@ -237,7 +247,7 @@ footer {
 }
 
 .age-gate-content h2 {
-  font-size: 2rem;
+  --heading-base-size: 2rem;
   margin-bottom: 1rem;
   text-transform: uppercase;
   letter-spacing: 2px;
@@ -281,7 +291,7 @@ footer {
 }
 
 .hero h1 {
-  font-size: 3.5rem;
+  --heading-base-size: 3.5rem;
   font-weight: 800;
   line-height: 1.05;
   text-transform: uppercase;
@@ -379,7 +389,11 @@ footer {
   padding: 1.25rem;
 }
 
-.card-body h2,
+.card-body h2 {
+  --heading-base-size: 1.15rem;
+  margin-bottom: 0.5rem;
+}
+
 .card-body h3 {
   font-size: 1.15rem;
   margin-bottom: 0.5rem;
@@ -694,9 +708,9 @@ footer {
 /* --- Responsive --- */
 
 @media (max-width: 768px) {
-  h1 { font-size: 2.25rem; }
-  h2 { font-size: 1.75rem; }
-  .hero h1 { font-size: 2.5rem; }
+  h1 { --heading-base-size: 2.25rem; }
+  h2 { --heading-base-size: 1.75rem; }
+  .hero h1 { --heading-base-size: 2.5rem; }
 
   header nav {
     flex-direction: column;
