@@ -3,7 +3,12 @@ import Layout from "../../layouts/Layout.astro";
 import Hero from "../../components/Hero.astro";
 import PortableText from "../../components/PortableText.astro";
 import SectionHeading from "../../components/SectionHeading.astro";
-import { getGlossaryTerms, getGlossaryTerm } from "../../lib/sanity";
+import {
+  getGlossaryTerms,
+  getGlossaryTerm,
+  glossaryMentionHref,
+  type GlossaryMentionType,
+} from "../../lib/sanity";
 import { formatPostDate } from "../../lib/date";
 import {
   buildBreadcrumbList,
@@ -33,6 +38,13 @@ const structuredData: StructuredData[] = [
 ];
 
 const mentions = term.mentionedIn ?? [];
+
+// Keyed by type, so a new mention type without a label is a compile error.
+const MENTION_LABELS: Record<GlossaryMentionType, string> = {
+  blogPost: "Blog",
+  strain: "Strain",
+  terpene: "Terpene",
+};
 ---
 
 <Layout title={term.term} description={term.shortDefinition} structuredData={structuredData}>
@@ -49,8 +61,11 @@ const mentions = term.mentionedIn ?? [];
         <ul class="glossary-mentions">
           {mentions.map( mention => (
             <li>
-              <a href={`/blog/${mention.slug.current}`}>{mention.title}</a>
-              <span class="glossary-mention-date">{formatPostDate( mention.publishedAt )}</span>
+              <a href={glossaryMentionHref( mention )}>{mention.title}</a>
+              <span class="glossary-mention-meta">
+                {MENTION_LABELS[ mention._type ]}
+                {mention.publishedAt && ` · ${formatPostDate( mention.publishedAt )}`}
+              </span>
             </li>
           ) )}
         </ul>
@@ -91,7 +106,7 @@ const mentions = term.mentionedIn ?? [];
     justify-content: space-between;
   }
 
-  .glossary-mention-date {
+  .glossary-mention-meta {
     font-size: 0.75rem;
     color: var(--text-secondary);
     text-transform: uppercase;
