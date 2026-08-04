@@ -1,0 +1,51 @@
+---
+import type { MarkProps } from "astro-portabletext/types";
+
+export interface GlossaryRefTarget {
+  _type?: string;
+  slug?: string;
+  label?: string;
+  summary?: string;
+}
+
+// The shape lib/sanity.ts projects onto a glossaryRef markDef.
+type GlossaryRefDef = {
+  term?: GlossaryRefTarget;
+};
+
+type Props = MarkProps<GlossaryRefDef>;
+
+const { node } = Astro.props;
+const term = node.markDef.term;
+
+// The markDefs projection in lib/sanity.ts dereferences this. An unresolved
+// reference means a query fetched blockContent without that projection, which
+// would render a link to nowhere — fail the build instead.
+if( !term?.slug ) {
+  throw new Error(
+    `Glossary reference ${node.markKey} did not resolve. `
+    + "Ensure the query projects markDefs via PORTABLE_TEXT_PROJECTION, and that the "
+    + "referenced term still exists.",
+  );
+}
+
+// Terpenes keep their existing richer pages; everything else lives in the glossary.
+const href = term._type === "terpene"
+  ? `/terpenes/${term.slug}`
+  : `/glossary/${term.slug}`;
+
+const tipId = `glossary-tip-${node.markKey}`;
+---
+
+<span class="glossary">
+  <a href={href} class="glossary-term" aria-describedby={term.summary ? tipId : undefined}>
+    <slot />
+  </a>
+  {term.summary && (
+    <span class="glossary-tip" id={tipId} role="tooltip">
+      {term.label && <span class="glossary-tip-label">{term.label}</span>}
+      <span class="glossary-tip-summary">{term.summary}</span>
+      <span class="glossary-tip-cta">Full entry →</span>
+    </span>
+  )}
+</span>

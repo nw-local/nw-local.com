@@ -116,9 +116,14 @@ on touch, where hover never fires, the tap simply follows the link — the agree
 Styling uses a dotted underline rather than the solid accent used for ordinary links, so a
 definition reads as a different kind of link.
 
-**Known limitation:** without JS the card cannot flip away from a viewport edge. Constrained to
-`min(320px, 90vw)`. A term at the far right of a wide screen sits tight. Adding flip logic later is
-small if it proves annoying.
+**Edge handling — changed during implementation.** The design accepted that a left-anchored card
+could sit tight against the viewport edge. In practice a term near the right of the column pushed
+the card off screen entirely and the definition became unreadable, so that was not acceptable.
+
+Resolved with CSS anchor positioning (`position-anchor` + `position-try-fallbacks: flip-inline`)
+behind an `@supports` guard, which flips the card to the other side of the term when it would
+overflow. Still zero JavaScript. Browsers without anchor positioning keep the left-anchored
+fallback, which is the originally-specified behaviour.
 
 **Failure mode:** a `glossaryRef` whose reference did not resolve throws at build time naming the
 offending mark key, rather than rendering a link to nowhere. Matches `PortableTextImage`.

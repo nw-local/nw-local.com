@@ -1,5 +1,6 @@
 import { blockContentType } from './blockContent'
 import { blogPostType } from './blogPost'
+import { glossaryTermType } from './glossaryTerm'
 import { pageType } from './page'
 import { productType } from './product'
 import { retailerPageType } from './retailerPage'
@@ -11,6 +12,7 @@ import { terpeneType } from './terpene'
 export const schemaTypes = [
   blockContentType,
   blogPostType,
+  glossaryTermType,
   pageType,
   productType,
   retailerPageType,

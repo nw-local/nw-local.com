@@ -633,6 +633,99 @@ footer {
   font-size: 0.9em;
 }
 
+/* --- Glossary terms --- */
+
+.glossary {
+  position: relative;
+  /* The tooltip is absolutely positioned against this, and must not be split
+     across a line break. */
+  display: inline-block;
+}
+
+.glossary-term {
+  color: var(--text-primary);
+  text-decoration: underline dotted var(--accent);
+  text-underline-offset: 3px;
+  cursor: help;
+}
+
+.glossary-term:hover,
+.glossary-term:focus-visible {
+  color: var(--accent);
+}
+
+.glossary-tip {
+  /* Revealed on hover/focus only. Touch devices never fire hover, so a tap
+     simply follows the link — the intended fallback. */
+  display: none;
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  z-index: 20;
+  width: max-content;
+  max-width: min(320px, 90vw);
+  padding: 0.85rem 1rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  text-align: left;
+  white-space: normal;
+  cursor: auto;
+}
+
+.glossary:hover .glossary-tip,
+.glossary:focus-within .glossary-tip {
+  display: block;
+}
+
+/* A term near the right edge of the column would push a left-anchored card off
+   screen. Where anchor positioning is supported, let the card flip to the other
+   side instead. Browsers without it keep the left-anchored fallback above. */
+@supports (anchor-name: --glossary) and (position-area: bottom span-right) {
+  .glossary {
+    anchor-name: --glossary;
+    /* Scope the name so every term anchors to itself, not the first one. */
+    anchor-scope: --glossary;
+  }
+
+  .glossary-tip {
+    position: fixed;
+    position-anchor: --glossary;
+    top: auto;
+    left: auto;
+    position-area: bottom span-right;
+    position-try-fallbacks: flip-inline;
+    margin-top: 0.5rem;
+  }
+}
+
+.glossary-tip-label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 0.35rem;
+}
+
+.glossary-tip-summary {
+  display: block;
+  color: var(--text-secondary);
+}
+
+.glossary-tip-cta {
+  display: block;
+  margin-top: 0.6rem;
+  font-size: 0.75rem;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
 /* --- Animations --- */
 
 @keyframes glow-pulse {

@@ -33,6 +33,22 @@ export const blockContentType = defineType({
               { title: 'URL', name: 'href', type: 'url' },
             ],
           },
+          {
+            title: 'Glossary term',
+            name: 'glossaryRef',
+            type: 'object',
+            description:
+              'Link this text to a definition. Terpenes link to their existing terpene page.',
+            fields: [
+              {
+                title: 'Term',
+                name: 'term',
+                type: 'reference',
+                to: [{ type: 'glossaryTerm' }, { type: 'terpene' }],
+                validation: (rule) => rule.required(),
+              },
+            ],
+          },
         ],
       },
     }),

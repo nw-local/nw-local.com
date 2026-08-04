@@ -16,6 +16,28 @@ export const sanityClient = createClient({
   token: SANITY_API_TOKEN,
 });
 
+// Portable Text bodies must dereference their markDefs. A glossaryRef stores a
+// reference, so left unresolved the renderer receives an id and has nothing to
+// display. blockContent is shared by six document types, so this fragment is the
+// single place that projection is defined — coalesce() normalises glossaryTerm
+// (term/shortDefinition) and terpene (name/tagline) into one shape.
+const PORTABLE_TEXT_PROJECTION = `{
+  ...,
+  markDefs[] {
+    ...,
+    _type == "glossaryRef" => {
+      ...,
+      term-> {
+        _type,
+        "slug": slug.current,
+        "label": coalesce(term, name),
+        "summary": coalesce(shortDefinition, tagline)
+      }
+    }
+  },
+  _type == "image" => { asset->, alt, caption }
+}`;
+
 // --- Shared types ---
 
 export interface SanitySlug {
@@ -81,7 +103,8 @@ export async function getStrains() {
 export async function getStrain( slug: string ) {
   return sanityClient.fetch<Strain | null>(
     `*[_type == "strain" && slug.current == $slug][0] {
-      _id, name, slug, strainType, description,
+      _id, name, slug, strainType,
+      description[] ${PORTABLE_TEXT_PROJECTION},
       effects, terpenes, thcRange, cbdRange, nextHarvestDate,
       heroImage { asset->, alt, crop, hotspot },
       gallery[] { asset->, alt, crop, hotspot },
@@ -130,10 +153,7 @@ export async function getTerpene( slug: string ) {
   return sanityClient.fetch<Terpene | null>(
     `*[_type == "terpene" && slug.current == $slug][0] {
       _id, name, slug, tagline, aroma, effects, foundIn,
-      description[] {
-        ...,
-        _type == "image" => { asset->, alt, caption }
-      },
+      description[] ${PORTABLE_TEXT_PROJECTION},
       heroImage { asset->, alt, crop, hotspot },
       "strains": *[_type == "strain" && ^.name in terpenes] | order(name asc) {
         _id, name, slug, strainType,
@@ -191,7 +211,7 @@ export async function getProductsByStrain( strainId: string ) {
     `*[_type == "product" && strain._ref == $strainId] | order(sortOrder asc) {
       _id, name, slug, category, weight, available,
       image { asset->, alt },
-      description
+      description[] ${PORTABLE_TEXT_PROJECTION}
     }`,
     { strainId },
   );
@@ -227,9 +247,48 @@ export async function getBlogPost( slug: string ) {
     `*[_type == "blogPost" && slug.current == $slug][0] {
       _id, title, slug, description, publishedAt, tags,
       heroImage { asset->, alt, crop, hotspot },
-      body[] {
-        ...,
-        _type == "image" => { asset->, alt, caption }
+      body[] ${PORTABLE_TEXT_PROJECTION}
+    }`,
+    { slug },
+  );
+}
+
+// --- Glossary ---
+
+export interface GlossaryTermSummary {
+  _id: string;
+  term: string;
+  slug: SanitySlug;
+  shortDefinition: string;
+}
+
+export interface GlossaryTermMention {
+  _id: string;
+  title: string;
+  slug: SanitySlug;
+  publishedAt: string;
+}
+
+export interface GlossaryTerm extends GlossaryTermSummary {
+  body?: PortableText;
+  mentionedIn?: GlossaryTermMention[];
+}
+
+export async function getGlossaryTerms() {
+  return sanityClient.fetch<GlossaryTermSummary[]>(
+    `*[_type == "glossaryTerm"] | order(lower(term) asc) {
+      _id, term, slug, shortDefinition
+    }`,
+  );
+}
+
+export async function getGlossaryTerm( slug: string ) {
+  return sanityClient.fetch<GlossaryTerm | null>(
+    `*[_type == "glossaryTerm" && slug.current == $slug][0] {
+      _id, term, slug, shortDefinition,
+      body[] ${PORTABLE_TEXT_PROJECTION},
+      "mentionedIn": *[_type == "blogPost" && references(^._id)] | order(publishedAt desc) {
+        _id, title, slug, publishedAt
       }
     }`,
     { slug },
@@ -291,10 +350,7 @@ export async function getPage( pageId: string ) {
     `*[_type == "page" && pageId == $pageId][0] {
       _id, title, pageId, seoDescription,
       heroImage { asset->, alt, crop, hotspot },
-      body[] {
-        ...,
-        _type == "image" => { asset->, alt, caption }
-      }
+      body[] ${PORTABLE_TEXT_PROJECTION}
     }`,
     { pageId },
   );
@@ -349,10 +405,7 @@ export interface RetailerPage {
 export async function getRetailerPage() {
   return sanityClient.fetch<RetailerPage | null>(
     `*[_type == "retailerPage"][0] {
-      headline, intro[] {
-        ...,
-        _type == "image" => { asset->, alt, caption }
-      },
+      headline, intro[] ${PORTABLE_TEXT_PROJECTION},
       contactEmail, contactPhone,
       "downloadables": downloadables[] { label, "url": file.asset->url }
     }`,

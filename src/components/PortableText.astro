@@ -1,15 +1,20 @@
 ---
 import { PortableText as PT } from "astro-portabletext";
 import PortableTextImage from "./PortableTextImage.astro";
+import GlossaryTerm from "./GlossaryTerm.astro";
 
 const { value } = Astro.props;
 
 // astro-portabletext ships no renderer for custom types, and its fallback emits
 // a display:none div — so without this mapping every inline image in a body
-// field disappears silently.
+// field disappears silently. Custom marks fall back to a bare span, which would
+// strip a glossary link down to plain text.
 const components = {
   type: {
     image: PortableTextImage,
+  },
+  mark: {
+    glossaryRef: GlossaryTerm,
   },
 };
 ---
