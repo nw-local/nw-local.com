@@ -8,6 +8,7 @@ import SectionHeading from "../../components/SectionHeading.astro";
 import ImageLightbox from "../../components/ImageLightbox.astro";
 import { getStrains, getStrain, getProductsByStrain } from "../../lib/sanity";
 import { urlFor } from "../../lib/image";
+import { formatMonthYear } from "../../lib/date";
 import {
   buildBreadcrumbList,
   buildProduct,
@@ -94,7 +95,7 @@ const structuredData: StructuredData[] = [
 
       {strain.nextHarvestDate && (
         <p style="margin-top:1.5rem;color:var(--accent);font-weight:600;">
-          Next harvest: {new Date( strain.nextHarvestDate ).toLocaleDateString( "en-US", { month: "long", year: "numeric" })}
+          Next harvest: {formatMonthYear( strain.nextHarvestDate )}
         </p>
       )}
     </div>

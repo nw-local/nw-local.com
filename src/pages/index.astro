@@ -3,12 +3,15 @@ import Layout from "../layouts/Layout.astro";
 import Hero from "../components/Hero.astro";
 import SectionHeading from "../components/SectionHeading.astro";
 import StrainCard from "../components/StrainCard.astro";
-import { getSiteSettings, getStrains, getPage } from "../lib/sanity";
+import FeaturedPost from "../components/FeaturedPost.astro";
+import { getSiteSettings, getStrains, getPage, getBlogPosts } from "../lib/sanity";
 
 const settings = await getSiteSettings();
 const page = await getPage( "home" );
 const allStrains = await getStrains() ?? [];
 const featuredStrains = allStrains.filter( strain => strain.featured );
+// getBlogPosts() already orders by publishedAt desc.
+const latestPost = ( await getBlogPosts() ?? [] )[ 0 ];
 ---
 
 <Layout
@@ -37,6 +40,13 @@ const featuredStrains = allStrains.filter( strain => strain.featured );
           <StrainCard {...strain} />
         ) )}
       </div>
+    </section>
+  )}
+
+  {latestPost && (
+    <section class="fade-in" style="margin-top:4rem;">
+      <SectionHeading title="From the Blog" />
+      <FeaturedPost {...latestPost} />
     </section>
   )}
 
