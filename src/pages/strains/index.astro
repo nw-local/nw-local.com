@@ -49,7 +49,7 @@ const TERPENE_FILTERS = allTerpenes.map( ( terpene: string ) => ({ value: terpen
       <div
         data-filter-item
         data-strain-type={strain.strainType}
-        data-terpenes={strain.terpenes?.map( ( t: string ) => t.toLowerCase() ).join( "," )}
+        data-terpenes={strain.terpenes?.map( ( terpene: string ) => terpene.toLowerCase() ).join( "," )}
         data-name={strain.name.toLowerCase()}
         data-created={strain._createdAt}
         data-search={[ strain.name, strain.strainType, ...( strain.effects ?? [] ), ...( strain.terpenes ?? [] ) ].join( " " ).toLowerCase()}
