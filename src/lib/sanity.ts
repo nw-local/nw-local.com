@@ -157,7 +157,7 @@ export async function getTerpene( slug: string ) {
       _id, name, slug, tagline, aroma, effects, foundIn,
       description[] ${PORTABLE_TEXT_PROJECTION},
       heroImage { asset->, alt, crop, hotspot },
-      "strains": *[_type == "strain" && ^.name in terpenes] | order(_createdAt desc) {
+      "strains": *[_type == "strain" && ^.name in terpenes] | order(name asc) {
         _id, _createdAt, name, slug, strainType,
         heroImage { asset->, alt, crop, hotspot }
       }
