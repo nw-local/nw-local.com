@@ -71,6 +71,7 @@ export type PortableText = PortableTextBlock[];
 
 export interface StrainSummary {
   _id: string;
+  _createdAt: string;
   name: string;
   slug: SanitySlug;
   strainType: StrainType;
@@ -91,8 +92,8 @@ export interface Strain extends StrainSummary {
 
 export async function getStrains() {
   return sanityClient.fetch<StrainSummary[]>(
-    `*[_type == "strain"] | order(sortOrder asc, name asc) {
-      _id, name, slug, strainType, effects, terpenes,
+    `*[_type == "strain"] | order(_createdAt desc) {
+      _id, _createdAt, name, slug, strainType, effects, terpenes,
       thcRange, cbdRange, nextHarvestDate,
       heroImage { asset->, alt, crop, hotspot },
       featured, available
@@ -103,7 +104,7 @@ export async function getStrains() {
 export async function getStrain( slug: string ) {
   return sanityClient.fetch<Strain | null>(
     `*[_type == "strain" && slug.current == $slug][0] {
-      _id, name, slug, strainType,
+      _id, _createdAt, name, slug, strainType,
       description[] ${PORTABLE_TEXT_PROJECTION},
       effects, terpenes, thcRange, cbdRange, nextHarvestDate,
       heroImage { asset->, alt, crop, hotspot },
@@ -129,6 +130,7 @@ export interface TerpeneSummary {
 
 export interface TerpeneStrainRef {
   _id: string;
+  _createdAt: string;
   name: string;
   slug: SanitySlug;
   strainType: StrainType;
@@ -155,8 +157,8 @@ export async function getTerpene( slug: string ) {
       _id, name, slug, tagline, aroma, effects, foundIn,
       description[] ${PORTABLE_TEXT_PROJECTION},
       heroImage { asset->, alt, crop, hotspot },
-      "strains": *[_type == "strain" && ^.name in terpenes] | order(name asc) {
-        _id, name, slug, strainType,
+      "strains": *[_type == "strain" && ^.name in terpenes] | order(_createdAt desc) {
+        _id, _createdAt, name, slug, strainType,
         heroImage { asset->, alt, crop, hotspot }
       }
     }`,
