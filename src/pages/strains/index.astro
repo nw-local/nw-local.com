@@ -31,6 +31,8 @@ const TERPENE_FILTERS = allTerpenes.map( ( terpene: string ) => ({ value: terpen
         aria-label="Search strains by name, effects, or terpenes"
       />
       <select id="strain-sort" class="strain-sort-select" aria-label="Sort strains">
+        <option value="created-desc">Newest</option>
+        <option value="created-asc">Oldest</option>
         <option value="name-asc">Name (A–Z)</option>
         <option value="name-desc">Name (Z–A)</option>
       </select>
@@ -47,9 +49,9 @@ const TERPENE_FILTERS = allTerpenes.map( ( terpene: string ) => ({ value: terpen
       <div
         data-filter-item
         data-strain-type={strain.strainType}
-        data-terpenes={strain.terpenes?.map( ( t: string ) => t.toLowerCase() ).join( "," )}
+        data-terpenes={strain.terpenes?.map( ( terpene: string ) => terpene.toLowerCase() ).join( "," )}
         data-name={strain.name.toLowerCase()}
-        data-thc={strain.thcRange?.replace( /[^\d]/g, "" ).slice( 0, 2 ) ?? "0"}
+        data-created={strain._createdAt}
         data-search={[ strain.name, strain.strainType, ...( strain.effects ?? [] ), ...( strain.terpenes ?? [] ) ].join( " " ).toLowerCase()}
       >
         <StrainCard {...strain} />
@@ -118,16 +120,18 @@ const TERPENE_FILTERS = allTerpenes.map( ( terpene: string ) => ({ value: terpen
   function sortCards( cards: HTMLElement[] ): HTMLElement[] {
     const sortValue = sortSelect.value;
     return [ ...cards ].sort( ( cardA, cardB ) => {
+      if( sortValue === "created-desc" ) {
+        return ( cardB.dataset.created ?? "" ).localeCompare( cardA.dataset.created ?? "" );
+      }
+      if( sortValue === "created-asc" ) {
+        return ( cardA.dataset.created ?? "" ).localeCompare( cardB.dataset.created ?? "" );
+      }
       if( sortValue === "name-asc" ) {
         return ( cardA.dataset.name ?? "" ).localeCompare( cardB.dataset.name ?? "" );
       }
       if( sortValue === "name-desc" ) {
         return ( cardB.dataset.name ?? "" ).localeCompare( cardA.dataset.name ?? "" );
       }
-      const thcA = parseInt( cardA.dataset.thc ?? "0", 10 );
-      const thcB = parseInt( cardB.dataset.thc ?? "0", 10 );
-      if( sortValue === "thc-desc" ) return thcB - thcA;
-      if( sortValue === "thc-asc" ) return thcA - thcB;
       return 0;
     });
   }

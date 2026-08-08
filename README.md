@@ -117,6 +117,7 @@ Out of scope:
 ```text
 .
 ├── astro.config.mjs           # site URL + integrations
+├── docs/                      # design specs & implementation plans (docs/superpowers/)
 ├── Makefile                   # all run/build/image commands
 ├── package.json
 ├── public/                    # static assets served as-is
