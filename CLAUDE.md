@@ -70,7 +70,7 @@ Required in `.env` (and as GitHub Actions secrets):
 - **GitHub Pages**: Auto-deploys on push to `main` via `.github/workflows/deploy.yml`
 - **Sanity Studio**: Hosted at https://nw-local.sanity.studio/ — deploy with `make deploy-studio`
 - **Sanity webhook**: On content publish, Sanity sends a POST to the GitHub Actions `workflow_dispatch` endpoint, triggering a rebuild (~1-2 min)
-  - Webhook URL: `https://api.github.com/repos/nw-local/nw-local.github.io/actions/workflows/deploy.yml/dispatches`
+  - Webhook URL: `https://api.github.com/repos/nw-local/nw-local.com/actions/workflows/deploy.yml/dispatches`
   - Projection: `{"ref": "main"}`
   - Auth: Fine-grained GitHub PAT with Actions (read/write) permission on the repo
   - Configured at: sanity.io/manage → project nyd3p2n0 → API → Webhooks

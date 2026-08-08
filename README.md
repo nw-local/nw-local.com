@@ -2,9 +2,9 @@
 
 Customer-facing website for **Northwest Local Cannabis**, a Washington State i502 licensed cannabis producer/processor.
 
-[![Deploy to GitHub Pages](https://github.com/nw-local/nw-local.github.io/actions/workflows/deploy.yml/badge.svg)](https://github.com/nw-local/nw-local.github.io/actions/workflows/deploy.yml)
-[![CI](https://github.com/nw-local/nw-local.github.io/actions/workflows/ci.yml/badge.svg)](https://github.com/nw-local/nw-local.github.io/actions/workflows/ci.yml)
-[![Nightly audit](https://github.com/nw-local/nw-local.github.io/actions/workflows/nightly.yml/badge.svg)](https://github.com/nw-local/nw-local.github.io/actions/workflows/nightly.yml)
+[![Deploy to GitHub Pages](https://github.com/nw-local/nw-local.com/actions/workflows/deploy.yml/badge.svg)](https://github.com/nw-local/nw-local.com/actions/workflows/deploy.yml)
+[![CI](https://github.com/nw-local/nw-local.com/actions/workflows/ci.yml/badge.svg)](https://github.com/nw-local/nw-local.com/actions/workflows/ci.yml)
+[![Nightly audit](https://github.com/nw-local/nw-local.com/actions/workflows/nightly.yml/badge.svg)](https://github.com/nw-local/nw-local.com/actions/workflows/nightly.yml)
 [![Astro](https://img.shields.io/badge/Astro-6.x-FF5D01?logo=astro&logoColor=white)](https://astro.build)
 [![Sanity CMS](https://img.shields.io/badge/Sanity-CMS-F03E2F?logo=sanity&logoColor=white)](https://www.sanity.io)
 [![Node](https://img.shields.io/badge/node-%E2%89%A522.13-339933?logo=node.js&logoColor=white)](https://nodejs.org)
@@ -39,7 +39,7 @@ Prereqs: Node 22.13+, yarn, and access to the Sanity project.
 
 ```sh
 # 1. Clone
-git clone git@github.com:nw-local/nw-local.github.io.git nw-local.com
+git clone git@github.com:nw-local/nw-local.com.git
 cd nw-local.com
 
 # 2. Install (root + studio)
@@ -206,7 +206,7 @@ GitHub Actions: .github/workflows/deploy.yml
 
 **Sanity webhook**: when an editor publishes content in Sanity Studio, Sanity posts to GitHub Actions `workflow_dispatch` to trigger a rebuild (~1-2 min end-to-end).
 
-- Webhook URL: `https://api.github.com/repos/nw-local/nw-local.github.io/actions/workflows/deploy.yml/dispatches`
+- Webhook URL: `https://api.github.com/repos/nw-local/nw-local.com/actions/workflows/deploy.yml/dispatches`
 - Projection: `{"ref": "main"}`
 - Auth: fine-grained GitHub PAT with Actions (read/write) on the repo
 - Configured at: sanity.io/manage → project `nyd3p2n0` → API → Webhooks
