@@ -2,9 +2,9 @@
 
 Customer-facing website for **Northwest Local Cannabis**, a Washington State i502 licensed cannabis producer/processor.
 
-[![Deploy to GitHub Pages](https://github.com/nw-local/nw-local.github.io/actions/workflows/deploy.yml/badge.svg)](https://github.com/nw-local/nw-local.github.io/actions/workflows/deploy.yml)
-[![CI](https://github.com/nw-local/nw-local.github.io/actions/workflows/ci.yml/badge.svg)](https://github.com/nw-local/nw-local.github.io/actions/workflows/ci.yml)
-[![Nightly audit](https://github.com/nw-local/nw-local.github.io/actions/workflows/nightly.yml/badge.svg)](https://github.com/nw-local/nw-local.github.io/actions/workflows/nightly.yml)
+[![Deploy to GitHub Pages](https://github.com/nw-local/nw-local.com/actions/workflows/deploy.yml/badge.svg)](https://github.com/nw-local/nw-local.com/actions/workflows/deploy.yml)
+[![CI](https://github.com/nw-local/nw-local.com/actions/workflows/ci.yml/badge.svg)](https://github.com/nw-local/nw-local.com/actions/workflows/ci.yml)
+[![Nightly audit](https://github.com/nw-local/nw-local.com/actions/workflows/nightly.yml/badge.svg)](https://github.com/nw-local/nw-local.com/actions/workflows/nightly.yml)
 [![Astro](https://img.shields.io/badge/Astro-6.x-FF5D01?logo=astro&logoColor=white)](https://astro.build)
 [![Sanity CMS](https://img.shields.io/badge/Sanity-CMS-F03E2F?logo=sanity&logoColor=white)](https://www.sanity.io)
 [![Node](https://img.shields.io/badge/node-%E2%89%A522.13-339933?logo=node.js&logoColor=white)](https://nodejs.org)
@@ -39,7 +39,7 @@ Prereqs: Node 22.13+, yarn, and access to the Sanity project.
 
 ```sh
 # 1. Clone
-git clone git@github.com:nw-local/nw-local.github.io.git nw-local.com
+git clone git@github.com:nw-local/nw-local.com.git
 cd nw-local.com
 
 # 2. Install (root + studio)
@@ -84,31 +84,9 @@ Run `make` (no args) to print the full target list with descriptions.
 
 ## Automated testing
 
-For a content-driven static site with no business logic, heavy testing is overkill — the failure modes are different from those of a typical app. The workflows are shaped around catching failure modes that *do* happen: broken queries, broken links, regressed SEO/perf signals, and content drift over time.
+Three GitHub Actions workflows guard the site: [`ci.yml`](.github/workflows/ci.yml) (type check + audit on every PR and push to `main`), the reusable [`audit.yml`](.github/workflows/audit.yml) (build, sitemap validation, Lychee link check, Lighthouse), and [`nightly.yml`](.github/workflows/nightly.yml) (the same audit on a daily cron, catching content drift between PRs).
 
-Workflow layout:
-
-- [`ci.yml`](.github/workflows/ci.yml) — runs on every PR and push to `main`. Type check + audit.
-- [`audit.yml`](.github/workflows/audit.yml) — **reusable** workflow (`workflow_call`) that does build + sitemap validation + link check + Lighthouse. Called by both CI and the nightly job.
-- [`nightly.yml`](.github/workflows/nightly.yml) — runs the same audit on a daily cron (08:27 UTC). Catches content drift on `main` between PRs (e.g., a Sanity-published strain whose Learn More link rotted last week), and gives Lighthouse a daily perf data point. Manual `workflow_dispatch` trigger for ad-hoc runs.
-
-What each step in the audit does:
-
-- **Type check** (CI only) — `yarn astro check`. Catches broken GROQ query types, missing required fields on Sanity entity types, and Astro template errors. The data layer in [`src/lib/sanity.ts`](src/lib/sanity.ts) parameterizes each `fetch<T>()` call with a typed entity (`Strain`, `Product`, etc.), so consumers in `.astro` pages get strict typing for free.
-- **Build** — `yarn build`. Uploads `dist/` as an artifact for the audit jobs below.
-- **Validate sitemap** — `xmllint` checks `dist/sitemap-index.xml` and `dist/sitemap-0.xml` are well-formed and contain `<loc>` entries.
-- **Check links** — [Lychee](https://lychee.cli.rs/) walks every link in built HTML (internal + external). Accepts 200/301/302 plus 403/429 (bot-blockers and rate limits) so well-known breeder sites that block automated requests don't cause false positives. Blocking — broken links fail the check.
-- **Lighthouse audit** (informational, doesn't block PRs) — runs Lighthouse against the homepage, a strain page, and the about page; reports Performance, SEO, Accessibility, and Best Practices scores. HTML reports are uploaded to temporary public storage and linked in the workflow logs. Configured in [`lighthouserc.json`](lighthouserc.json).
-
-Considered for future addition:
-
-- **Playwright smoke test** — build the site and verify the homepage and a strain detail page render with expected content. Would catch dead pages from broken queries or missing layouts that Lighthouse may not surface.
-
-Out of scope:
-
-- **Unit tests** — most code is data fetching and static rendering; minimal logic to test in isolation.
-- **Visual regression** — overkill unless the design is iterating frequently.
-- **Content metadata** (missing alt text, ghost terpenes, missing required fields) — already covered by the [`/audit-content`](#claude-code-skills) skill, which can be run on a schedule rather than as a CI gate.
+There are deliberately no unit tests — the failure modes of a content-driven static site are broken queries, broken links, and regressed SEO/perf signals, not logic bugs. Full rationale, per-step details, and the considered/rejected list: [docs/testing.md](docs/testing.md).
 
 ---
 
@@ -117,7 +95,7 @@ Out of scope:
 ```text
 .
 ├── astro.config.mjs           # site URL + integrations
-├── docs/                      # design specs & implementation plans (docs/superpowers/)
+├── docs/                      # project docs (testing, SEO) + superpowers specs/plans
 ├── Makefile                   # all run/build/image commands
 ├── package.json
 ├── public/                    # static assets served as-is
@@ -168,26 +146,7 @@ Strains link to terpenes by **string name** (not by reference). The strain page 
 
 ## SEO
 
-The site emits **JSON-LD structured data** to help search engines understand the content. Every page gets `Organization` schema (company name, URL, logo, social links, contact info pulled from Sanity site settings). Detail pages add their own:
-
-| Page | Schemas emitted |
-|------|-----------------|
-| Strain detail (`/strains/[slug]`) | `Organization`, `Product`, `BreadcrumbList` |
-| Blog post (`/blog/[slug]`)        | `Organization`, `Article`, `BreadcrumbList` |
-| Terpene detail (`/terpenes/[slug]`) | `Organization`, `BreadcrumbList` |
-| Other pages                       | `Organization` |
-
-The schema-building helpers live in [`src/lib/jsonld.ts`](src/lib/jsonld.ts) — one function per schema type (`buildOrganization`, `buildProduct`, `buildArticle`, `buildBreadcrumbList`). Pages compose what they need into a `structuredData` array and pass it to `Layout`, which prepends `Organization` and renders each block as a separate `<script type="application/ld+json">` via [`src/components/JsonLd.astro`](src/components/JsonLd.astro).
-
-Test the output with [Google's Rich Results Test](https://search.google.com/test/rich-results) on any deployed URL.
-
-Beyond JSON-LD, the existing SEO foundation:
-
-- Canonical URLs, OG tags, and Twitter card tags emitted by `BaseHead.astro`
-- Sitemap auto-generated by `@astrojs/sitemap` (output: `/sitemap-index.xml`)
-- RSS feed at `/rss.xml` for the blog
-- Per-page titles and descriptions; pages without a specific description fall back to the site default
-- Image alt text enforced by the `make upload-image` script and the `/audit-content` skill
+Every page emits **JSON-LD structured data** (`Organization` everywhere; `Product`, `Article`, and `BreadcrumbList` on detail pages) via helpers in [`src/lib/jsonld.ts`](src/lib/jsonld.ts) — plus canonical URLs, OG/Twitter tags, an auto-generated sitemap, an RSS feed, and enforced image alt text. Schema tables, architecture, and testing guidance: [docs/seo.md](docs/seo.md).
 
 ## Deployment
 
@@ -206,7 +165,7 @@ GitHub Actions: .github/workflows/deploy.yml
 
 **Sanity webhook**: when an editor publishes content in Sanity Studio, Sanity posts to GitHub Actions `workflow_dispatch` to trigger a rebuild (~1-2 min end-to-end).
 
-- Webhook URL: `https://api.github.com/repos/nw-local/nw-local.github.io/actions/workflows/deploy.yml/dispatches`
+- Webhook URL: `https://api.github.com/repos/nw-local/nw-local.com/actions/workflows/deploy.yml/dispatches`
 - Projection: `{"ref": "main"}`
 - Auth: fine-grained GitHub PAT with Actions (read/write) on the repo
 - Configured at: sanity.io/manage → project `nyd3p2n0` → API → Webhooks
