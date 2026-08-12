@@ -77,8 +77,8 @@ const crossfadeKeyframes = slides.slice( 1 ).map( ( _slide, offset ) => {
         const sources = heroBackdropSources( slide, `Hero backdrop image ${index + 1}` );
         return (
           <div
-            class="hero-backdrop-slide"
-            style={index > 0 ? `animation-name: hero-crossfade-${index};` : undefined}
+            class:list={[ "hero-backdrop-slide", { "hero-backdrop-slide-base": index === 0 } ]}
+            style={index > 0 ? `--hero-crossfade-name: hero-crossfade-${index};` : undefined}
           >
             {/* fetchpriority="high" on the first slide is deliberate, and Hero's
                 lockup img carries it too: which image is the LCP element

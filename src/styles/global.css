@@ -474,9 +474,25 @@ footer {
   animation-timing-function: linear;
   animation-iteration-count: infinite;
   animation-fill-mode: both;
+  /* The keyframe name arrives as a custom property, not as a direct
+     `animation-name` in the inline style attribute. A declaration in a
+     `style` attribute outranks every stylesheet declaration regardless of
+     specificity, so the `prefers-reduced-motion` override below — which sets
+     `animation-name: none` on this same selector — would never win if the
+     inline style set `animation-name` itself. Routing the value through a
+     custom property keeps the actual `animation-name` declaration here, in
+     the stylesheet, where source order can settle it in the media query's
+     favor. Do not "simplify" this back to an inline `animation-name`. */
+  animation-name: var(--hero-crossfade-name, none);
 }
 
-.hero-backdrop-slide:first-child {
+/* Pinned to an explicit class, not `:first-child`, because the opaque base is
+   an invariant the whole crossfade depends on: exactly one slide must always
+   be fully visible under the others. `:first-child` would silently break that
+   invariant the moment anything else — a caption, a debug marker, whatever —
+   gets inserted into `.hero-backdrop` ahead of the slides, with no build,
+   lint, or type signal that the base disappeared. */
+.hero-backdrop-slide-base {
   opacity: 1;
 }
 
