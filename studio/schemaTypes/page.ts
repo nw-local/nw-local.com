@@ -43,6 +43,26 @@ export const pageType = defineType({
       ],
     }),
     defineField({
+      name: 'heroImages',
+      title: 'Hero Images',
+      type: 'array',
+      of: [
+        {
+          type: 'image',
+          options: { hotspot: true },
+        },
+      ],
+      description:
+        'Backdrop photographs for the homepage hero, crossfaded in order. The first loads immediately and is what most visitors see; the rest fade in behind it. Leave empty to fall back to the single Hero Image above.',
+      hidden: ({ document }) => document?.pageId !== 'home',
+      validation: (rule) =>
+        rule
+          .max(6)
+          .warning(
+            'Every photograph here loads eagerly, so a long rotation costs real bandwidth on every page load.',
+          ),
+    }),
+    defineField({
       name: 'body',
       title: 'Body',
       type: 'blockContent',

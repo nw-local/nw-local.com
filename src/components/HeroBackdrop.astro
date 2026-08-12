@@ -1,67 +1,122 @@
 ---
 import type { SanityImage } from "../lib/sanity";
-import { urlFor, resolveImageDimensions } from "../lib/image";
+import { heroBackdropSources } from "../lib/image";
 
 interface Props {
-  image?: SanityImage
+  images?: SanityImage[]
 }
 
-const { image } = Astro.props;
+const { images = [] } = Astro.props;
 
-// Same empty-object guard as Hero: a cleared Sanity image field is truthy.
-const backdrop = image?.asset ? image : undefined;
+// Same empty-object guard as Hero: a Sanity image field that has been touched
+// and then cleared in Studio leaves an empty object behind, so test the asset
+// rather than the wrapper.
+const slides = images.filter( image => image?.asset );
 
-// Sanity will happily upscale a small source and return double the bytes for no
-// extra detail, so cap the request at the asset's own width. The backdrop is
-// full-bleed, so the ceiling is a retina-density common desktop width rather
-// than anything derived from the content column.
-const backdropWidth = backdrop
-  ? Math.min( 3000, resolveImageDimensions( backdrop.asset, "Hero backdrop image" ).width )
-  : 0;
+// Seconds each photograph holds still, and seconds spent dissolving into the
+// next. One photograph's full turn is a period; the whole rotation is a cycle.
+const HOLD_SECONDS = 8;
+const FADE_SECONDS = 2;
+const PERIOD_SECONDS = HOLD_SECONDS + FADE_SECONDS;
+const cycleSeconds = slides.length * PERIOD_SECONDS;
 
-// Responsive candidates, clamped to the same source-width ceiling as
-// backdropWidth above so a phone never pulls a desktop-sized (or upscaled)
-// file.
+const cyclePercent = ( seconds: number ) => `${( ( seconds / cycleSeconds ) * 100 ).toFixed( 4 )}%`;
+
+// One keyframe block per slide after the first. The first slide never animates:
+// it is the opaque base that every other slide dissolves over. That asymmetry
+// is the whole trick. The obvious version — every slide fading in and out on a
+// shared keyframe with staggered delays — puts two layers at 0.5 opacity
+// mid-transition, and compositing gives 0.5 + 0.5 * 0.5 = 0.75 coverage, so a
+// quarter of the dark page background flashes through on every dissolve. Here
+// exactly one layer is ever in motion, always over an opaque layer beneath.
 //
-// sizes is 100vw because the backdrop breaks out of main and spans the
-// viewport. Treat that as a floor rather than an exact figure: the parallax
-// makes the image 140% of the box height, which can flip `object-fit: cover`
-// from scaling by width to scaling by height, and a height-scaled image is
-// wider than the viewport. On a 1280px-wide desktop hero the image renders at
-// roughly 1440 CSS px, so the browser can select one candidate lower than it
-// ideally would. Candidate rounding absorbs most of that on desktop; the gap
-// is larger on narrow screens, where the box is tall relative to its width.
-// Correcting it properly needs breakpointed sizes, which is a bandwidth
-// tradeoff rather than a straight win — see PR #45's review.
-const backdropSrcSetWidths = backdrop
-  ? [ ...new Set( [ 480, 800, 1200, 1600, 2000, 2400, backdropWidth ].filter( width => width <= backdropWidth ) ) ]
-  : [];
-const backdropSrcSet = backdrop
-  ? backdropSrcSetWidths
-    .map( width => `${urlFor( backdrop ).width( width ).format( "webp" ).url()} ${width}w` )
-    .join( ", " )
-  : undefined;
+// Slide i fades in while slide i-1 is still fully opaque. It then either snaps
+// off underneath slide i+1 — invisible, because slide i+1 covers it — or, if it
+// is the last slide, fades back out to reveal slide 0 and close the loop.
+// `animation-timing-function: step-end` on a keyframe holds that segment's
+// start value and jumps at its end, which is how the snap happens without two
+// keyframes a thousandth of a percent apart.
+//
+// The percentages depend on how many photographs an editor added, and keyframe
+// selectors cannot read CSS custom properties, so they are generated here
+// rather than living in global.css with the structural rules. Hardcoding three
+// blocks there and validating the count in Studio was rejected: rule
+// validation is Studio-side only, so an API write of a fourth image would
+// break the rotation silently.
+//
+// See docs/superpowers/specs/2026-08-12-hero-crossfade-design.md.
+const crossfadeKeyframes = slides.slice( 1 ).map( ( _slide, offset ) => {
+  const index = offset + 1;
+  const fadeInStart = index * PERIOD_SECONDS - FADE_SECONDS;
+  const fadeInEnd = index * PERIOD_SECONDS;
+  const isLast = index === slides.length - 1;
+
+  const stops = [
+    "0% { opacity: 0; }",
+    `${cyclePercent( fadeInStart )} { opacity: 0; }`,
+    isLast
+      ? `${cyclePercent( fadeInEnd )} { opacity: 1; }`
+      : `${cyclePercent( fadeInEnd )} { opacity: 1; animation-timing-function: step-end; }`,
+    isLast
+      ? `${cyclePercent( cycleSeconds - FADE_SECONDS )} { opacity: 1; }`
+      : `${cyclePercent( ( index + 1 ) * PERIOD_SECONDS )} { opacity: 0; }`,
+    "100% { opacity: 0; }",
+  ];
+
+  return `@keyframes hero-crossfade-${index} {\n  ${stops.join( "\n  " )}\n}`;
+}).join( "\n" );
 ---
 
-{backdrop ? (
-  <div class="hero-backdrop">
-    {/* fetchpriority="high" is deliberate here and on Hero's lockup img: which
-        image is the LCP element depends on fallback state (this photo when
-        present, the lockup when it is not), so one hint cannot cover both
-        without conditional plumbing. */}
-    <img
-      class="hero-backdrop-image"
-      src={urlFor( backdrop ).width( backdropWidth ).format( "webp" ).url()}
-      srcset={backdropSrcSet}
-      sizes="100vw"
-      alt=""
-      fetchpriority="high"
-    />
-    <div class="hero-backdrop-scrim"></div>
-    <div class="hero-backdrop-content">
-      <slot />
-    </div>
-  </div>
-) : (
+{slides.length === 0 ? (
   <slot />
+) : (
+  <Fragment>
+    {crossfadeKeyframes && <style is:inline set:html={crossfadeKeyframes}></style>}
+    <div class="hero-backdrop" style={crossfadeKeyframes ? `--hero-crossfade-cycle: ${cycleSeconds}s;` : undefined}>
+      {slides.map( ( slide, index ) => {
+        const sources = heroBackdropSources( slide, `Hero backdrop image ${index + 1}` );
+        return (
+          <div
+            class:list={[ "hero-backdrop-slide", { "hero-backdrop-slide-base": index === 0 } ]}
+            style={index > 0 ? `--hero-crossfade-name: hero-crossfade-${index};` : undefined}
+          >
+            {/* fetchpriority="high" on the first slide is deliberate, and Hero's
+                lockup img carries it too: which image is the LCP element
+                depends on fallback state (this photo when present, the lockup
+                when it is not), so one hint cannot cover both without
+                conditional plumbing. Later slides are explicitly deprioritised
+                so they never compete with it. loading="lazy" is deliberately
+                absent — it keys off viewport intersection, not visibility, and
+                every slide is inside the hero band, so it would defer nothing.
+
+                sizes is 100vw because the backdrop breaks out of main and spans
+                the viewport. Treat that as a floor rather than an exact figure:
+                the parallax makes the image 140% of the box height, which can
+                flip `object-fit: cover` from scaling by width to scaling by
+                height, and a height-scaled image is wider than the viewport. On
+                a 1280px-wide desktop hero the image renders at roughly 1440 CSS
+                px, so the browser can select one candidate lower than it ideally
+                would. Candidate rounding absorbs most of that on desktop; the
+                gap is larger on narrow screens, where the box is tall relative
+                to its width. Correcting it properly needs breakpointed sizes,
+                which is a bandwidth tradeoff rather than a straight win — see
+                PR #45's review. */}
+            <img
+              class="hero-backdrop-image"
+              src={sources.src}
+              srcset={sources.srcset}
+              sizes="100vw"
+              alt=""
+              fetchpriority={index === 0 ? "high" : "low"}
+              decoding={index === 0 ? undefined : "async"}
+            />
+          </div>
+        );
+      })}
+      <div class="hero-backdrop-scrim"></div>
+      <div class="hero-backdrop-content">
+        <slot />
+      </div>
+    </div>
+  </Fragment>
 )}

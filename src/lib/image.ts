@@ -1,5 +1,5 @@
 import { createImageUrlBuilder, type SanityImageSource } from "@sanity/image-url";
-import { sanityClient } from "./sanity";
+import { sanityClient, type SanityImage } from "./sanity";
 
 const builder = createImageUrlBuilder( sanityClient );
 
@@ -58,4 +58,35 @@ export function resolveImageDimensions(
   }
 
   return imageDimensions( assetId );
+}
+
+// Full-bleed backdrop candidates. Sanity will happily upscale a small source
+// and return double the bytes for no extra detail, so cap every request at the
+// asset's own width. The ceiling is a retina-density common desktop width
+// rather than anything derived from the content column, because the backdrop
+// spans the viewport rather than sitting inside `main`.
+const BACKDROP_CEILING_WIDTH = 3000;
+const BACKDROP_CANDIDATE_WIDTHS = [ 480, 800, 1200, 1600, 2000, 2400 ];
+
+export interface BackdropSources {
+  src: string;
+  srcset: string;
+  width: number;
+}
+
+export function heroBackdropSources( image: SanityImage, context: string ): BackdropSources {
+  const width = Math.min(
+    BACKDROP_CEILING_WIDTH,
+    resolveImageDimensions( image.asset, context ).width,
+  );
+  const candidateWidths = [ ...new Set(
+    [ ...BACKDROP_CANDIDATE_WIDTHS, width ].filter( candidate => candidate <= width ),
+  ) ];
+  return {
+    src: urlFor( image ).width( width ).format( "webp" ).url(),
+    srcset: candidateWidths
+      .map( candidate => `${urlFor( image ).width( candidate ).format( "webp" ).url()} ${candidate}w` )
+      .join( ", " ),
+    width,
+  };
 }

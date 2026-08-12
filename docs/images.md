@@ -35,6 +35,8 @@ Requires `SANITY_WRITE_TOKEN`, which is not needed to build or run the site — 
 
 Hero images should be landscape 4:3, minimum 1200×900. `upload-image` warns on a portrait image because a portrait hero gets cropped on the strain detail page.
 
+Homepage hero backdrops (`heroImages` on the home page document) have an extra constraint: they are crossfaded into each other, so pick photographs that share a colour temperature — a warm-to-cool dissolve passes through a muddy midpoint. Avoid blown highlights where the wordmark sits, since the scrim over them is a flat 42% wash rather than a gradient.
+
 Author photos are legitimately portrait. Pass `PORTRAIT_OK=1` to suppress the warning:
 
 ```sh
