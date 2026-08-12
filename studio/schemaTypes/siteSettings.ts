@@ -27,6 +27,18 @@ export const siteSettingsType = defineType({
       ],
     }),
     defineField({
+      name: 'heroLockup',
+      title: 'Hero Lockup',
+      type: 'image',
+      description:
+        'Emblem + wordmark shown as the homepage headline. White artwork on a '
+        + 'transparent background. Pair only with dark, low-key hero photography: '
+        + 'a bright photo will wash out the wordmark.',
+      fields: [
+        defineField({ name: 'alt', title: 'Alternative Text', type: 'string' }),
+      ],
+    }),
+    defineField({
       name: 'socialLinks',
       title: 'Social Links',
       type: 'object',
