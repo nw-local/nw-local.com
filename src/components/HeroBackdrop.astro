@@ -17,6 +17,19 @@ const backdrop = image?.asset ? image : undefined;
 const backdropWidth = backdrop
   ? Math.min( 2400, resolveImageDimensions( backdrop.asset, "Hero backdrop image" ).width )
   : 0;
+
+// Responsive candidates, clamped to the same source-width ceiling as
+// backdropWidth above so a phone never pulls a desktop-sized (or upscaled)
+// file. sizes="100vw" is correct because this image is always full-bleed
+// across the content column.
+const backdropSrcSetWidths = backdrop
+  ? [ ...new Set( [ 480, 800, 1200, 1600, 2000, backdropWidth ].filter( width => width <= backdropWidth ) ) ]
+  : [];
+const backdropSrcSet = backdrop
+  ? backdropSrcSetWidths
+    .map( width => `${urlFor( backdrop ).width( width ).format( "webp" ).url()} ${width}w` )
+    .join( ", " )
+  : undefined;
 ---
 
 {backdrop ? (
@@ -24,8 +37,11 @@ const backdropWidth = backdrop
     <img
       class="hero-backdrop-image"
       src={urlFor( backdrop ).width( backdropWidth ).format( "webp" ).url()}
+      srcset={backdropSrcSet}
+      sizes="100vw"
       alt=""
       aria-hidden="true"
+      fetchpriority="high"
     />
     <div class="hero-backdrop-scrim"></div>
     <div class="hero-backdrop-content">
