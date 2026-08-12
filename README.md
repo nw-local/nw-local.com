@@ -130,7 +130,7 @@ The site auto-deploys to GitHub Pages on every push to `main`, via [`.github/wor
 
 The Studio itself is hosted separately at <https://nw-local.sanity.studio/> and deploys with `make deploy-studio` — **not** with the site. A schema or sidebar change needs that command before editors see it.
 
-Webhook config, and the publish/rebuild ordering rule that follows from it: [docs/deployment.md](docs/deployment.md).
+Webhook config, why Pages deploys are serialized behind a concurrency group, and the publish/rebuild ordering rule that follows from it: [docs/deployment.md](docs/deployment.md).
 
 ---
 

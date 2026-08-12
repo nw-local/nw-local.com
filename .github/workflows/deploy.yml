@@ -12,6 +12,24 @@ permissions:
   pages: write
   id-token: write
 
+# GitHub Pages permits exactly one deployment at a time, and this workflow has
+# three triggers that routinely fire at once. Sanity's webhook sends one
+# workflow_dispatch per *published document*, so a content batch of N documents
+# queues N builds that all rebuild main against the same dataset. Any push to
+# main landing in that window loses the race and fails with "Deployment request
+# failed ... due to in progress deployment" — a red run that a later green one
+# silently supersedes, on a workflow nobody watches. Seen 2026-08-12: a
+# 22-document glossary publish collided with a push (run 31576537317).
+#
+# cancel-in-progress is deliberately false, matching GitHub's own Pages
+# guidance: a queued run is superseded by a newer one, but a deployment already
+# in flight is allowed to finish rather than being interrupted mid-publish.
+# That still collapses the storm, since every queued run would build the same
+# thing anyway.
+concurrency:
+  group: pages-deploy
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
