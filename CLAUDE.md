@@ -43,6 +43,7 @@ No test framework is configured.
 ## Invariants
 
 - **`prep-images` dedup depends on byte-identical conversion output.** SHA-1 is computed on the converted JPG, not the source file, and matched against `sha1hash` on Sanity's image assets. The `sips -s formatOptions 90` setting in `scripts/prep-images.sh` is therefore part of the dedup contract — changing it silently invalidates every existing hash, and duplicate uploads start slipping through.
+- **`studio/` is a separate project from the root, with its own style and its own package manager.** The root ESLint config explicitly ignores `studio/**` (`eslint.config.mjs`), so `make format` and `yarn lint` never touch it and the root's spaced-paren/double-quote/semicolon style does **not** apply there. Studio files follow the Prettier config in `studio/package.json` — no semicolons, single quotes, `bracketSpacing: false`, tight parens (`(rule) => rule.required()`). Studio is also an **npm** project (`studio/package-lock.json` is tracked) while the root uses yarn, and it is not a yarn workspace of the root — `yarn install` at the root never installs `studio/node_modules`. Install studio deps with `cd studio && npm install`; running `yarn install` there creates a competing `studio/yarn.lock`. Lint/type-check studio with `cd studio && npx eslint .` and `npx tsc --noEmit`, since `studio/package.json` defines no `lint` script.
 
 ## Sanity Content Model
 
@@ -50,7 +51,8 @@ No test framework is configured.
 |---------------|---------|
 | `strain` | Cannabis strains with effects, terpenes, THC/CBD ranges, gallery |
 | `product` | SKUs (flower, preroll, concentrate, edible) referencing a parent strain |
-| `blogPost` | Blog posts with rich text body, tags, hero image |
+| `author` | Post authors with role, bio, photo, and profile links |
+| `blogPost` | Blog posts with rich text body, tags, hero image, author reference |
 | `retailer` | Dispensary partners with address, contact info, products carried |
 | `page` | Singleton pages (home, about, contact) with flexible body content |
 | `siteSettings` | Global config: title, logo, social links, contact info, age gate message |

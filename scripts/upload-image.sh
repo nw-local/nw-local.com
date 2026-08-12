@@ -13,6 +13,10 @@ set -euo pipefail
 FILE="${1:?Usage: upload-image.sh <file> [label] [description]}"
 LABEL="${2:-}"
 DESCRIPTION="${3:-}"
+# Hero images are cropped to landscape on strain pages, so a portrait upload is
+# usually a mistake there. Author portraits are legitimately portrait, so the
+# warning is opt-out rather than unconditional.
+PORTRAIT_OK="${4:-}"
 
 if [[ ! -f "$FILE" ]]; then
   echo "Error: file not found: $FILE" >&2
@@ -29,7 +33,7 @@ if [[ "$DIMENSIONS" != "unknown" ]]; then
   IMG_WIDTH="${DIMENSIONS%x*}"
   IMG_HEIGHT="${DIMENSIONS#*x}"
   echo "Image dimensions: ${IMG_WIDTH}×${IMG_HEIGHT}" >&2
-  if (( IMG_HEIGHT > IMG_WIDTH )); then
+  if (( IMG_HEIGHT > IMG_WIDTH )) && [[ -z "$PORTRAIT_OK" ]]; then
     echo "⚠  Warning: Image is portrait orientation (${IMG_WIDTH}×${IMG_HEIGHT})." >&2
     echo "   Hero images display best at landscape 4:3 (minimum 1200×900)." >&2
     echo "   Portrait images will be cropped on the strain page." >&2
