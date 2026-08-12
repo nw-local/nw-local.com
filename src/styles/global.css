@@ -11,6 +11,9 @@
   --border: #333333;
   --max-width: 1200px;
   --content-width: 720px;
+  /* main's vertical padding, extracted so the full-bleed hero can cancel it
+     with a negative margin without duplicating the literal. */
+  --page-padding-block: 2rem;
   --font-heading: "Arial Black", "Arial Bold", Gadget, sans-serif;
   /* Headings are drawn oversized and stretched horizontally. The vertical part
      of that used to be a `transform: scale()`, but a transform paints outside
@@ -54,7 +57,7 @@ main {
   width: 100%;
   max-width: var(--max-width);
   margin: 0 auto;
-  padding: 2rem 1.5rem;
+  padding: var(--page-padding-block) 1.5rem;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -430,10 +433,19 @@ footer {
    edge. No border-radius — a full-bleed band has no corners to round. */
 .hero-backdrop {
   position: relative;
-  overflow: hidden;
+  /* clip, not hidden. `hidden` makes an element a scroll container, which
+     would leave the parallax timeline in Task 2 resolving against a box that
+     never scrolls — the animation would attach, report as running, and never
+     advance a single frame. `clip` clips identically without creating one.
+     Same distinction as the `overflow-x: clip` on html near the top of this
+     file, for the same underlying reason. */
+  overflow: clip;
   isolation: isolate;
   width: 100vw;
   margin-inline: calc(50% - 50vw);
+  /* Cancel main's top padding so the photograph meets the nav with no band
+     of page background between them. */
+  margin-top: calc(-1 * var(--page-padding-block));
 }
 
 .hero-backdrop-image {
