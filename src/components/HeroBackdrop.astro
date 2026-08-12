@@ -12,19 +12,20 @@ const { image } = Astro.props;
 const backdrop = image?.asset ? image : undefined;
 
 // Sanity will happily upscale a small source and return double the bytes for no
-// extra detail, so cap the request at the asset's own width. 2400 is twice the
-// 1200px content column, for retina displays.
+// extra detail, so cap the request at the asset's own width. The backdrop is
+// full-bleed, so the ceiling is a retina-density common desktop width rather
+// than anything derived from the content column.
 const backdropWidth = backdrop
-  ? Math.min( 2400, resolveImageDimensions( backdrop.asset, "Hero backdrop image" ).width )
+  ? Math.min( 3000, resolveImageDimensions( backdrop.asset, "Hero backdrop image" ).width )
   : 0;
 
 // Responsive candidates, clamped to the same source-width ceiling as
 // backdropWidth above so a phone never pulls a desktop-sized (or upscaled)
-// file. The sizes attribute below matches: this box is never the viewport
-// width, it is capped by main's max-width (--max-width: 1200px, minus its
-// 1.5rem side padding), so the slot cannot be 100vw.
+// file. sizes is plain 100vw because the backdrop breaks out of main and spans
+// the viewport — it was previously capped by main's max-width, and the full-bleed
+// change is what makes 100vw correct rather than wasteful.
 const backdropSrcSetWidths = backdrop
-  ? [ ...new Set( [ 480, 800, 1200, 1600, 2000, backdropWidth ].filter( width => width <= backdropWidth ) ) ]
+  ? [ ...new Set( [ 480, 800, 1200, 1600, 2000, 2400, backdropWidth ].filter( width => width <= backdropWidth ) ) ]
   : [];
 const backdropSrcSet = backdrop
   ? backdropSrcSetWidths
@@ -43,7 +44,7 @@ const backdropSrcSet = backdrop
       class="hero-backdrop-image"
       src={urlFor( backdrop ).width( backdropWidth ).format( "webp" ).url()}
       srcset={backdropSrcSet}
-      sizes="(min-width: 1200px) 1152px, calc(100vw - 3rem)"
+      sizes="100vw"
       alt=""
       fetchpriority="high"
     />
