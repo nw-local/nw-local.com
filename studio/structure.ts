@@ -22,28 +22,28 @@
 // checked outside the Studio bundle.
 
 export type StructureEntry =
-  | {kind: 'divider'}
-  | {kind: 'list'; type: string; title: string}
-  | {kind: 'singleton'; type: string; title: string}
+  | { kind: 'divider' }
+  | { kind: 'list'; type: string; title: string }
+  | { kind: 'singleton'; type: string; title: string }
 
 // Singleton entries assume the document ID equals the type name, which holds for
 // both of the current ones.
 export const STRUCTURE: StructureEntry[] = [
-  {kind: 'singleton', type: 'siteSettings', title: 'Site Settings'},
-  {kind: 'divider'},
-  {kind: 'list', type: 'strain', title: 'Strains'},
-  {kind: 'list', type: 'product', title: 'Products'},
-  {kind: 'divider'},
-  {kind: 'list', type: 'blogPost', title: 'Blog Posts'},
-  {kind: 'list', type: 'author', title: 'Authors'},
-  {kind: 'divider'},
-  {kind: 'list', type: 'glossaryTerm', title: 'Glossary'},
-  {kind: 'list', type: 'terpene', title: 'Terpenes'},
-  {kind: 'divider'},
-  {kind: 'list', type: 'retailer', title: 'Retailers'},
-  {kind: 'singleton', type: 'retailerPage', title: 'For Retailers Page'},
-  {kind: 'divider'},
-  {kind: 'list', type: 'page', title: 'Pages'},
+  { kind: 'singleton', type: 'siteSettings', title: 'Site Settings' },
+  { kind: 'divider' },
+  { kind: 'list', type: 'strain', title: 'Strains' },
+  { kind: 'list', type: 'product', title: 'Products' },
+  { kind: 'divider' },
+  { kind: 'list', type: 'blogPost', title: 'Blog Posts' },
+  { kind: 'list', type: 'author', title: 'Authors' },
+  { kind: 'divider' },
+  { kind: 'list', type: 'glossaryTerm', title: 'Glossary' },
+  { kind: 'list', type: 'terpene', title: 'Terpenes' },
+  { kind: 'divider' },
+  { kind: 'list', type: 'retailer', title: 'Retailers' },
+  { kind: 'singleton', type: 'retailerPage', title: 'For Retailers Page' },
+  { kind: 'divider' },
+  { kind: 'list', type: 'page', title: 'Pages' },
 ]
 
 export const SINGLETON_TYPES = new Set(
@@ -65,7 +65,7 @@ export interface SidebarPlan {
  * anything. If the name was a typo, the real type falls through to `appended`,
  * which is the visible signal that something needs fixing.
  */
-export function planSidebar( documentTypes: string[] ): SidebarPlan {
+export function planSidebar(documentTypes: string[]): SidebarPlan {
   const curated = new Set(
     STRUCTURE.flatMap((entry) => (entry.kind === 'divider' ? [] : [entry.type])),
   )
