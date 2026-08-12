@@ -449,6 +449,37 @@ footer {
   margin-top: calc(-1 * var(--page-padding-block));
 }
 
+/* One wrapper per photograph. The wrapper owns opacity; the image inside owns
+   the parallax transform. Keeping the two animations on separate elements is
+   what lets the scroll-driven timeline below stay exactly as it was: combining
+   them would mean a comma-separated animation-* list whose every longhand the
+   @supports guard has to restate.
+
+   Because the wrapper is absolutely positioned it is the containing block for
+   the image, so the image's `top: -20%` / `height: 140%` resolve against the
+   same box they always did.
+
+   Painting order comes from DOM order, so the slides need no z-index relative
+   to each other and all of them stay below the scrim.
+
+   Every slide but the first starts transparent. If the generated keyframes
+   never arrive, that leaves the first photograph showing and nothing else —
+   which is exactly the pre-rotation homepage. The cycle duration is set inline
+   by HeroBackdrop, because it depends on how many photographs there are. */
+.hero-backdrop-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  animation-duration: var(--hero-crossfade-cycle, 0s);
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-fill-mode: both;
+}
+
+.hero-backdrop-slide:first-child {
+  opacity: 1;
+}
+
 .hero-backdrop-image {
   position: absolute;
   inset: 0;
@@ -1022,6 +1053,12 @@ footer {
   .nav-logo-image,
   .portable-text p {
     animation: none;
+  }
+
+  /* Falls back to the base rules above: first slide opaque, the rest
+     transparent. One still photograph, no rotation. */
+  .hero-backdrop-slide {
+    animation-name: none;
   }
 
   .hero-backdrop-image {

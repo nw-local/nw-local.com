@@ -13,13 +13,21 @@ const allStrains = await getStrains() ?? [];
 const featuredStrains = allStrains.filter( strain => strain.featured );
 // getBlogPosts() already orders by publishedAt desc.
 const latestPost = ( await getBlogPosts() ?? [] )[ 0 ];
+
+// heroImages is the crossfade rotation; heroImage is the single-photograph
+// field about-us also renders. Falling back to it keeps the homepage backdrop
+// alive in the window between this shipping and an editor filling in the
+// array, since Sanity publishes rebuild against main.
+const heroImages = page?.heroImages?.length
+  ? page.heroImages
+  : ( page?.heroImage ? [ page.heroImage ] : [] );
 ---
 
 <Layout
   title={page?.title ?? settings?.siteTitle ?? "Northwest Local Cannabis"}
   description={page?.seoDescription ?? settings?.siteDescription ?? "Washington State licensed cannabis producer and processor."}
 >
-  <HeroBackdrop image={page?.heroImage}>
+  <HeroBackdrop images={heroImages}>
     <Hero
       title={page?.title ?? settings?.siteTitle ?? "Northwest Local Cannabis"}
       subtitle={page?.seoDescription ?? settings?.siteDescription}
