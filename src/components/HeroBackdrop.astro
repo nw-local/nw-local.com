@@ -1,0 +1,37 @@
+---
+import type { SanityImage } from "../lib/sanity";
+import { urlFor, resolveImageDimensions } from "../lib/image";
+
+interface Props {
+  image?: SanityImage
+}
+
+const { image } = Astro.props;
+
+// Same empty-object guard as Hero: a cleared Sanity image field is truthy.
+const backdrop = image?.asset ? image : undefined;
+
+// Sanity will happily upscale a small source and return double the bytes for no
+// extra detail, so cap the request at the asset's own width. 2400 is twice the
+// 1200px content column, for retina displays.
+const backdropWidth = backdrop
+  ? Math.min( 2400, resolveImageDimensions( backdrop.asset, "Hero backdrop image" ).width )
+  : 0;
+---
+
+{backdrop ? (
+  <div class="hero-backdrop">
+    <img
+      class="hero-backdrop-image"
+      src={urlFor( backdrop ).width( backdropWidth ).format( "webp" ).url()}
+      alt=""
+      aria-hidden="true"
+    />
+    <div class="hero-backdrop-scrim"></div>
+    <div class="hero-backdrop-content">
+      <slot />
+    </div>
+  </div>
+) : (
+  <slot />
+)}
