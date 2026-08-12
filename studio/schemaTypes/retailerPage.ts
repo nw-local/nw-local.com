@@ -28,6 +28,40 @@ export const retailerPageType = defineType({
       type: 'string',
     }),
     defineField({
+      name: 'marketplaces',
+      title: 'Marketplaces',
+      description:
+        'Cultivera Market storefronts. Rendered as call-to-action cards in the order listed.',
+      type: 'array',
+      of: [
+        {
+          type: 'object',
+          fields: [
+            defineField({
+              name: 'label',
+              title: 'Label',
+              type: 'string',
+              description: 'The buyer type this storefront serves, e.g. "Retailers".',
+              validation: (rule) => rule.required(),
+            }),
+            defineField({
+              name: 'audience',
+              title: 'Audience Line',
+              type: 'string',
+              description: 'One supporting line describing what this storefront carries.',
+            }),
+            defineField({
+              name: 'url',
+              title: 'Storefront URL',
+              type: 'url',
+              validation: (rule) => rule.required().uri({scheme: ['https']}),
+            }),
+          ],
+          preview: {select: {title: 'label', subtitle: 'audience'}},
+        },
+      ],
+    }),
+    defineField({
       name: 'downloadables',
       title: 'Downloadable Files',
       type: 'array',
