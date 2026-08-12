@@ -51,6 +51,8 @@ No test framework is configured.
 - **GROQ `match` is a tokenizing full-text operator, not a substring test.** It tokenizes both operands and discards punctuation, so `field match "*—*"` collapses to a wildcard and returns every document. Verified on this dataset: it returned all 25 `glossaryTerm` docs while exactly one contained an em dash. Use `count(string::split(field, "needle")) > 1` for a literal substring test. This matters because a broken check of this shape fails *open* — it looks like it is finding problems while asserting nothing. Verified 2026-08-12.
 - **Flattening `body[].markDefs` yields a phantom `null` for every block that lacks the field.** The purple post's three image blocks (`figKeracyanin`, `figPathway`, `figTemperature`) have no `markDefs`, so an unguarded count came back 3 too high (28 instead of 25). Guard with `body[defined(markDefs)].markDefs[]`. Verified 2026-08-12.
 
+- **`grep -c` against built HTML always returns 1, because Astro minifies each page onto a single line.** `grep -c` counts matching *lines*, not occurrences, so an assertion like `grep -c 'class="card"' dist/index.html` reports 1 whether the page has one card or forty, and a plan that expects a specific count reads as satisfied for the wrong reason. Use `grep -o 'pattern' file | wc -l` instead, which counts occurrences. This matters more here than in most repos: there is no test framework, so grep assertions against `dist/` are the entire automated verification surface. Verified on this repo 2026-08-12.
+
 - **Sanity's `rule.required()` is Studio-side validation only — the Content Lake does not enforce it on API writes.** It stops a human clicking Publish in the Studio UI. It does not stop `create`/`patch` through the HTTP API, the Sanity MCP tools, or a script, all of which will happily write a document missing a required field. So **every code path that creates documents must enforce required fields itself**, and adding a required field means auditing the writers: the `.claude/skills/` that create that document type, and anything in `scripts/`. This bit `blogPost.author` in [#34](https://github.com/nw-local/nw-local.com/pull/34) — the field was `rule.required()`, but `/new-post` writes via MCP and did not gather an author, so the next post would have published with no byline anywhere, no `<dc:creator>` in the feed, and an `Article.author` silently falling back to the Organization. Nothing would have failed: not lint, not `astro check`, not the build. The skill now resolves a real author reference and hard-fails when no author document exists.
 
 ## Sanity Content Model
@@ -64,7 +66,7 @@ No test framework is configured.
 | `retailer` | Dispensary partners with address, contact info, products carried |
 | `page` | Singleton pages (home, about, contact) with flexible body content |
 | `siteSettings` | Global config: title, logo, hero lockup, social links, contact info, age gate message |
-| `retailerPage` | Wholesale page singleton with downloadable product sheets |
+| `retailerPage` | Wholesale page singleton: Cultivera storefront links, contact details, product sheets. Required, since a missing or empty one fails the build |
 
 ## Environment Variables
 
