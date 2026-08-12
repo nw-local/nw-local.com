@@ -126,6 +126,8 @@ There are deliberately no unit tests — the failure modes of a content-driven s
 │   ├── prep-images.sh         # HEIC→JPG, dedup, slug-rename
 │   └── upload-image.sh        # POSTs to Sanity asset endpoint
 └── studio/                    # Sanity Studio project (schemas, deployment config)
+    ├── sanity.config.ts       # Studio wiring: schema, structure tool, singletons
+    ├── structure.ts           # sidebar as data; unlisted types append automatically
     └── schemaTypes/           # document type definitions
 ```
 
