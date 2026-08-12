@@ -7,7 +7,7 @@ Customer-facing website for **Northwest Local Cannabis**, a Washington State i50
 [![Nightly audit](https://github.com/nw-local/nw-local.com/actions/workflows/nightly.yml/badge.svg)](https://github.com/nw-local/nw-local.com/actions/workflows/nightly.yml)
 [![Astro](https://img.shields.io/badge/Astro-6.x-FF5D01?logo=astro&logoColor=white)](https://astro.build)
 [![Sanity CMS](https://img.shields.io/badge/Sanity-CMS-F03E2F?logo=sanity&logoColor=white)](https://www.sanity.io)
-[![Node](https://img.shields.io/badge/node-%E2%89%A522.13-339933?logo=node.js&logoColor=white)](https://nodejs.org)
+[![Node](https://img.shields.io/badge/node-%E2%89%A522.20-339933?logo=node.js&logoColor=white)](https://nodejs.org)
 [![Yarn](https://img.shields.io/badge/yarn-package%20manager-2C8EBB?logo=yarn&logoColor=white)](https://yarnpkg.com)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Deployed](https://img.shields.io/badge/site-nw--local.com-1f6feb)](https://www.nw-local.com)
@@ -35,7 +35,7 @@ There are no Markdown files in the repo — every piece of content (strains, pro
 
 ## Quick start
 
-Prereqs: Node 22.13+, yarn, and access to the Sanity project.
+Prereqs: Node 22.20+, yarn, and access to the Sanity project.
 
 ```sh
 # 1. Clone
