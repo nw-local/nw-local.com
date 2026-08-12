@@ -12,6 +12,7 @@
 
 - **Definitions must stand alone.** A definition explains the term as it exists in the world. It may state a general fact about the term. It may not reference the argument, conclusions or framing of the article that prompted it.
 - **No em dashes in `shortDefinition`.** It is published copy. Use commas, periods or parentheses. No constructed aphorisms, no restating the same fact twice.
+- **Scope of the em-dash rule.** The [design doc](../specs/2026-08-12-glossary-terms-expansion-design.md) states this as a site-wide published-copy rule; `shortDefinition` is the instance that binds this plan. Pre-existing article prose is exempt, as the implementer note below already states.
 - **`shortDefinition` is capped at 200 characters** by `rule.required().max(200)` in `studio/schemaTypes/glossaryTerm.ts`. Sanity rejects the write if exceeded.
 - **Sanity resource for every MCP call:** `{"projectId": "nyd3p2n0", "dataset": "production"}`.
 - **New documents use explicit readable `_id`s** of the form `glossary-<slug>`. The original 8 terms carry generated UUIDs; this batch deviates deliberately so that Task 3's `markDefs` can be written with literal IDs instead of values discovered at runtime. No dots in the IDs, since Sanity reserves the `drafts.` prefix.
@@ -161,11 +162,15 @@ Call `mcp__Sanity__query_documents`:
 ```groq
 *[_id == "4a30c75c-f328-431c-be1f-dac96d67c4fe"][0]{
   "marks": count(body[defined(markDefs)].markDefs[][_type == "glossaryRef"]),
-  "targets": body[_key in ["b000a","b000p","b0011","b001e","b001v","b002t","b002w","b003i","b003k","b003q","b003u","b004f"]]{_key, "spanKeys": children[]._key}
+  "targets": body[_key in ["b000a","b000p","b0011","b001e","b001v","b002t","b002w","b003i","b003k","b003q","b003u","b004f"]]{_key, "spanKeys": children[]._key, "joined": array::join(children[].text, "")}
 }
 ```
 
 Expected: `marks` is `8`, and all 12 target blocks are present with the span keys named in Step 2.
+
+**Save the `joined` value for each of the 12 blocks before patching.** It is the only capture of the
+pre-patch prose anywhere in this workflow — nothing else records the original span text — and Step
+3's byte-identity check diffs against it.
 
 **The `defined(markDefs)` guard is required.** The body contains 3 image blocks (`figKeracyanin`, `figPathway`, `figTemperature`) with no `markDefs` field at all. Without the guard, flattening yields one `null` per such block and the count comes back 3 too high — 11 here, 28 after patching. Verified against this dataset on 2026-08-12. If a span key is missing, the block has been edited since this plan was written — stop and report rather than guessing.
 
@@ -300,7 +305,7 @@ The split must not change a single character of prose. Call `mcp__Sanity__query_
 ]{_key, "joined": array::join(children[].text, "")}
 ```
 
-Compare each `joined` value against the original text recorded in the design doc's annotation table and in Step 2's span tables (concatenate the `text` column in order). Any difference means a typo was introduced during the split, which is the main risk in this task.
+Compare each `joined` value against the corresponding `joined` value captured in Step 1, block by block. Any difference means a typo was introduced during the split, which is the main risk in this task.
 
 - [ ] **Step 4: Verify mark count and reference resolution**
 
