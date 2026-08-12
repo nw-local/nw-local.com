@@ -86,7 +86,7 @@ const description = author.role
       <SectionHeading title={`Posts by ${author.name}`} />
       <div class="card-grid">
         {posts.map( post => (
-          <BlogPostCard {...post} />
+          <BlogPostCard {...post} showAuthor={false} />
         ) )}
       </div>
     </section>
