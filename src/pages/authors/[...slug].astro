@@ -3,6 +3,7 @@ import Layout from "../../layouts/Layout.astro";
 import Hero from "../../components/Hero.astro";
 import PortableText from "../../components/PortableText.astro";
 import BlogPostCard from "../../components/BlogPostCard.astro";
+import AuthorLinks from "../../components/AuthorLinks.astro";
 import SectionHeading from "../../components/SectionHeading.astro";
 import { getAuthors, getAuthor, getBlogPostsByAuthor, getSiteSettings, AUTHOR_BASE_PATH } from "../../lib/sanity";
 import { urlFor } from "../../lib/image";
@@ -76,6 +77,7 @@ const description = author.role
     </div>
     <div>
       {author.bio && <PortableText value={author.bio} />}
+      {author.sameAs && <AuthorLinks links={author.sameAs} />}
     </div>
   </div>
 

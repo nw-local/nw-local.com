@@ -1,0 +1,57 @@
+---
+import { profileLinkLabel } from "../lib/links";
+
+interface Props {
+  links: string[];
+}
+
+const { links } = Astro.props;
+---
+
+{links.length > 0 && (
+  <ul class="author-links">
+    {links.map( link => (
+      <li>
+        {/* rel="me" is the microformats convention for "another profile of this
+            same person" — the HTML counterpart to the schema.org sameAs these
+            URLs also feed. noopener matches the footer's outbound-link handling. */}
+        <a href={link} target="_blank" rel="me noopener">{profileLinkLabel( link )}</a>
+      </li>
+    ) )}
+  </ul>
+)}
+
+<style>
+  .author-links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem 0.75rem;
+    list-style: none;
+    padding: 0;
+    margin: 1.75rem 0 0;
+    font-size: 0.9rem;
+  }
+
+  .author-links li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .author-links li:not(:last-child)::after {
+    content: "·";
+    color: var(--text-secondary);
+    opacity: 0.6;
+  }
+
+  .author-links a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  .author-links a:hover {
+    color: var(--accent);
+  }
+</style>
