@@ -160,7 +160,9 @@ In `studio/sanity.config.ts`, add an Authors entry to the structure list. Place 
 `workspaces` field, so `yarn install` at the root never installed studio's dependencies and
 `studio/node_modules` does not exist. Install them once:
 
-Run: `cd studio && yarn install`
+Use **npm**, not yarn. The root project uses yarn, but `studio/` is an npm project: `studio/package-lock.json` is tracked, and `make studio` / `make deploy-studio` invoke bare `npx sanity ...`. Running `yarn install` here creates a competing `studio/yarn.lock` alongside the tracked npm lockfile.
+
+Run: `cd studio && npm install`
 Expected: completes successfully. This is a one-time cost of roughly 1-2 minutes.
 
 - [ ] **Step 6: Verify the studio schema lints and type-checks**
@@ -1053,7 +1055,20 @@ And update the `blogPost` row to mention the reference:
 | `blogPost` | Blog posts with rich text body, tags, hero image, author reference |
 ```
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 5: Record the studio/root toolchain split as an Invariant**
+
+`CLAUDE.md`'s "Whitespace inside parens" convention is stated globally, but it is false for `studio/`.
+This cost real time during this feature's pre-flight and will bite anyone editing studio files.
+
+Add to the **Invariants** section of `CLAUDE.md`:
+
+```markdown
+- **`studio/` is a separate project from the root, with its own style and its own package manager.** The root ESLint config explicitly ignores `studio/**` (`eslint.config.mjs`), so `make format` and `yarn lint` never touch it and the root's spaced-paren/double-quote/semicolon style does **not** apply there. Studio files follow the Prettier config in `studio/package.json` — no semicolons, single quotes, `bracketSpacing: false`, tight parens (`(rule) => rule.required()`). Studio is also an **npm** project (`studio/package-lock.json` is tracked) while the root uses yarn, and it is not a yarn workspace of the root — `yarn install` at the root never installs `studio/node_modules`. Install studio deps with `cd studio && npm install`; running `yarn install` there creates a competing `studio/yarn.lock`. Lint/type-check studio with `cd studio && npx eslint .` and `npx tsc --noEmit`, since `studio/package.json` defines no `lint` script.
+```
+
+Renumber the commit step below accordingly.
+
+- [ ] **Step 6: Commit**
 
 ```bash
 make format
