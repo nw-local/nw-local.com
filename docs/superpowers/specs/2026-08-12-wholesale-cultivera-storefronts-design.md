@@ -129,16 +129,37 @@ Scope limit: this covers the accent-fill mechanic and the new CTA only. Restylin
 the filter and pagination components is adjacent refactoring the goal does not
 need.
 
-### 5. Microcopy assumes the storefronts are gated
+### 5. Microcopy states the login requirement plainly
 
-Whether the menus render to a logged-out visitor was not verified. The `/bm/` path
-segment reads as "buyer market", so the copy assumes a login wall:
+Both storefronts are configured **not** publicly viewable. Cultivera's market
+settings expose two independent toggles, "Want your Market to be publicly viewable?"
+and "Want prices to also be publicly viewable?". Both are off by deliberate choice:
+a publicly browsable market page renders company profile fields, and the operator
+does not want the facility location that easily reachable.
 
-> An active Washington I502 license is required to place an order.
+So a logged-out visitor sees a login wall, not a menu. The CTA copy must say so
+before the click rather than after:
 
-Warning a visitor about a wall that turns out not to exist costs nothing.
-Surprising a retailer with an unexpected login screen loses the click. Revisit if
-the storefronts turn out to be publicly browsable.
+> Browse our full menu on Cultivera Market. A licensed buyer account is required to
+> view pricing and place orders.
+
+This is a settings-dependent fact, not a property of the platform. If the markets
+are ever made public, revisit this copy.
+
+### 6. Ship the storefront links before the catalogs are stocked
+
+The Cultivera catalogs are not built yet. The links ship anyway, live immediately,
+at the operator's direction.
+
+The considered alternative was an `available` boolean per marketplace entry,
+matching the existing `strain.available` and `product.available` convention, which
+would have captured the URLs now and revealed each card when its catalog was ready.
+That was declined in favour of shipping.
+
+Known consequence, accepted: a buyer who clicks through in the window before the
+catalogs are stocked meets a login wall and then an empty menu. This is a content
+timing issue, not a code defect. Do not add an `available` flag later without
+asking; the decision was explicit.
 
 ## Page structure
 
@@ -153,7 +174,8 @@ the storefronts turn out to be publicly browsable.
   | menu          |  | for extraction   |
   | [ SHOP -> ]   |  | [ SHOP -> ]      |
   +---------------+  +------------------+
-   An active WA I502 license is required
+   A licensed buyer account is required to
+   view pricing and place orders
 
          WHOLESALE INQUIRIES
               email / phone
