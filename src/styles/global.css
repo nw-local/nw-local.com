@@ -335,6 +335,44 @@ footer {
   height: auto;
 }
 
+.hero-cta-row {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.hero-cta-primary,
+.hero-cta-ghost {
+  padding: 0.6rem 1.5rem;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-radius: 4px;
+  border: 1px solid;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.hero-cta-primary {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.hero-cta-primary:hover {
+  color: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+/* Translucent white rather than --border (#333), which disappears against a
+   backdrop photograph. */
+.hero-cta-ghost {
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.hero-cta-ghost:hover {
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
 /* --- Hero Backdrop --- */
 
 /* isolation: isolate is load-bearing. Without a local stacking context these
