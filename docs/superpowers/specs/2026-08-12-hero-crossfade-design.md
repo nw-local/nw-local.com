@@ -1,7 +1,7 @@
 # Crossfading hero backdrop — design
 
 **Date:** 2026-08-12
-**Status:** Approved, not yet implemented
+**Status:** Implemented. Shipped with two photographs rather than the three below — the intended third photograph's source was too low-resolution and the library had no suitable replacement.
 
 ## Problem
 

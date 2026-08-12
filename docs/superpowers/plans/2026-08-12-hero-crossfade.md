@@ -10,6 +10,8 @@
 
 **Spec:** `docs/superpowers/specs/2026-08-12-hero-crossfade-design.md`
 
+> **Post-implementation note (2026-08-12):** the plan below was written and executed against three photographs, 8s hold / 2s dissolve, 30s cycle. What shipped is **two** photographs on a **20s cycle**, with one keyframe block instead of two — the intended third photograph's source file was too low-resolution to use, and the library had no suitable replacement at the time. The mechanism, task structure, and every step below are otherwise accurate; only the photograph count and the numbers that follow from it (cycle duration, keyframe percentages, slide counts in Steps 6 and 7 of Task 4) describe the originally-planned three-photograph configuration rather than what actually shipped.
+
 ## Global Constraints
 
 - **No client JavaScript.** The rotation is CSS-only. The site ships no runtime JS except the age gate.
@@ -576,7 +578,7 @@ Expected: 0 errors, 0 warnings from `astro check`; `yarn lint` clean.
 
 ```bash
 make build
-echo "slides:    $(grep -c 'class="hero-backdrop-slide"' dist/index.html)"
+echo "slides:    $(grep -o 'class="hero-backdrop-slide' dist/index.html | wc -l)"
 echo "keyframes: $(grep -o '@keyframes hero-crossfade-[0-9]*' dist/index.html | sort -u | tr '\n' ' ')"
 grep -o 'fetchpriority="[a-z]*"' dist/index.html
 grep -o -- '--hero-crossfade-cycle: [0-9]*s' dist/index.html
