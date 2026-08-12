@@ -479,7 +479,7 @@ footer {
    image 140% the height of its box is really +/-14% of the box, against 20%
    of overhang on each side. Changing either number without the other is a
    bug. */
-@supports (animation-timeline: scroll(root block)) {
+@supports (animation-timeline: scroll(root block)) and (animation-duration: auto) {
   .hero-backdrop-image {
     /* The base rule sets `inset: 0`. Setting top and height while bottom
        stays 0 over-constrains the box, leaving the outcome to the browser's

@@ -21,9 +21,18 @@ const backdropWidth = backdrop
 
 // Responsive candidates, clamped to the same source-width ceiling as
 // backdropWidth above so a phone never pulls a desktop-sized (or upscaled)
-// file. sizes is plain 100vw because the backdrop breaks out of main and spans
-// the viewport — it was previously capped by main's max-width, and the full-bleed
-// change is what makes 100vw correct rather than wasteful.
+// file.
+//
+// sizes is 100vw because the backdrop breaks out of main and spans the
+// viewport. Treat that as a floor rather than an exact figure: the parallax
+// makes the image 140% of the box height, which can flip `object-fit: cover`
+// from scaling by width to scaling by height, and a height-scaled image is
+// wider than the viewport. On a 1280px-wide desktop hero the image renders at
+// roughly 1440 CSS px, so the browser can select one candidate lower than it
+// ideally would. Candidate rounding absorbs most of that on desktop; the gap
+// is larger on narrow screens, where the box is tall relative to its width.
+// Correcting it properly needs breakpointed sizes, which is a bandwidth
+// tradeoff rather than a straight win — see PR #45's review.
 const backdropSrcSetWidths = backdrop
   ? [ ...new Set( [ 480, 800, 1200, 1600, 2000, 2400, backdropWidth ].filter( width => width <= backdropWidth ) ) ]
   : [];

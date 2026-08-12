@@ -68,24 +68,44 @@ animation frames.
 
 ## Implementation
 
-### `overflow: clip` is mandatory
+### `overflow: clip` on the backdrop
 
-`.hero-backdrop` is currently `overflow: hidden`. **`hidden` makes an element a
-scroll container**, so the timeline would resolve against the backdrop, which
-never scrolls, and never advance. `clip` clips identically without creating a
-scroll container.
+`.hero-backdrop` is currently `overflow: hidden`. It must clip something either
+way, because the image is 140% of the box height and would otherwise paint over
+the content below. `clip` is preferred over `hidden` because it clips
+identically without making the element a scroll container, and there is no
+reason for the hero to be one.
 
-This is the same distinction already documented at `global.css:39`, where
-`overflow-x: clip` is used on `html` so the root does not become a scroll
-container and break `position: sticky`. Same two values, opposite direction,
-both silent when wrong.
+**A correction, because an earlier draft of this spec got it wrong and the
+wrong version reached a shipped comment.** That draft claimed `hidden` would
+break the parallax by making the timeline resolve against a box that never
+scrolls. That is true of `scroll(nearest)`, which walks the ancestor chain. It
+is *not* true of `scroll(root block)`, which is what this design uses:
+`root` names the document scroller explicitly and ignores ancestors entirely.
+`hidden` would have clipped correctly and the animation would have worked.
+
+The distinction is still worth knowing — it is the same one documented near the
+top of `global.css`, where `overflow-x: clip` keeps the root from becoming a
+scroll container and breaking `position: sticky` — but it is not what makes this
+rule necessary.
 
 ### The overhang and the travel are coupled
 
-The image is `top: -20%; height: 140%`, so it is taller than its box by 40%. The
-travel is +/-10%. **The overhang must always exceed the travel**, or the image's
-edge slides into view mid-scroll. Changing one without the other is a bug, so
-both values and this constraint belong in one comment.
+The image is `top: -20%; height: 140%`, so it overhangs its box by 20% at the
+top and 20% at the bottom.
+
+**The two percentages are measured against different things, and comparing them
+directly is wrong.** The overhang is a share of the box. The travel is a share
+of the *image*, because `translateY` percentages resolve against the transformed
+element's own height — and the image is 140% of the box. So a +/-10% translate
+is really **+/-14% of the box**, against 20% of overhang per side. The margin is
+6%, not 10%.
+
+**That margin must stay positive**, or the image's edge slides into view
+mid-scroll. Raising the travel to +/-15% looks safe against 20% of overhang and
+is not: it is 21% of the box, and the edge appears. Changing either number
+without the other is a bug, so both values and this arithmetic belong in one
+comment beside them.
 
 ### CSS
 
