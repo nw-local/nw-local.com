@@ -312,6 +312,26 @@ footer {
   animation: glow-pulse 3s ease-in-out infinite;
 }
 
+/* h1/h2 carry a horizontal display-type stretch (see the h1, h2 rule above).
+   That is correct for text and wrong for artwork: it would render the lockup
+   3.85% too wide, distorting the emblem and contradicting the aspect ratio the
+   width/height attributes declare. Neutralise it when the heading holds an
+   image. */
+.hero h1.hero-title-lockup {
+  transform: none;
+  max-width: 100%;
+  letter-spacing: normal;
+  -webkit-text-stroke: 0;
+}
+
+/* 900px at the 1200px content column is the approved scale. Below that the
+   lockup goes fluid, so mobile needs no breakpoint of its own. */
+.hero-lockup {
+  width: 100%;
+  max-width: 900px;
+  height: auto;
+}
+
 /* --- Section Heading --- */
 
 .section-heading {
