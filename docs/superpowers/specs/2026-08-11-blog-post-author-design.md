@@ -154,8 +154,12 @@ Publish/rebuild ordering applies: a Sanity publish rebuilds against `main`, so c
 
 1. Merge the code PR to `main`. Deploy runs green with no author on the existing post; no byline renders.
 2. `make deploy-studio` so the Studio exposes the new type.
-3. Create the `author` document — name, role, bio, photo. **Still needed from the user:** the role
-   and bio text. The photo is prepared (see Author photo below).
+3. Create the `author` document. Name: **Ben Petty**. Role: **Co-Founder**. Photo: prepared (see
+   Author photo below). **Still needed from the user:** the bio text — a draft grounded in the
+   existing About Us copy is awaiting factual corrections. No biographical claim ships unconfirmed:
+   the About page credits "over 20 years" to the company's growers collectively, not to a named
+   person, and an unverified experience claim on an author page is precisely what E-E-A-T scrutiny
+   punishes.
 4. Patch and republish `why-cannabis-turns-purple` with the reference, which triggers the rebuild
    that lights everything up.
 
