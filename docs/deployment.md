@@ -38,6 +38,8 @@ When an editor publishes content, Sanity POSTs to the GitHub Actions `workflow_d
 
 If publishes ever stop triggering deploys, check that webhook URL first — a repo rename leaves it pointing at the old path, and POST bodies do not reliably survive GitHub's 301.
 
+Asset creation triggers a rebuild too, not just document publishes. Uploading an image through `make upload-image` fires the same `workflow_dispatch` webhook, so a session that uploads three images and publishes one document queues four deploys. The concurrency group added in #40 cancels the redundant ones, so this is wasteful rather than harmful, but it does mean "publish equals one rebuild" is the wrong mental model when reasoning about deploy counts.
+
 ## Deploy concurrency
 
 The webhook fires one dispatch per *published document*, not one per publish action. A batch of 22 documents queues 22 builds, all rebuilding `main` against the same dataset. GitHub Pages permits exactly one deployment at a time, so those builds race each other, and any push to `main` landing in the same window loses:
