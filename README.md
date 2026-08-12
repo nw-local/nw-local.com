@@ -97,37 +97,16 @@ There are deliberately no unit tests — the failure modes of a content-driven s
 
 ```text
 .
-├── astro.config.mjs           # site URL + integrations
-├── docs/                      # project docs (testing, SEO) + superpowers specs/plans
-├── Makefile                   # all run/build/image commands
-├── package.json
-├── public/                    # static assets served as-is
-├── src/
-│   ├── components/            # Astro components (Nav, Footer, AgeGate, etc.)
-│   ├── content.config.ts      # content collection schemas (mostly unused — content is in Sanity)
-│   ├── layouts/
-│   │   └── Layout.astro       # base layout: BaseHead, Nav, Footer, AgeGate, fetches site settings
-│   ├── lib/
-│   │   ├── sanity.ts          # Sanity client + ALL GROQ queries
-│   │   ├── image.ts           # urlFor() — Sanity image URL builder
-│   │   ├── jsonld.ts          # JSON-LD schema builders (see docs/seo.md)
-│   │   ├── date.ts            # build-time date formatting, pinned to UTC
-│   │   └── links.ts           # profile URL → display label
-│   ├── pages/
-│   │   ├── index.astro
-│   │   ├── strains/[...slug].astro   # dynamic strain pages via getStaticPaths
-│   │   ├── blog/[...slug].astro      # dynamic blog post pages
-│   │   ├── authors/[...slug].astro   # author bio + their posts (no index page by design)
-│   │   └── ...
-│   └── styles/
-│       └── global.css         # Dark + Electric Green theme via CSS custom properties
-├── scripts/
-│   ├── check-nightly-freshness.sh  # fails if the nightly audit's cron has stalled
-│   ├── prep-images.sh         # HEIC→JPG, dedup, slug-rename
-│   └── upload-image.sh        # POSTs to Sanity asset endpoint
-└── studio/                    # Sanity Studio project (schemas, deployment config)
-    └── schemaTypes/           # document type definitions
+├── astro.config.mjs   # site URL + integrations
+├── Makefile           # all run/build/image commands
+├── docs/              # deployment, content model, SEO, testing, images
+├── public/            # static assets served as-is
+├── scripts/           # image prep/upload, CI health checks
+├── src/               # Astro site: pages, components, layouts, lib
+└── studio/            # Sanity Studio: schemas + sidebar structure
 ```
+
+Two entry points worth knowing: [`src/lib/sanity.ts`](src/lib/sanity.ts) holds the Sanity client and **every** GROQ query, and [`studio/structure.ts`](studio/structure.ts) defines the Studio sidebar — a document type not listed there is appended automatically rather than going missing.
 
 The age-gate overlay (`src/components/AgeGate.astro`) is client-side and uses `localStorage` to persist the 21+ acknowledgement.
 
@@ -135,22 +114,9 @@ The age-gate overlay (`src/components/AgeGate.astro`) is client-side and uses `l
 
 ## Sanity content model
 
-All content types live in `studio/schemaTypes/`. Strain pages and blog post pages are statically generated via `getStaticPaths()`.
+Ten document types live in `studio/schemaTypes/`: `strain`, `product`, `blogPost`, `author`, `retailer`, `page`, `siteSettings`, `retailerPage`, `terpene`, and `glossaryTerm`. Detail pages are statically generated via `getStaticPaths()`.
 
-| Document type     | Purpose                                                                        |
-| ----------------- | ------------------------------------------------------------------------------ |
-| `strain`          | Cannabis strains — effects, terpenes, THC/CBD ranges, hero + gallery images   |
-| `product`         | SKUs (flower, preroll, concentrate, edible) referencing a parent strain        |
-| `blogPost`        | Blog posts with rich text body, tags, hero image, and a required `author` reference |
-| `author`          | Post authors — role, bio, photo, and `sameAs` profile links                   |
-| `retailer`        | Dispensary partners with address, contact info, products carried               |
-| `page`            | Singleton pages (home, about, contact) with flexible body content              |
-| `siteSettings`    | Global config: title, logo, hero lockup, social links, contact info, age gate message |
-| `retailerPage`    | Wholesale singleton page with downloadable product sheets                      |
-| `terpene`         | Terpene reference documents — aroma, effects, foundIn, hero image             |
-| `glossaryTerm`    | Glossary definitions, backlinked from the content that mentions them          |
-
-Strains link to terpenes by **string name** (not by reference). The strain page resolves the matching `terpene` document by slug at render time. Typos silently produce ghost terpenes, so when adding a strain, check existing terpene names first.
+Full table, plus the gotchas worth knowing before you add content or write against the schema: [docs/content-model.md](docs/content-model.md).
 
 ---
 
@@ -160,27 +126,11 @@ Every page emits **JSON-LD structured data** (`Organization` everywhere; `Produc
 
 ## Deployment
 
-The site auto-deploys to GitHub Pages on every push to `main`.
+The site auto-deploys to GitHub Pages on every push to `main`, via [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml). Publishing content in Sanity also triggers a rebuild through a webhook (~1-2 min end-to-end), because the build fetches all content at build time.
 
-```text
-git push origin main
-        │
-        ▼
-GitHub Actions: .github/workflows/deploy.yml
-        │
-        ├── checkout
-        ├── withastro/action@v6 (install, build with secrets injected)
-        └── actions/deploy-pages@v5 → https://www.nw-local.com
-```
+The Studio itself is hosted separately at <https://nw-local.sanity.studio/> and deploys with `make deploy-studio` — **not** with the site. A schema or sidebar change needs that command before editors see it.
 
-**Sanity webhook**: when an editor publishes content in Sanity Studio, Sanity posts to GitHub Actions `workflow_dispatch` to trigger a rebuild (~1-2 min end-to-end).
-
-- Webhook URL: `https://api.github.com/repos/nw-local/nw-local.com/actions/workflows/deploy.yml/dispatches`
-- Projection: `{"ref": "main"}`
-- Auth: fine-grained GitHub PAT with Actions (read/write) on the repo
-- Configured at: sanity.io/manage → project `nyd3p2n0` → API → Webhooks
-
-The Sanity Studio itself (the editor UI) is hosted separately at <https://nw-local.sanity.studio/> and deploys with `make deploy-studio`.
+Webhook config, and the publish/rebuild ordering rule that follows from it: [docs/deployment.md](docs/deployment.md).
 
 ---
 
@@ -203,31 +153,18 @@ A separate `SANITY_WRITE_TOKEN` is used **only** by the image-upload helper scri
 
 ## Image workflow
 
-For uploading strain/blog/retailer images to Sanity. Two scripts orchestrated by `make`:
+Two scripts orchestrated by `make` — `prep-images` converts and dedups against Sanity, `upload-image` uploads with alt text:
 
 ```sh
-# 1. Convert HEIC→JPG, slugify filenames, dedup against Sanity
-make prep-images DIR="path/to/images" STRAIN="Strain Name" \
-    RENAME="IMG_3559.HEIC:bud-closeup,IMG_3561.HEIC:trichome-detail"
-
-# 2. Upload each NEW file with descriptive alt text
+make prep-images DIR="path/to/images" STRAIN="Strain Name"
 make upload-image FILE="path/to/_processed/strain-name-bud-closeup.jpg" \
     LABEL="Short label" \
     DESCRIPTION="SEO-friendly alt text describing the image content"
 ```
 
-`prep-images` writes to a `_processed/` subdirectory inside the source folder. **Keep `_processed/` around** — it acts as the canonical local manifest of what's currently uploaded for that strain, and the dedup logic uses it to detect duplicates and renames on subsequent runs.
+**Keep the generated `_processed/` directory** — it is the local manifest the dedup logic reads on later runs.
 
-Hero images: landscape 4:3, minimum 1200×900. `upload-image` warns when given a portrait image, because a portrait hero gets cropped on the strain detail page.
-
-Author photos are legitimately portrait, so pass `PORTRAIT_OK=1` to suppress that warning:
-
-```sh
-make upload-image FILE="path/to/_processed/ben-petty.jpg" \
-    LABEL="Ben Petty" \
-    DESCRIPTION="SEO-friendly alt text describing the image content" \
-    PORTRAIT_OK=1
-```
+Renames, the hashing contract, orientation handling, and hotspot cropping: [docs/images.md](docs/images.md).
 
 ---
 

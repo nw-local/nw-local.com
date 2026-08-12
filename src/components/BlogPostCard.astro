@@ -3,9 +3,16 @@ import { urlFor } from "../lib/image";
 import { formatPostDate } from "../lib/date";
 import type { BlogPostSummary } from "../lib/sanity";
 
-type Props = BlogPostSummary;
+// The data half of Props comes from the central type so a schema change surfaces
+// here as a type error; showAuthor is presentation, not content, so it is layered
+// on rather than pushed into BlogPostSummary.
+type Props = BlogPostSummary & {
+  // Off on an author page, where every card sits under a "Posts by <name>"
+  // heading and repeating the byline on each one reads as a stutter.
+  showAuthor?: boolean;
+};
 
-const { title, slug, description, publishedAt, heroImage, author } = Astro.props;
+const { title, slug, description, publishedAt, heroImage, author, showAuthor = true } = Astro.props;
 const formattedDate = formatPostDate( publishedAt );
 ---
 
@@ -23,7 +30,7 @@ const formattedDate = formatPostDate( publishedAt );
   </div>
   <div class="card-body">
     <p style="font-size:0.75rem;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:0.5rem;">
-      {formattedDate}{author && ` · ${author.name}`}
+      {formattedDate}{showAuthor && author && ` · ${author.name}`}
     </p>
     <h3>{title}</h3>
     <p>{description}</p>
