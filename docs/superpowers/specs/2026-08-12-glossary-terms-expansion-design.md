@@ -30,7 +30,9 @@ No schema change either: `term`, `slug` and `shortDefinition` already cover it.
 ## Authoring conventions
 
 These govern every future glossary entry, not just this batch. Both were established by user
-correction during this design.
+correction during this design. They are now canonicalized in
+[2026-08-04-glossary-design.md](./2026-08-04-glossary-design.md#authoring-conventions); this section
+is kept as the historical record of where and why they originated.
 
 ### 1. Definitions must stand alone
 
@@ -131,7 +133,7 @@ One `glossaryRef` mark per new term, at first occurrence, matching how the origi
 | Electrical conductivity (EC) | `EC` | "Root zone lag in coco" |
 | DIF | `DIF` | Protocol step 2 |
 
-### Two deviations from strict first-occurrence
+### Three deviations from strict first-occurrence
 
 1. **`Drain-to-waste`** first appears in "in coco drain-to-waste especially", immediately after where
    `coco` is marked. Two adjacent dotted underlines read as a single broken link, so the mark moves
@@ -139,6 +141,10 @@ One `glossaryRef` mark per new term, at first occurrence, matching how the origi
 2. **`Relative humidity`** is first spelled out inside the Buirs citation. The mark goes on the
    bolded "Relative humidity is a function of temperature" instead, where the concept is being
    taught rather than quoted.
+3. **`Cannabinoid`** first appears in the h2 heading "The pigment: anthocyanins, not cannabinoids",
+   before the marked occurrence in the "key structural point" paragraph. Headings are not marked, so
+   the mark sits on the later occurrence, where the term is used in running prose rather than in a
+   title.
 
 ## Verification
 
