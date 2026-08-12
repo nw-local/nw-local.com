@@ -445,7 +445,7 @@ export async function getPage( pageId: string ) {
     `*[_type == "page" && pageId == $pageId][0] {
       _id, title, pageId, seoDescription,
       heroImage { asset->, alt, crop, hotspot },
-      heroImages[] { asset->, alt, crop, hotspot },
+      heroImages[] { asset->, crop, hotspot },
       body[] ${PORTABLE_TEXT_PROJECTION}
     }`,
     { pageId },
