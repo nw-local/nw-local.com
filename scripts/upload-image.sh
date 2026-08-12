@@ -7,10 +7,11 @@
 # Usage:
 #   make upload-image FILE=path/to/image.jpg
 #   make upload-image FILE=path/to/image.jpg LABEL="Hero shot" DESCRIPTION="Alt text here"
+#   make upload-image FILE=path/to/portrait.jpg PORTRAIT_OK=1
 
 set -euo pipefail
 
-FILE="${1:?Usage: upload-image.sh <file> [label] [description]}"
+FILE="${1:?Usage: upload-image.sh <file> [label] [description] [portrait_ok]}"
 LABEL="${2:-}"
 DESCRIPTION="${3:-}"
 # Hero images are cropped to landscape on strain pages, so a portrait upload is

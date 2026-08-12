@@ -4,7 +4,7 @@ import Hero from "../../components/Hero.astro";
 import PortableText from "../../components/PortableText.astro";
 import BlogPostCard from "../../components/BlogPostCard.astro";
 import SectionHeading from "../../components/SectionHeading.astro";
-import { getAuthors, getAuthor, getBlogPostsByAuthor, AUTHOR_BASE_PATH } from "../../lib/sanity";
+import { getAuthors, getAuthor, getBlogPostsByAuthor, getSiteSettings, AUTHOR_BASE_PATH } from "../../lib/sanity";
 import { urlFor } from "../../lib/image";
 import {
   buildPerson,
@@ -32,11 +32,17 @@ const photoUrl = author.photo?.asset
 const ogImage = author.photo?.asset
   ? urlFor( author.photo ).width( 1200 ).height( 630 ).fit( "crop" ).format( "jpg" ).url()
   : undefined;
+const personImageUrl = author.photo?.asset
+  ? urlFor( author.photo ).width( 800 ).height( 800 ).fit( "crop" ).format( "jpg" ).url()
+  : undefined;
+
+const settings = await getSiteSettings();
+const siteName = settings?.siteTitle ?? "Northwest Local Cannabis";
 
 const siteUrl = Astro.site?.toString() ?? "https://www.nw-local.com";
 const baseUrl = normalizeSiteUrl( siteUrl );
 const structuredData: StructuredData[] = [
-  buildPerson({ author, siteUrl, photoUrl: ogImage }),
+  buildPerson({ author, siteUrl, photoUrl: personImageUrl }),
   buildBreadcrumbList( [
     { name: "Home", url: `${baseUrl}/` },
     { name: "Blog", url: `${baseUrl}/blog/` },
@@ -45,7 +51,7 @@ const structuredData: StructuredData[] = [
 ];
 
 const description = author.role
-  ? `${author.name}, ${author.role} at Northwest Local Cannabis.`
+  ? `${author.name}, ${author.role} at ${siteName}.`
   : `Posts by ${author.name}.`;
 ---
 

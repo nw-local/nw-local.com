@@ -34,6 +34,7 @@ Scan all content in Sanity CMS and report quality issues.
 - Missing hero image
 - Missing body content
 - Missing slug
+- Missing author reference
 
 **Retailers:**
 - Missing address fields (address, city, zip)
