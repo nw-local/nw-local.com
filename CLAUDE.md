@@ -66,7 +66,7 @@ No test framework is configured.
 | `retailer` | Dispensary partners with address, contact info, products carried |
 | `page` | Singleton pages (home, about, contact) with flexible body content |
 | `siteSettings` | Global config: title, logo, hero lockup, social links, contact info, age gate message |
-| `retailerPage` | Wholesale page singleton with downloadable product sheets |
+| `retailerPage` | Wholesale page singleton: Cultivera storefront links, contact details, product sheets. Required, since a missing or empty one fails the build |
 
 ## Environment Variables
 
