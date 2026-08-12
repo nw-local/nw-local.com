@@ -43,6 +43,7 @@ No test framework is configured.
 ## Invariants
 
 - **`prep-images` dedup depends on byte-identical conversion output.** SHA-1 is computed on the converted JPG, not the source file, and matched against `sha1hash` on Sanity's image assets. The `sips -s formatOptions 90` setting in `scripts/prep-images.sh` is therefore part of the dedup contract — changing it silently invalidates every existing hash, and duplicate uploads start slipping through.
+- **GitHub disables this repo's nightly cron after 60 days of inactivity, silently.** The repo is public, and it is worked on in bursts with long gaps between them (2026-05-24 → 2026-08-04 was 72 days), so it crosses that line routinely rather than exceptionally. When it happens every signal still reads healthy: `gh workflow list` reports `state: active`, `workflow_dispatch` runs succeed, and nothing fails so no failure email is sent. The only symptom is the *absence* of runs with `event=schedule` — which is why neither a green manual dispatch nor an active-looking workflow is evidence of a working cron. Remedy: `gh workflow disable nightly.yml && gh workflow enable nightly.yml`, then confirm a scheduled run appears within ~24h. `scripts/check-nightly-freshness.sh`, wired into `ci.yml` as the `nightly-freshness` job on pushes to `main`, now fails loudly when this recurs. Background: `docs/superpowers/specs/2026-08-11-nightly-freshness-check-design.md`.
 
 ## Sanity Content Model
 
