@@ -8,12 +8,21 @@ The site emits **JSON-LD structured data** to help search engines understand the
 |------|-----------------|
 | Strain detail (`/strains/[slug]`) | `Organization`, `Product`, `BreadcrumbList` |
 | Blog post (`/blog/[slug]`)        | `Organization`, `Article`, `BreadcrumbList` |
+| Author (`/authors/[slug]`)        | `Organization`, `Person`, `BreadcrumbList` |
 | Terpene detail (`/terpenes/[slug]`) | `Organization`, `BreadcrumbList` |
 | Other pages                       | `Organization` |
 
-The schema-building helpers live in [`src/lib/jsonld.ts`](../src/lib/jsonld.ts) — one function per schema type (`buildOrganization`, `buildProduct`, `buildArticle`, `buildBreadcrumbList`). Pages compose what they need into a `structuredData` array and pass it to `Layout`, which prepends `Organization` and renders each block as a separate `<script type="application/ld+json">` via [`src/components/JsonLd.astro`](../src/components/JsonLd.astro).
+The schema-building helpers live in [`src/lib/jsonld.ts`](../src/lib/jsonld.ts) — one function per schema type (`buildOrganization`, `buildProduct`, `buildArticle`, `buildPerson`, `buildBreadcrumbList`). Pages compose what they need into a `structuredData` array and pass it to `Layout`, which prepends `Organization` and renders each block as a separate `<script type="application/ld+json">` via [`src/components/JsonLd.astro`](../src/components/JsonLd.astro).
 
 Test the output with [Google's Rich Results Test](https://search.google.com/test/rich-results) on any deployed URL.
+
+### Author attribution
+
+Blog posts carry a named `Person` author rather than the site itself, which is a stronger E-E-A-T signal in a regulated, health-adjacent space. `buildArticle` emits a `Person` with a `url` pointing at that author's page, so the byline resolves to a real identity instead of a bare string. Posts with no author fall back to an `Organization` author — that path exists so code can deploy ahead of a content backfill without emitting an `Article` that has lost its author.
+
+The author's `sameAs` array links the `Person` entity to their external profiles. Those same URLs render on the author page as visible links carrying `rel="me"`, the microformats counterpart to `sameAs` — machines get both signals, people get something clickable. Labels are derived from each URL's hostname in [`src/lib/links.ts`](../src/lib/links.ts) rather than authored per link, since `sameAs` accepts URLs and nothing else.
+
+Note that `sameAs` appears on two different entities and they must not be conflated: `Organization.sameAs` carries the brand's accounts from `siteSettings.socialLinks`, while `Person.sameAs` carries the author's personal ones. Each entity links only to profiles representing that same entity.
 
 ## Foundation beyond JSON-LD
 
