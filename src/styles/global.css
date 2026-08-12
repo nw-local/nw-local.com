@@ -11,6 +11,9 @@
   --border: #333333;
   --max-width: 1200px;
   --content-width: 720px;
+  /* main's vertical padding, extracted so the full-bleed hero can cancel it
+     with a negative margin without duplicating the literal. */
+  --page-padding-block: 2rem;
   --font-heading: "Arial Black", "Arial Bold", Gadget, sans-serif;
   /* Headings are drawn oversized and stretched horizontally. The vertical part
      of that used to be a `transform: scale()`, but a transform paints outside
@@ -54,7 +57,7 @@ main {
   width: 100%;
   max-width: var(--max-width);
   margin: 0 auto;
-  padding: 2rem 1.5rem;
+  padding: var(--page-padding-block) 1.5rem;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -430,10 +433,20 @@ footer {
    edge. No border-radius — a full-bleed band has no corners to round. */
 .hero-backdrop {
   position: relative;
-  overflow: hidden;
+  /* clip, not hidden. The parallax image is 140% tall and offset -20%, so
+     clipping is required to keep it from painting outside the hero band.
+     `hidden` would clip it too, but it also makes the element a scroll
+     container — pointless here since nothing inside is meant to scroll.
+     `clip` clips identically without creating one. Same distinction as the
+     `overflow-x: clip` on html near the top of this file, for the same
+     underlying reason. */
+  overflow: clip;
   isolation: isolate;
   width: 100vw;
   margin-inline: calc(50% - 50vw);
+  /* Cancel main's top padding so the photograph meets the nav with no band
+     of page background between them. */
+  margin-top: calc(-1 * var(--page-padding-block));
 }
 
 .hero-backdrop-image {
@@ -443,6 +456,50 @@ footer {
   height: 100%;
   object-fit: cover;
   z-index: 0;
+}
+
+/* The photograph drifts as the page scrolls while the lockup and copy stay
+   put. Three details here are load-bearing, and every one of them fails
+   silently — no error, no warning, just a static image:
+
+   1. scroll(), not view(). view() measures an element's progress through the
+      viewport, starting when it enters from the bottom edge. A hero at the top
+      of the page never enters from below, so a view() timeline starts at a
+      negative position and stays pinned to its first keyframe for most of the
+      hero's time on screen.
+   2. Longhand properties. The `animation` shorthand resets animation-duration
+      to 0s, and a scroll-driven animation needs `auto` to fill its timeline.
+   3. The @supports guard. Without it, a browser lacking scroll-timeline
+      support drops animation-timeline and animation-duration: auto, leaving a
+      0s animation whose `both` fill mode applies the END keyframe forever —
+      a permanent 10% offset rather than no effect.
+
+   The overhang and the travel are coupled: translateY() percentages resolve
+   against the transformed element's own height, so a +/-10% translate on an
+   image 140% the height of its box is really +/-14% of the box, against 20%
+   of overhang on each side. Changing either number without the other is a
+   bug. */
+@supports (animation-timeline: scroll(root block)) {
+  .hero-backdrop-image {
+    /* The base rule sets `inset: 0`. Setting top and height while bottom
+       stays 0 over-constrains the box, leaving the outcome to the browser's
+       tie-breaking rule instead of to intent. Release bottom explicitly. */
+    top: -20%;
+    bottom: auto;
+    height: 140%;
+    will-change: transform;
+    animation-name: hero-parallax;
+    animation-duration: auto;
+    animation-timing-function: linear;
+    animation-fill-mode: both;
+    animation-timeline: scroll(root block);
+    animation-range: 0 100vh;
+  }
+
+  @keyframes hero-parallax {
+    from { transform: translateY(-10%); }
+    to { transform: translateY(10%); }
+  }
 }
 
 /* A flat wash rather than a gradient, deliberately. The previous 55%-to-92%
@@ -965,6 +1022,11 @@ footer {
   .nav-logo-image,
   .portable-text p {
     animation: none;
+  }
+
+  .hero-backdrop-image {
+    animation-name: none;
+    transform: none;
   }
 
   .card {
