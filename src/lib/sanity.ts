@@ -490,20 +490,53 @@ export interface RetailerPageDownloadable {
   url: string;
 }
 
+export interface RetailerPageMarketplace {
+  label: string;
+  audience?: string;
+  url: string;
+}
+
 export interface RetailerPage {
   headline?: string;
   intro?: PortableText;
   contactEmail?: string;
   contactPhone?: string;
+  marketplaces?: RetailerPageMarketplace[];
   downloadables?: RetailerPageDownloadable[];
 }
 
 export async function getRetailerPage() {
-  return sanityClient.fetch<RetailerPage | null>(
+  const page = await sanityClient.fetch<RetailerPage | null>(
     `*[_type == "retailerPage"][0] {
       headline, intro[] ${PORTABLE_TEXT_PROJECTION},
       contactEmail, contactPhone,
+      marketplaces[] { label, audience, url },
       "downloadables": downloadables[] { label, "url": file.asset->url }
     }`,
   );
+
+  // Both the nav and the footer promote /retailers, and every section on that
+  // page is optional-chained. A missing singleton therefore renders a blank page
+  // behind the most prominent CTA on the site, and nothing else fails: not lint,
+  // not astro check, not the build. Fail the build instead.
+  if( !page ) {
+    throw new Error(
+      "No retailerPage document found in Sanity. "
+      + "Create and publish one in the Studio before building.",
+    );
+  }
+
+  // Studio validation is not enforced by the Content Lake, so an entry written
+  // through the HTTP API, the MCP tools, or a script can be missing either field
+  // and would render an unlabelled card or a link to nowhere.
+  page.marketplaces?.forEach( ( marketplace, index ) => {
+    if( !marketplace.label?.trim() || !marketplace.url?.trim() ) {
+      throw new Error(
+        `retailerPage.marketplaces[${index}] is missing a label or a url. `
+        + "Both are required to render a storefront card.",
+      );
+    }
+  });
+
+  return page;
 }
