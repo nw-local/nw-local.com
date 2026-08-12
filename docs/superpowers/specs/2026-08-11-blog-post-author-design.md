@@ -154,13 +154,32 @@ Publish/rebuild ordering applies: a Sanity publish rebuilds against `main`, so c
 
 1. Merge the code PR to `main`. Deploy runs green with no author on the existing post; no byline renders.
 2. `make deploy-studio` so the Studio exposes the new type.
-3. Create the `author` document — name, role, bio, photo. **Needs from the user:** a photo file path
-   and the role/bio text.
+3. Create the `author` document — name, role, bio, photo. **Still needed from the user:** the role
+   and bio text. The photo is prepared (see Author photo below).
 4. Patch and republish `why-cannabis-turns-purple` with the reference, which triggers the rebuild
    that lights everything up.
 
 Issue #29 is open (webhook still points at the pre-rename repo path), so verify the deploy actually
 fires after the step-4 publish and fall back to a manual `workflow_dispatch` if it does not.
+
+### Author photo
+
+Prepared at `Dropbox/Northwest Local Cannabis/www/Blog/Authors/_processed/ben-petty.jpg`
+(2316×3088 portrait), following the `_processed/` convention `prep-images.sh` already writes to.
+
+The source carries **EXIF orientation tag 6** while `sips -g orientation` reports `<nil>` — `sips`
+reads a different metadata slot than the actual EXIF IFD0 tag. The prepared file has the orientation
+baked into the pixels and the tag dropped, so no renderer in the chain can disagree about which way
+is up. Anything re-deriving this asset must bake orientation the same way rather than trusting
+`sips`.
+
+Uploaded at full resolution via `make upload-image`. The Sanity `hotspot` (approximately
+`x: 0.46, y: 0.50`) lets `urlFor()` derive both the small circular byline avatar and the larger
+author page image from the single asset, so no pre-cropped square is uploaded.
+
+`upload-image.sh` warns that portrait images "will be cropped on the strain page" — a false positive
+here, since the check assumes every upload is a strain hero. Author portraits make portrait a
+legitimate shape, so the warning gets scoped to stop firing on non-hero uploads.
 
 ## Testing
 
