@@ -26,6 +26,7 @@ export default defineConfig({
             S.documentTypeListItem('product').title('Products'),
             S.divider(),
             S.documentTypeListItem('blogPost').title('Blog Posts'),
+            S.documentTypeListItem('author').title('Authors'),
             S.divider(),
             S.documentTypeListItem('retailer').title('Retailers'),
             S.listItem()
