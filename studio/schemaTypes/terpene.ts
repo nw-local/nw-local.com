@@ -44,7 +44,8 @@ export const terpeneType = defineType({
       name: 'description',
       title: 'Description',
       type: 'blockContent',
-      description: 'Detailed description of this terpene — what it is, where it occurs in nature, how it affects the cannabis experience',
+      description:
+        'Detailed description of this terpene — what it is, where it occurs in nature, how it affects the cannabis experience',
     }),
     defineField({
       name: 'foundIn',
@@ -52,16 +53,15 @@ export const terpeneType = defineType({
       type: 'array',
       of: [{ type: 'string' }],
       options: { layout: 'tags' },
-      description: 'Where else this terpene occurs in nature (e.g., "mangoes", "lavender", "black pepper")',
+      description:
+        'Where else this terpene occurs in nature (e.g., "mangoes", "lavender", "black pepper")',
     }),
     defineField({
       name: 'heroImage',
       title: 'Hero Image',
       type: 'image',
       options: { hotspot: true },
-      fields: [
-        defineField({ name: 'alt', title: 'Alternative Text', type: 'string' }),
-      ],
+      fields: [defineField({ name: 'alt', title: 'Alternative Text', type: 'string' })],
     }),
     defineField({
       name: 'sortOrder',

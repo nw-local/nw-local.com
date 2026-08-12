@@ -38,9 +38,7 @@ export const pageType = defineType({
       title: 'Hero Image',
       type: 'image',
       options: { hotspot: true },
-      fields: [
-        defineField({ name: 'alt', title: 'Alternative Text', type: 'string' }),
-      ],
+      fields: [defineField({ name: 'alt', title: 'Alternative Text', type: 'string' })],
     }),
     defineField({
       name: 'heroImages',

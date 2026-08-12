@@ -31,7 +31,12 @@ export const blogPostType = defineType({
       type: 'image',
       options: { hotspot: true },
       fields: [
-        defineField({ name: 'alt', title: 'Alternative Text', type: 'string', validation: (rule) => rule.required() }),
+        defineField({
+          name: 'alt',
+          title: 'Alternative Text',
+          type: 'string',
+          validation: (rule) => rule.required(),
+        }),
       ],
     }),
     defineField({

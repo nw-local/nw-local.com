@@ -29,9 +29,7 @@ export const blockContentType = defineType({
             title: 'URL',
             name: 'link',
             type: 'object',
-            fields: [
-              { title: 'URL', name: 'href', type: 'url' },
-            ],
+            fields: [{ title: 'URL', name: 'href', type: 'url' }],
           },
           {
             title: 'Glossary term',

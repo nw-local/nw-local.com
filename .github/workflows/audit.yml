@@ -24,7 +24,7 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
         with:
-          node-version: "22.13"
+          node-version: "22.20"
           cache: yarn
       - run: yarn install --frozen-lockfile
       - run: yarn build
@@ -111,7 +111,7 @@ jobs:
           path: dist/
       - uses: actions/setup-node@v6
         with:
-          node-version: "22.13"
+          node-version: "22.20"
       - uses: treosh/lighthouse-ci-action@v12
         with:
           configPath: ./lighthouserc.json

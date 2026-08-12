@@ -57,9 +57,7 @@ export const productType = defineType({
       title: 'Image',
       type: 'image',
       options: { hotspot: true },
-      fields: [
-        defineField({ name: 'alt', title: 'Alternative Text', type: 'string' }),
-      ],
+      fields: [defineField({ name: 'alt', title: 'Alternative Text', type: 'string' })],
     }),
     defineField({
       name: 'available',

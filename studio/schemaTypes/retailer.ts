@@ -77,9 +77,7 @@ export const retailerType = defineType({
       title: 'Logo',
       type: 'image',
       options: { hotspot: true },
-      fields: [
-        defineField({ name: 'alt', title: 'Alternative Text', type: 'string' }),
-      ],
+      fields: [defineField({ name: 'alt', title: 'Alternative Text', type: 'string' })],
     }),
     defineField({
       name: 'featured',

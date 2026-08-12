@@ -69,18 +69,25 @@ export const strainType = defineType({
       type: 'image',
       options: { hotspot: true },
       fields: [
-        defineField({ name: 'alt', title: 'Alternative Text', type: 'string', validation: (rule) => rule.required() }),
+        defineField({
+          name: 'alt',
+          title: 'Alternative Text',
+          type: 'string',
+          validation: (rule) => rule.required(),
+        }),
       ],
     }),
     defineField({
       name: 'gallery',
       title: 'Gallery',
       type: 'array',
-      of: [{
-        type: 'image',
-        options: { hotspot: true },
-        fields: [{ name: 'alt', title: 'Alternative Text', type: 'string' }],
-      }],
+      of: [
+        {
+          type: 'image',
+          options: { hotspot: true },
+          fields: [{ name: 'alt', title: 'Alternative Text', type: 'string' }],
+        },
+      ],
     }),
     defineField({
       name: 'nextHarvestDate',
