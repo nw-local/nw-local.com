@@ -160,12 +160,14 @@ Call `mcp__Sanity__query_documents`:
 
 ```groq
 *[_id == "4a30c75c-f328-431c-be1f-dac96d67c4fe"][0]{
-  "marks": count(body[].markDefs[_type == "glossaryRef"][]),
+  "marks": count(body[defined(markDefs)].markDefs[][_type == "glossaryRef"]),
   "targets": body[_key in ["b000a","b000p","b0011","b001e","b001v","b002t","b002w","b003i","b003k","b003q","b003u","b004f"]]{_key, "spanKeys": children[]._key}
 }
 ```
 
-Expected: `marks` is `8`, and all 12 target blocks are present with the span keys named in Step 2. If a span key is missing, the block has been edited since this plan was written — stop and report rather than guessing.
+Expected: `marks` is `8`, and all 12 target blocks are present with the span keys named in Step 2.
+
+**The `defined(markDefs)` guard is required.** The body contains 3 image blocks (`figKeracyanin`, `figPathway`, `figTemperature`) with no `markDefs` field at all. Without the guard, flattening yields one `null` per such block and the count comes back 3 too high — 11 here, 28 after patching. Verified against this dataset on 2026-08-12. If a span key is missing, the block has been edited since this plan was written — stop and report rather than guessing.
 
 - [ ] **Step 2: Patch the 12 blocks**
 
@@ -302,16 +304,16 @@ Compare each `joined` value against the original text recorded in the design doc
 
 - [ ] **Step 4: Verify mark count and reference resolution**
 
+Same `defined(markDefs)` guard as Step 1, for the same reason.
+
 ```groq
 *[_id == "4a30c75c-f328-431c-be1f-dac96d67c4fe"][0]{
-  "glossaryMarks": count(body[].markDefs[_type == "glossaryRef"][]),
-  "unresolved": body[].markDefs[_type == "glossaryRef"][]{
-    _key, "ok": defined(term->_id)
-  }[ok == false]
+  "glossaryMarks": count(body[defined(markDefs)].markDefs[][_type == "glossaryRef"]),
+  "unresolved": count(body[defined(markDefs)].markDefs[][_type == "glossaryRef" && !defined(term->_id)])
 }
 ```
 
-Expected: `glossaryMarks` is `25`, `unresolved` is `[]`.
+Expected: `glossaryMarks` is `25`, `unresolved` is `0`.
 
 - [ ] **Step 5: Publish the post**
 
