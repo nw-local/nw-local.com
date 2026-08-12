@@ -269,15 +269,12 @@ footer {
 }
 
 .age-gate-button {
-  color: var(--bg);
   border: none;
   padding: 0.75rem 2rem;
   font-size: 1rem;
-  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
   cursor: pointer;
-  transition: background 0.2s;
 }
 
 .age-gate-deny {
@@ -556,15 +553,21 @@ footer {
 
 /* --- Accent CTA (shared) --- */
 
-/* The accent fill, radius, and hover shared by every call-to-action control.
-   Call sites keep their own sizing, which is where they legitimately differ:
-   the nav CTA is compact, the age gate and storefront buttons are full size.
-   This class deliberately omits color, font-weight, and transition: at (0,1,0)
-   it would lose to `.nav-links a` at (0,1,1), so the nav call site sets those
-   three with !important instead. */
+/* The accent fill, radius, hover, ink color, weight, and hover transition
+   shared by every call-to-action control. Call sites keep their own sizing,
+   which is where they legitimately differ: the nav CTA is compact, the age
+   gate and storefront buttons are full size.
+   `.nav-retailers-cta` still repeats color, font-weight, and transition with
+   `!important` because the nav call site sits inside `.nav-links a` at (0,1,1),
+   which sets exactly those three and would otherwise beat this class at
+   (0,1,0). That is a fact about the nav, not a reason to keep the properties
+   off the shared class. */
 .btn-accent {
   background: var(--accent);
   border-radius: 4px;
+  color: var(--bg);
+  font-weight: 700;
+  transition: background 0.2s;
 }
 
 .btn-accent:hover {
@@ -575,12 +578,16 @@ footer {
   display: inline-block;
   margin-top: 1rem;
   padding: 0.5rem 1.25rem;
-  color: var(--bg);
-  font-weight: 700;
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 1px;
-  transition: background 0.2s;
+}
+
+/* The CTA is a span inside the card link, so `.btn-accent:hover` only fires
+   when the pointer is directly over it. Light it up with the whole card, the
+   same way `.card:hover .card-image img` does. */
+.card:hover .marketplace-card-cta {
+  background: var(--accent-hover);
 }
 
 .marketplace-note {
