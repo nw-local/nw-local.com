@@ -316,6 +316,19 @@ footer {
   max-width: 600px;
 }
 
+/* Paragraphs inherit --text-secondary (#888) globally, which is right against
+   the flat page background the other Hero pages use — roughly 5.3:1 there. Over
+   a backdrop photograph it collapses: measured against the greenhouse photo
+   under the flat scrim, #888 sits at 1.02:1 at worst and only 1.53:1 at the 5th
+   percentile, because a mid-grey on a scrimmed mid-toned photo is grey on grey
+   across nearly the whole area. White takes the same worst case to 3.61:1.
+
+   Scoped to the backdrop so the thirteen Hero pages without one keep the
+   established secondary-text look. */
+.hero-backdrop .hero p {
+  color: var(--text-primary);
+}
+
 .hero-accent {
   width: 60px;
   height: 3px;
