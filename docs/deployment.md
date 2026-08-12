@@ -38,6 +38,27 @@ When an editor publishes content, Sanity POSTs to the GitHub Actions `workflow_d
 
 If publishes ever stop triggering deploys, check that webhook URL first — a repo rename leaves it pointing at the old path, and POST bodies do not reliably survive GitHub's 301.
 
+## Deploy concurrency
+
+The webhook fires one dispatch per *published document*, not one per publish action. A batch of 22 documents queues 22 builds, all rebuilding `main` against the same dataset. GitHub Pages permits exactly one deployment at a time, so those builds race each other, and any push to `main` landing in the same window loses:
+
+```text
+Deployment request failed for b6962b4... due to in progress deployment.
+Please cancel 5618c8f... first or wait for it to complete.
+```
+
+`deploy.yml` declares a workflow-level `concurrency` group so they serialize instead:
+
+```yaml
+concurrency:
+  group: pages-deploy
+  cancel-in-progress: false
+```
+
+`cancel-in-progress: false` is deliberate and follows GitHub's own Pages guidance. A *queued* run is superseded by a newer one, which is what collapses the dispatch storm, since every queued run would build the same thing anyway. A deployment already *in flight* is allowed to finish rather than being interrupted mid-publish. Setting it to `true` would also stop the collision, but it can cancel a live production deploy in order to replace it with an identical one.
+
+The reason this went unnoticed for so long is that it leaves almost no trace. A later dispatch goes green and supersedes the failed run, so the only evidence is one red entry on a workflow nobody watches. Seen 2026-08-12, when a glossary publish collided with a push to `main` ([run 31576537317](https://github.com/nw-local/nw-local.com/actions/runs/31576537317)).
+
 ## Publish/rebuild ordering
 
 The webhook dispatches against `main`. A publish therefore rebuilds using whatever code is on `main` at that moment, **not** the branch you are working on.
