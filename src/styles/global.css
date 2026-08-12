@@ -457,6 +457,48 @@ footer {
   z-index: 0;
 }
 
+/* The photograph drifts as the page scrolls while the lockup and copy stay
+   put. Three details here are load-bearing, and every one of them fails
+   silently — no error, no warning, just a static image:
+
+   1. scroll(), not view(). view() measures an element's progress through the
+      viewport, starting when it enters from the bottom edge. A hero at the top
+      of the page never enters from below, so a view() timeline starts at a
+      negative position and stays pinned to its first keyframe for most of the
+      hero's time on screen.
+   2. Longhand properties. The `animation` shorthand resets animation-duration
+      to 0s, and a scroll-driven animation needs `auto` to fill its timeline.
+   3. The @supports guard. Without it, a browser lacking scroll-timeline
+      support drops animation-timeline and animation-duration: auto, leaving a
+      0s animation whose `both` fill mode applies the END keyframe forever —
+      a permanent 10% offset rather than no effect.
+
+   The overhang and the travel are coupled: the image is 40% taller than its
+   box and travels +/-10%, so its edge never slides into view. Changing either
+   number without the other is a bug. */
+@supports (animation-timeline: scroll()) {
+  .hero-backdrop-image {
+    /* The base rule sets `inset: 0`. Setting top and height while bottom
+       stays 0 over-constrains the box, leaving the outcome to the browser's
+       tie-breaking rule instead of to intent. Release bottom explicitly. */
+    top: -20%;
+    bottom: auto;
+    height: 140%;
+    will-change: transform;
+    animation-name: hero-parallax;
+    animation-duration: auto;
+    animation-timing-function: linear;
+    animation-fill-mode: both;
+    animation-timeline: scroll(root block);
+    animation-range: 0 100vh;
+  }
+
+  @keyframes hero-parallax {
+    from { transform: translateY(-10%); }
+    to { transform: translateY(10%); }
+  }
+}
+
 /* A flat wash rather than a gradient, deliberately. The previous 55%-to-92%
    vertical ramp was chosen against a strain macro, where the subject filled the
    frame evenly. Over real hero photography it failed twice: it buried the most
@@ -977,6 +1019,11 @@ footer {
   .nav-logo-image,
   .portable-text p {
     animation: none;
+  }
+
+  .hero-backdrop-image {
+    animation-name: none;
+    transform: none;
   }
 
   .card {
