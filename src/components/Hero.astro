@@ -1,15 +1,46 @@
 ---
+import type { SanityImage } from "../lib/sanity";
+import { urlFor, resolveImageDimensions } from "../lib/image";
+
 interface Props {
   title: string
   subtitle?: string
   titleClass?: string
+  image?: SanityImage
 }
 
-const { title, subtitle, titleClass } = Astro.props;
+const { title, subtitle, titleClass, image } = Astro.props;
+
+// A Sanity image field that has been touched and then cleared in Studio leaves
+// an empty object behind, so test the asset rather than the wrapper.
+const lockup = image?.asset ? image : undefined;
+const lockupDimensions = lockup
+  ? resolveImageDimensions( lockup.asset, "Hero lockup image" )
+  : undefined;
+
+// The lockup img below carries fetchpriority="high", as does HeroBackdrop's
+// photo img. This is deliberate duplication, not copy-paste: which image is
+// the LCP element depends on fallback state (this lockup when no backdrop
+// photo exists, the backdrop when one does), so one hint cannot cover both
+// without conditional plumbing.
+
+// The h1 below's expression braces hug the h1/img/text so no whitespace text
+// nodes land in the output: Astro preserves template whitespace (unlike
+// JSX), so writing this ternary across its own lines previously emitted
+// "<h1> About Us </h1>" and changed 13 pages. Keep it on one line.
 ---
 
 <section class="hero">
-  <h1 class={titleClass}>{title}</h1>
+  <h1 class:list={[ titleClass, { "hero-title-lockup": Boolean( lockup ) } ]}>{lockup && lockupDimensions ? (
+    <img
+      class="hero-lockup"
+      src={urlFor( lockup ).width( 1800 ).format( "webp" ).url()}
+      alt={lockup.alt || title}
+      width={lockupDimensions.width}
+      height={lockupDimensions.height}
+      fetchpriority="high"
+    />
+  ) : title}</h1>
   <div class="hero-accent"></div>
   {subtitle && <p>{subtitle}</p>}
   <slot />

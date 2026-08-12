@@ -1,18 +1,10 @@
 ---
-import { urlFor, imageDimensions } from "../lib/image";
-
-export interface PortableTextImageAsset {
-  // Raw reference, as stored in the document.
-  _ref?: string;
-  // Dereferenced asset document, as returned by a `asset->` projection.
-  _id?: string;
-  metadata?: { dimensions?: { width?: number; height?: number } };
-}
+import { urlFor, resolveImageDimensions, type SanityImageAssetLike } from "../lib/image";
 
 export interface PortableTextImageNode {
   _type: "image";
   _key?: string;
-  asset?: PortableTextImageAsset;
+  asset?: SanityImageAssetLike;
   alt?: string;
   caption?: string;
 }
@@ -23,28 +15,14 @@ interface Props {
 
 const { node } = Astro.props;
 
-// The body queries in lib/sanity.ts project image blocks with `asset->`, which
-// dereferences the asset document — so `_ref` is absent and `_id` carries the
-// identifier. Accept either shape so this component works against a raw
-// document as well as a dereferenced projection.
-const assetId = node.asset?._ref ?? node.asset?._id;
-
 // astro-portabletext renders unhandled node types into a display:none div, so a
-// malformed image block would vanish from the page instead of failing. Reject it
-// at build time rather than shipping a post with a hole in it.
-if( !assetId ) {
-  throw new Error(
-    `Portable Text image block ${node._key ?? "(no _key)"} has no asset reference. `
-    + "Attach an image to the block in Sanity Studio or remove the block.",
-  );
-}
-
-// A dereferenced asset carries its dimensions directly; a raw reference encodes
-// them in the id.
-const dimensions = node.asset?.metadata?.dimensions;
-const { width, height } = dimensions?.width && dimensions?.height
-  ? { width: dimensions.width, height: dimensions.height }
-  : imageDimensions( assetId );
+// malformed image block would vanish from the page instead of failing. The throw
+// inside resolveImageDimensions rejects it at build time rather than shipping a
+// post with a hole in it.
+const { width, height } = resolveImageDimensions(
+  node.asset,
+  `Portable Text image block ${node._key ?? "(no _key)"}`,
+);
 
 const displayWidth = Math.min( width, 1400 );
 const displayHeight = Math.round( displayWidth * ( height / width ) );

@@ -12,7 +12,7 @@ All content types are defined in `studio/schemaTypes/`. Sanity is the single sou
 | `author` | Post authors — role, bio, photo, and `sameAs` profile links |
 | `retailer` | Dispensary partners with address, contact info, products carried |
 | `page` | Singleton pages (home, about, contact) with flexible body content |
-| `siteSettings` | Global config: title, logo, social links, contact info, age gate message |
+| `siteSettings` | Global config: title, logo, hero lockup, social links, contact info, age gate message |
 | `retailerPage` | Wholesale singleton page with downloadable product sheets |
 | `terpene` | Terpene reference documents — aroma, effects, foundIn, hero image |
 | `glossaryTerm` | Glossary definitions, backlinked from the content that mentions them |

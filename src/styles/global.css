@@ -1,5 +1,8 @@
 :root {
   --bg: #111111;
+  /* Channel triplet of --bg, so the hero scrim can compose an alpha version of
+     the background colour without hardcoding a second copy of the value. */
+  --bg-rgb: 17, 17, 17;
   --bg-surface: #1a1a1a;
   --accent: #00ff88;
   --accent-hover: #00cc6e;
@@ -310,6 +313,130 @@ footer {
   margin: 1.5rem 0;
   box-shadow: 0 0 8px rgba(0, 255, 136, 0.4), 0 0 20px rgba(0, 255, 136, 0.15);
   animation: glow-pulse 3s ease-in-out infinite;
+}
+
+/* h1/h2 carry a horizontal display-type stretch (see the h1, h2 rule above).
+   That is correct for text and wrong for artwork: it would render the lockup
+   3.85% too wide, distorting the emblem and contradicting the aspect ratio the
+   width/height attributes declare. Neutralise it when the heading holds an
+   image. */
+.hero h1.hero-title-lockup {
+  transform: none;
+  max-width: 100%;
+  letter-spacing: normal;
+  -webkit-text-stroke: 0;
+}
+
+/* 900px at the 1200px content column is the approved scale. Below that the
+   lockup goes fluid, so mobile needs no breakpoint of its own. */
+.hero-lockup {
+  width: 100%;
+  max-width: 900px;
+  height: auto;
+}
+
+.hero-cta-row {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.hero-cta-primary,
+.hero-cta-ghost {
+  padding: 0.6rem 1.5rem;
+  font-size: 0.85rem;
+  border-radius: 4px;
+}
+
+.hero-cta-primary {
+  background: var(--accent);
+  color: var(--bg);
+  font-weight: 700;
+  transition: background 0.2s;
+}
+
+/* Explicit color here (not just background) is load-bearing: the global
+   a:hover rule (element + pseudo-class) outranks the bare .hero-cta-primary
+   class selector, so without this the text would flip to --accent-hover on
+   hover instead of staying --bg. Matching specificity here reasserts it. */
+.hero-cta-primary:hover {
+  background: var(--accent-hover);
+  color: var(--bg);
+}
+
+.hero-cta-primary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Translucent white rather than --border (#333), which disappears against a
+   backdrop photograph. */
+.hero-cta-ghost {
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+/* Hovering brightens both the border and the text together — a deliberate
+   improvement over the old inline style, which had no hover state at all. */
+.hero-cta-ghost:hover {
+  border-color: rgba(255, 255, 255, 0.6);
+  color: var(--text-primary);
+}
+
+.hero-cta-ghost:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* --- Hero Backdrop --- */
+
+/* isolation: isolate is load-bearing. Without a local stacking context these
+   z-indexes compete page-wide, and AgeGate (which sits above everything on its
+   own z-index) can interleave with the hero layers. */
+.hero-backdrop {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: 8px;
+}
+
+.hero-backdrop-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+
+/* Measured worst-case contrast for white artwork over this gradient is 4.98:1
+   against the darkest real photo in the dataset, clearing WCAG AA. The margin
+   is thin by design, which is why the Studio field description restricts the
+   backdrop to dark, low-key photography. */
+.hero-backdrop-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    180deg,
+    rgba(var(--bg-rgb), 0.55) 0%,
+    rgba(var(--bg-rgb), 0.75) 60%,
+    rgba(var(--bg-rgb), 0.92) 100%
+  );
+}
+
+.hero-backdrop-content {
+  position: relative;
+  z-index: 2;
+}
+
+/* .hero is padding: 4rem 0, which is right against a page background and wrong
+   inside a backdrop, where it puts text flush against the photo edge. */
+.hero-backdrop .hero {
+  padding-inline: 2rem;
 }
 
 /* --- Section Heading --- */

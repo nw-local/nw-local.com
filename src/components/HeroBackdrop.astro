@@ -1,0 +1,57 @@
+---
+import type { SanityImage } from "../lib/sanity";
+import { urlFor, resolveImageDimensions } from "../lib/image";
+
+interface Props {
+  image?: SanityImage
+}
+
+const { image } = Astro.props;
+
+// Same empty-object guard as Hero: a cleared Sanity image field is truthy.
+const backdrop = image?.asset ? image : undefined;
+
+// Sanity will happily upscale a small source and return double the bytes for no
+// extra detail, so cap the request at the asset's own width. 2400 is twice the
+// 1200px content column, for retina displays.
+const backdropWidth = backdrop
+  ? Math.min( 2400, resolveImageDimensions( backdrop.asset, "Hero backdrop image" ).width )
+  : 0;
+
+// Responsive candidates, clamped to the same source-width ceiling as
+// backdropWidth above so a phone never pulls a desktop-sized (or upscaled)
+// file. The sizes attribute below matches: this box is never the viewport
+// width, it is capped by main's max-width (--max-width: 1200px, minus its
+// 1.5rem side padding), so the slot cannot be 100vw.
+const backdropSrcSetWidths = backdrop
+  ? [ ...new Set( [ 480, 800, 1200, 1600, 2000, backdropWidth ].filter( width => width <= backdropWidth ) ) ]
+  : [];
+const backdropSrcSet = backdrop
+  ? backdropSrcSetWidths
+    .map( width => `${urlFor( backdrop ).width( width ).format( "webp" ).url()} ${width}w` )
+    .join( ", " )
+  : undefined;
+---
+
+{backdrop ? (
+  <div class="hero-backdrop">
+    {/* fetchpriority="high" is deliberate here and on Hero's lockup img: which
+        image is the LCP element depends on fallback state (this photo when
+        present, the lockup when it is not), so one hint cannot cover both
+        without conditional plumbing. */}
+    <img
+      class="hero-backdrop-image"
+      src={urlFor( backdrop ).width( backdropWidth ).format( "webp" ).url()}
+      srcset={backdropSrcSet}
+      sizes="(min-width: 1200px) 1152px, calc(100vw - 3rem)"
+      alt=""
+      fetchpriority="high"
+    />
+    <div class="hero-backdrop-scrim"></div>
+    <div class="hero-backdrop-content">
+      <slot />
+    </div>
+  </div>
+) : (
+  <slot />
+)}

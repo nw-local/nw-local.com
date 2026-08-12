@@ -49,7 +49,7 @@ export interface SanityImage {
     _id?: string;
     _ref?: string;
     url?: string;
-    metadata?: unknown;
+    metadata?: { dimensions?: { width?: number; height?: number } };
   };
   alt?: string;
   caption?: string;
@@ -462,6 +462,7 @@ export interface SiteSettings {
   siteTitle?: string;
   siteDescription?: string;
   logo?: SanityImage;
+  heroLockup?: SanityImage;
   socialLinks?: SocialLinks;
   contactEmail?: string;
   contactPhone?: string;
@@ -474,6 +475,7 @@ export async function getSiteSettings() {
     `*[_type == "siteSettings"][0] {
       siteTitle, siteDescription,
       logo { asset->, alt },
+      heroLockup { asset->, alt },
       socialLinks,
       contactEmail, contactPhone, address,
       ageGateMessage

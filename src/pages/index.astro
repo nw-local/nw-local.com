@@ -1,6 +1,7 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import Hero from "../components/Hero.astro";
+import HeroBackdrop from "../components/HeroBackdrop.astro";
 import SectionHeading from "../components/SectionHeading.astro";
 import StrainCard from "../components/StrainCard.astro";
 import FeaturedPost from "../components/FeaturedPost.astro";
@@ -18,19 +19,18 @@ const latestPost = ( await getBlogPosts() ?? [] )[ 0 ];
   title={page?.title ?? settings?.siteTitle ?? "Northwest Local Cannabis"}
   description={page?.seoDescription ?? settings?.siteDescription ?? "Washington State licensed cannabis producer and processor."}
 >
-  <Hero
-    title={page?.title ?? settings?.siteTitle ?? "Northwest Local Cannabis"}
-    subtitle={page?.seoDescription ?? settings?.siteDescription}
-  >
-    <div style="display:flex;gap:1rem;margin-top:1.5rem;">
-      <a href="/strains" class="nav-retailers-cta" style="text-decoration:none;font-size:0.85rem;padding:0.6rem 1.5rem;">
-        Explore Strains
-      </a>
-      <a href="/retailers" style="border:1px solid var(--border);color:var(--text-secondary);padding:0.6rem 1.5rem;font-size:0.85rem;text-transform:uppercase;letter-spacing:1px;border-radius:4px;">
-        Wholesale
-      </a>
-    </div>
-  </Hero>
+  <HeroBackdrop image={page?.heroImage}>
+    <Hero
+      title={page?.title ?? settings?.siteTitle ?? "Northwest Local Cannabis"}
+      subtitle={page?.seoDescription ?? settings?.siteDescription}
+      image={settings?.heroLockup}
+    >
+      <div class="hero-cta-row">
+        <a href="/strains" class="hero-cta-primary">Explore Strains</a>
+        <a href="/retailers" class="hero-cta-ghost">Wholesale</a>
+      </div>
+    </Hero>
+  </HeroBackdrop>
 
   {featuredStrains.length > 0 && (
     <section class="fade-in" style="margin-top:3rem;">
