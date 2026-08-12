@@ -43,6 +43,20 @@ export const pageType = defineType({
       ],
     }),
     defineField({
+      name: 'heroImages',
+      title: 'Hero Images',
+      type: 'array',
+      of: [
+        {
+          type: 'image',
+          options: {hotspot: true},
+          fields: [defineField({name: 'alt', title: 'Alternative Text', type: 'string'})],
+        },
+      ],
+      description:
+        'Backdrop photographs for the homepage hero, crossfaded in order. The first loads immediately and is what most visitors see; the rest fade in behind it. Leave empty to fall back to the single Hero Image above.',
+    }),
+    defineField({
       name: 'body',
       title: 'Body',
       type: 'blockContent',
