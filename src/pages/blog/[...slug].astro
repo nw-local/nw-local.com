@@ -1,6 +1,7 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import PortableText from "../../components/PortableText.astro";
+import AuthorByline from "../../components/AuthorByline.astro";
 import { getBlogPosts, getBlogPost, getSiteSettings } from "../../lib/sanity";
 import { urlFor } from "../../lib/image";
 import { formatPostDate } from "../../lib/date";
@@ -49,6 +50,11 @@ const structuredData: StructuredData[] = [
       </p>
       <h1>{post.title}</h1>
       <div class="hero-accent"></div>
+      {post.author && (
+        <div style="margin-top:1rem;">
+          <AuthorByline author={post.author} />
+        </div>
+      )}
       {post.tags && post.tags.length > 0 && (
         <div style="display:flex;gap:0.5rem;margin-top:1rem;">
           {post.tags.map( ( tag: string ) => (

@@ -5,7 +5,7 @@ import type { BlogPostSummary } from "../lib/sanity";
 
 type Props = BlogPostSummary;
 
-const { title, slug, description, publishedAt, heroImage } = Astro.props;
+const { title, slug, description, publishedAt, heroImage, author } = Astro.props;
 const formattedDate = formatPostDate( publishedAt );
 const hasHeroImage = Boolean( heroImage?.asset );
 ---
@@ -23,7 +23,7 @@ const hasHeroImage = Boolean( heroImage?.asset );
     </div>
   )}
   <div class="featured-post-body">
-    <p class="featured-post-date">{formattedDate}</p>
+    <p class="featured-post-date">{formattedDate}{author && ` · ${author.name}`}</p>
     <h3>{title}</h3>
     {description && <p>{description}</p>}
     <span class="featured-post-cta">Read post →</span>
