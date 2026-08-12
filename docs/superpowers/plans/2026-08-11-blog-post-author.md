@@ -10,7 +10,9 @@
 
 ## Global Constraints
 
-- **Whitespace inside parens:** codebase style is `function name( arg )` and `if( condition )`. ESLint enforces it; `make format` rewrites tight-paren code automatically.
+- **Two style regimes, split by directory. Do not apply one to the other.**
+  - **`src/`, `scripts/`, root config** — spaced parens (`function name( arg )`, `if( condition )`), double quotes, semicolons, trailing commas. Enforced by the root ESLint config; `make format` rewrites it automatically.
+  - **`studio/`** — its own Prettier config in `studio/package.json`: **no semicolons, single quotes, `bracketSpacing: false`**, and tight parens (`(rule) => rule.required()`). The root ESLint config **explicitly ignores `studio/**`** (`eslint.config.mjs:7`), so `make format` and `yarn lint` never touch these files. Match the surrounding studio files exactly; never reformat them toward the root style.
 - **Descriptive variable names:** no single-character identifiers anywhere, including callback parameters (`post` not `p`, `index` not `i`).
 - **No TypeScript `as` assertions.** Use type guards, narrowing, or `satisfies`.
 - **No `eslint-disable` comments.**
@@ -18,7 +20,7 @@
 - **Accent green (`--accent`, #00ff88) is for emphasis, not surface** — CTAs, links, interactive states. Never a background for large areas.
 - **No test framework is configured.** Verification is `yarn astro check`, `make build`, and reading real built output from `dist/`. Never claim a step passed without running its command and seeing the output.
 - **`author` is required in Sanity validation but optional in the TypeScript type.** Code deploys before the content backfill, so there is a build window where the one existing post has no author. Every byline surface must render conditionally.
-- **Run `make format` before every commit.**
+- **Run `make format` before every commit that touches `src/` or `scripts/`.** It is a no-op for `studio/` (ignored by the root ESLint config), so a studio-only task skips it.
 - **Never boot the dev server.** The user keeps one running. Browser-level checks are requested from the user, not performed here.
 
 ---
@@ -152,24 +154,42 @@ In `studio/sanity.config.ts`, add an Authors entry to the structure list. Place 
             S.documentTypeListItem('author').title('Authors'),
 ```
 
-- [ ] **Step 5: Verify the Studio schema compiles**
+- [ ] **Step 5: Install studio dependencies**
 
-Run: `cd studio && yarn lint`
-Expected: exits 0 with no errors.
+`studio/` is **not** a yarn workspace of the root package — the root `package.json` has no
+`workspaces` field, so `yarn install` at the root never installed studio's dependencies and
+`studio/node_modules` does not exist. Install them once:
 
-Then verify the schema loads without a runtime error:
+Run: `cd studio && yarn install`
+Expected: completes successfully. This is a one-time cost of roughly 1-2 minutes.
 
-Run: `cd studio && npx sanity schema validate`
-Expected: reports the schema is valid, listing `author` among the types. If the subcommand does not exist in this Sanity version, it exits non-zero with a usage message — that is not a failure of this task; move on, since the Astro build in Task 2 is the real gate on the schema being usable.
+- [ ] **Step 6: Verify the studio schema lints and type-checks**
 
-- [ ] **Step 6: Commit**
+`studio/package.json` has no `lint` script, so invoke ESLint directly against studio's own config:
+
+Run: `cd studio && npx eslint .`
+Expected: exits 0 with no output.
+
+Run: `cd studio && npx tsc --noEmit`
+Expected: exits 0 with no output.
+
+These two commands are the only gate on the studio schema before `make deploy-studio` runs during
+rollout. A syntax or type error caught here is cheap; the same error caught at deploy time surfaces
+after the code PR has already merged.
+
+- [ ] **Step 7: Commit**
+
+Do **not** run `make format` — the root ESLint config ignores `studio/**`, so it would be a no-op
+here, and the studio's own style (no semicolons, single quotes) must be preserved.
 
 ```bash
-cd studio && yarn lint
-cd ..
 git add studio/schemaTypes/author.ts studio/schemaTypes/index.ts studio/schemaTypes/blogPost.ts studio/sanity.config.ts
 git commit -m "feat: add author document type and blogPost reference"
 ```
+
+Note `studio/node_modules/` and `studio/yarn.lock` — confirm `git status` shows neither as
+untracked-and-staged. If `studio/yarn.lock` is newly created and untracked, leave it out of this
+commit and report it as a concern rather than deciding unilaterally.
 
 ---
 
