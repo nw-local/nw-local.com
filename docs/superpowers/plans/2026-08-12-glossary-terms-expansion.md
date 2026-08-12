@@ -341,10 +341,12 @@ The design doc is explicit that a fixture does not count as verification here. A
 - [ ] **Step 2: Verify the glossary index has 25 entries**
 
 ```bash
-grep -c 'class="glossary-index-entry"' dist/glossary/index.html
+grep -o 'class="glossary-index-entry"' dist/glossary/index.html | wc -l
 ```
 
 Expected: `25`.
+
+**Do not use `grep -c` here.** It counts matching *lines*, and Astro minifies the output so all 25 entries sit on one line — it returns `1` regardless of how many entries exist. Use `grep -o | wc -l` for occurrence counts in built HTML throughout this task.
 
 - [ ] **Step 3: Verify every new term page generated**
 
@@ -369,11 +371,13 @@ Expected: `25`.
 Then confirm the two hand-placed marks landed on the right words:
 
 ```bash
-grep -o 'href="/glossary/ec"[^>]*>EC<' dist/blog/why-cannabis-turns-purple/index.html
-grep -o 'href="/glossary/dif"[^>]*>DIF<' dist/blog/why-cannabis-turns-purple/index.html
+grep -o 'href="/glossary/ec"[^>]*class="glossary-term"[^>]*>[^<]*<' dist/blog/why-cannabis-turns-purple/index.html
+grep -o 'href="/glossary/dif"[^>]*class="glossary-term"[^>]*>[^<]*<' dist/blog/why-cannabis-turns-purple/index.html
 ```
 
-Expected: one match each.
+Expected: one match each, whose inner text is ` EC ` and ` DIF ` respectively.
+
+**Two things make the naive pattern `>EC<` fail.** `GlossaryTerm.astro` renders its `<slot />` on its own line, so every glossary anchor's inner text is padded with whitespace — the built markup is `> EC <`, never `>EC<`. And each term appears twice in the HTML, since the hover card carries a second link to the same href with class `glossary-tip-cta`. Matching on `class="glossary-term"` selects the real mark and excludes the tooltip CTA.
 
 - [ ] **Step 5: Verify backlinks resolve**
 
