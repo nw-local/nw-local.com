@@ -30,6 +30,16 @@
   padding: 0;
 }
 
+/* The full-bleed hero backdrop is sized in vw, and vw counts the vertical
+   scrollbar's width on platforms that reserve space for one (Windows and Linux;
+   macOS overlay scrollbars do not). Without this, those platforms get a
+   horizontal scrollbar on every page. `clip` rather than `hidden` because
+   `hidden` silently turns the root into a scroll container, which breaks
+   position: sticky for any descendant. */
+html {
+  overflow-x: clip;
+}
+
 body {
   font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
   background-color: var(--bg);
@@ -370,20 +380,24 @@ footer {
 }
 
 /* Translucent white rather than --border (#333), which disappears against a
-   backdrop photograph. */
+   backdrop photograph.
+
+   The text is --text-primary, not --text-secondary. Measured against the
+   greenhouse photo under the flat scrim, #888 bottomed out at 1.00:1 — the grey
+   and the image behind it reach identical luminance, so the label vanishes
+   entirely rather than merely being hard to read. White keeps this button
+   legible without constraining which photographs can be used. */
 .hero-cta-ghost {
   border: 1px solid rgba(255, 255, 255, 0.35);
-  color: var(--text-secondary);
+  color: var(--text-primary);
   text-transform: uppercase;
   letter-spacing: 1px;
   transition: color 0.2s, border-color 0.2s;
 }
 
-/* Hovering brightens both the border and the text together — a deliberate
-   improvement over the old inline style, which had no hover state at all. */
+/* Hovering brightens the border; the text is already at full white. */
 .hero-cta-ghost:hover {
-  border-color: rgba(255, 255, 255, 0.6);
-  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.8);
 }
 
 .hero-cta-ghost:focus-visible {
@@ -395,12 +409,18 @@ footer {
 
 /* isolation: isolate is load-bearing. Without a local stacking context these
    z-indexes compete page-wide, and AgeGate (which sits above everything on its
-   own z-index) can interleave with the hero layers. */
+   own z-index) can interleave with the hero layers.
+
+   The backdrop is a child of `main` (max-width 1200px, centred, 1.5rem side
+   padding) but has to span the viewport, so it breaks out: 50% is half the
+   parent, 50vw is half the viewport, and the difference is the distance to each
+   edge. No border-radius — a full-bleed band has no corners to round. */
 .hero-backdrop {
   position: relative;
   overflow: hidden;
   isolation: isolate;
-  border-radius: 8px;
+  width: 100vw;
+  margin-inline: calc(50% - 50vw);
 }
 
 .hero-backdrop-image {
@@ -412,31 +432,35 @@ footer {
   z-index: 0;
 }
 
-/* Measured worst-case contrast for white artwork over this gradient is 4.98:1
-   against the darkest real photo in the dataset, clearing WCAG AA. The margin
-   is thin by design, which is why the Studio field description restricts the
-   backdrop to dark, low-key photography. */
+/* A flat wash rather than a gradient, deliberately. The previous 55%-to-92%
+   vertical ramp was chosen against a strain macro, where the subject filled the
+   frame evenly. Over real hero photography it failed twice: it buried the most
+   interesting part of the image (a greenhouse canopy sits at the bottom, under
+   what was the heaviest 92% band), and it was not perceptible as a gradient at
+   all — high-frequency foliage gives the eye no smooth surface to read a ramp
+   against, so it registered as uniformly dark at roughly its heaviest value.
+
+   A flat wash is lighter overall, treats the whole photo equally, and is honest
+   about what it is. Legibility now depends on the photograph rather than on
+   where its bright areas happen to fall: pick images whose highlights are not
+   blown out behind the wordmark. */
 .hero-backdrop-scrim {
   position: absolute;
   inset: 0;
   z-index: 1;
-  background: linear-gradient(
-    180deg,
-    rgba(var(--bg-rgb), 0.55) 0%,
-    rgba(var(--bg-rgb), 0.75) 60%,
-    rgba(var(--bg-rgb), 0.92) 100%
-  );
+  background: rgba(var(--bg-rgb), 0.42);
 }
 
+/* The backdrop spans the viewport; its contents must not. This re-imposes the
+   same column geometry `main` provides, so the lockup and copy stay aligned
+   with the sections below the hero. */
 .hero-backdrop-content {
   position: relative;
   z-index: 2;
-}
-
-/* .hero is padding: 4rem 0, which is right against a page background and wrong
-   inside a backdrop, where it puts text flush against the photo edge. */
-.hero-backdrop .hero {
-  padding-inline: 2rem;
+  width: 100%;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding-inline: 1.5rem;
 }
 
 /* --- Section Heading --- */

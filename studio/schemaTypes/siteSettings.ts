@@ -32,8 +32,11 @@ export const siteSettingsType = defineType({
       type: 'image',
       description:
         'Emblem + wordmark shown as the homepage headline. White artwork on a '
-        + 'transparent background. Pair only with dark, low-key hero photography: '
-        + 'a bright photo will wash out the wordmark.',
+        + 'transparent background. What matters in the hero photo behind it is '
+        + 'not overall darkness but where the bright areas fall: avoid images '
+        + 'with blown-out highlights in the upper half, since that is where the '
+        + 'wordmark sits. A warm, mid-toned photo is fine; one lamp in the wrong '
+        + 'place is not.',
       fields: [
         defineField({ name: 'alt', title: 'Alternative Text', type: 'string' }),
       ],
