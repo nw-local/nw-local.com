@@ -433,12 +433,13 @@ footer {
    edge. No border-radius — a full-bleed band has no corners to round. */
 .hero-backdrop {
   position: relative;
-  /* clip, not hidden. `hidden` makes an element a scroll container, which
-     would leave the parallax timeline in Task 2 resolving against a box that
-     never scrolls — the animation would attach, report as running, and never
-     advance a single frame. `clip` clips identically without creating one.
-     Same distinction as the `overflow-x: clip` on html near the top of this
-     file, for the same underlying reason. */
+  /* clip, not hidden. The parallax image is 140% tall and offset -20%, so
+     clipping is required to keep it from painting outside the hero band.
+     `hidden` would clip it too, but it also makes the element a scroll
+     container — pointless here since nothing inside is meant to scroll.
+     `clip` clips identically without creating one. Same distinction as the
+     `overflow-x: clip` on html near the top of this file, for the same
+     underlying reason. */
   overflow: clip;
   isolation: isolate;
   width: 100vw;
@@ -473,10 +474,12 @@ footer {
       0s animation whose `both` fill mode applies the END keyframe forever —
       a permanent 10% offset rather than no effect.
 
-   The overhang and the travel are coupled: the image is 40% taller than its
-   box and travels +/-10%, so its edge never slides into view. Changing either
-   number without the other is a bug. */
-@supports (animation-timeline: scroll()) {
+   The overhang and the travel are coupled: translateY() percentages resolve
+   against the transformed element's own height, so a +/-10% translate on an
+   image 140% the height of its box is really +/-14% of the box, against 20%
+   of overhang on each side. Changing either number without the other is a
+   bug. */
+@supports (animation-timeline: scroll(root block)) {
   .hero-backdrop-image {
     /* The base rule sets `inset: 0`. Setting top and height while bottom
        stays 0 over-constrains the box, leaving the outcome to the browser's
