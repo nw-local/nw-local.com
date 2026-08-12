@@ -85,6 +85,26 @@ The guard must be `image?.asset`, not `image`. A Sanity image field that has
 been touched and then cleared in Studio leaves `{}` behind, which is truthy.
 This matches how `Nav.astro:26` and `about-us.astro:17` both test `?.asset`.
 
+**The heading stretch must be neutralized.** `global.css:55-64` applies
+`transform: scaleX( var(--heading-stretch-x) )` (1.0385) plus a compensating
+`max-width: calc( 100% / var(--heading-stretch-x) )` and a
+`-webkit-text-stroke` to every `h1` and `h2`. Those exist to stretch display
+type, and they apply to an `<img>` child just as readily as to text: the lockup
+would render 3.85% too wide, distorting the emblem and breaking the aspect
+ratio the `width`/`height` attributes declare.
+
+Hero therefore applies a modifier class to the `h1` itself whenever it is
+rendering an image, rather than leaving it to the caller:
+
+```css
+.hero h1.hero-title-lockup {
+  transform: none;
+  max-width: 100%;
+  letter-spacing: normal;
+  -webkit-text-stroke: 0;
+}
+```
+
 Hero is imported by 14 pages. The change is purely additive: the other 13 call
 `<Hero title=... />` unchanged and must render byte-identically.
 
