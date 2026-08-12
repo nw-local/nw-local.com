@@ -74,7 +74,7 @@ Call `mcp__Sanity__query_documents` with `perspective: "published"`:
 {
   "total": count(*[_type == "glossaryTerm"]),
   "overLength": *[_type == "glossaryTerm" && length(shortDefinition) > 200].term,
-  "emDashes": *[_type == "glossaryTerm" && shortDefinition match "*—*"].term,
+  "emDashes": *[_type == "glossaryTerm" && count(string::split(shortDefinition, "—")) > 1].term,
   "missingSlug": *[_type == "glossaryTerm" && !defined(slug.current)].term,
   "ecSlug": *[_id == "glossary-ec"][0].slug.current
 }
@@ -83,11 +83,13 @@ Call `mcp__Sanity__query_documents` with `perspective: "published"`:
 Expected exactly:
 - `total`: `25`
 - `overLength`: `[]`
-- `emDashes`: `[]`
+- `emDashes`: `["Chlorophyll"]`
 - `missingSlug`: `[]`
 - `ecSlug`: `"ec"`
 
-If `emDashes` is non-empty it will list the 4 original entries that still contain them; those are fixed in Task 2. Any *new* term appearing there is a failure of this task.
+**Do not use `shortDefinition match "*—*"` for this check.** GROQ's `match` is a full-text operator: it tokenizes both operands and discards punctuation, so the pattern collapses to a wildcard and returns every document. Verified against this dataset on 2026-08-12 — it returned all 25. Use the `string::split` form above, which is a true substring test.
+
+`Chlorophyll` is the only pre-existing entry containing a literal em dash, and Task 2 removes it. The other three Task 2 rewrites violate the standalone rule but contain no em dash. Any *new* `glossary-*` term appearing in `emDashes` is a failure of this task.
 
 ---
 
@@ -120,17 +122,19 @@ Call `mcp__Sanity__publish_documents` with those 4 `_id`s.
 
 Call `mcp__Sanity__query_documents` with `perspective: "published"`:
 
+Use `string::split` for every check. `match` is a tokenizing full-text operator and cannot test for a literal substring (see the note in Task 1 Step 4).
+
 ```groq
 *[_type == "glossaryTerm" && (
-  shortDefinition match "*—*" ||
-  shortDefinition match "*purpling*" ||
-  shortDefinition match "*than color*" ||
-  shortDefinition match "*unrelated to cannabinoids*" ||
-  shortDefinition match "*that induces anthocyanin*"
+  count(string::split(shortDefinition, "—")) > 1 ||
+  count(string::split(shortDefinition, "purpling")) > 1 ||
+  count(string::split(shortDefinition, "than color")) > 1 ||
+  count(string::split(shortDefinition, "unrelated to cannabinoids")) > 1 ||
+  count(string::split(shortDefinition, "that induces anthocyanin")) > 1
 )]{term, shortDefinition}
 ```
 
-Expected: `[]`.
+Expected: `[]`. This asserts across all 25 terms, so it also re-confirms Task 1's output.
 
 ---
 
