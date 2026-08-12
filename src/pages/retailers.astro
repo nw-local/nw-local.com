@@ -8,20 +8,37 @@ import { getRetailerPage } from "../lib/sanity";
 const page = await getRetailerPage();
 ---
 
-<Layout title="For Retailers" description="Partner with Northwest Local Cannabis — wholesale info for dispensary buyers.">
-  <Hero title={page?.headline ?? "For Retailers"} />
+<Layout title="Wholesale" description="Wholesale ordering for licensed Washington retailers and producer/processors.">
+  <Hero title={page.headline ?? "Wholesale"} />
 
   <div style="max-width:var(--content-width);">
-    {page?.intro && <PortableText value={page.intro} />}
+    {page.intro && <PortableText value={page.intro} />}
 
-    {( page?.contactEmail || page?.contactPhone ) && (
+    {page.marketplaces && page.marketplaces.length > 0 && (
+      <section style="margin-top:2rem;">
+        <div class="card-grid">
+          {page.marketplaces.map( marketplace => (
+            <a class="card" href={marketplace.url} target="_blank" rel="noopener">
+              <div class="card-body">
+                <h3>{marketplace.label}</h3>
+                {marketplace.audience && <p>{marketplace.audience}</p>}
+                <span class="btn-accent marketplace-card-cta">Shop on Cultivera</span>
+              </div>
+            </a>
+          ) )}
+        </div>
+        <p class="marketplace-note">A licensed buyer account is required to view pricing and place orders.</p>
+      </section>
+    )}
+
+    {( page.contactEmail || page.contactPhone ) && (
       <section style="margin-top:2rem;">
         <h3 style="text-transform:uppercase;letter-spacing:2px;font-size:0.85rem;color:var(--accent);margin-bottom:1rem;">Wholesale Inquiries</h3>
         <ContactInfo email={page.contactEmail} phone={page.contactPhone} />
       </section>
     )}
 
-    {page?.downloadables && page.downloadables.length > 0 && (
+    {page.downloadables && page.downloadables.length > 0 && (
       <section style="margin-top:2rem;">
         <h3 style="text-transform:uppercase;letter-spacing:2px;font-size:0.85rem;color:var(--accent);margin-bottom:1rem;">Downloads</h3>
         <ul style="list-style:none;display:grid;gap:0.75rem;">

@@ -13,7 +13,7 @@ All content types are defined in `studio/schemaTypes/`. Sanity is the single sou
 | `retailer` | Dispensary partners with address, contact info, products carried |
 | `page` | Singleton pages (home, about, contact) with flexible body content |
 | `siteSettings` | Global config: title, logo, hero lockup, social links, contact info, age gate message |
-| `retailerPage` | Wholesale singleton page with downloadable product sheets |
+| `retailerPage` | Wholesale singleton page: Cultivera storefront links, contact details, downloadable product sheets |
 | `terpene` | Terpene reference documents — aroma, effects, foundIn, hero image |
 | `glossaryTerm` | Glossary definitions, backlinked from the content that mentions them |
 
@@ -36,6 +36,14 @@ Any code path that creates documents has to enforce required fields itself. Addi
 ### Registering a type is not enough to edit it
 
 A document type registered in `studio/schemaTypes/index.ts` but absent from the sidebar in `studio/structure.ts` exists in the dataset and renders on the public site, while being invisible in the Studio. `structure.ts` now appends any unlisted document type automatically under its raw type name, so this cannot recur — but a type showing up with an ugly lowercase name is the signal that it needs a proper entry.
+
+### `retailerPage` is required for the build to succeed
+
+Unlike every other content type, a missing or half-filled `retailerPage` fails the build rather than degrading. `getRetailerPage()` in `src/lib/sanity.ts` throws when the singleton is absent, when its `marketplaces` array is empty, and when any entry is missing a `label` or a `url`. Deleting that document, or removing its last storefront, breaks deploys site-wide until it is restored.
+
+That is deliberate. The page is promoted by a dedicated CTA in the nav and a link in the footer, and every section on it is optional-chained, so before the guards existed a missing document rendered a bare hero and looked intentional. Nothing failed: not lint, not `astro check`, not the build. Failing loudly is the only way an operator finds out.
+
+Both guards are verified by observed failure rather than by assertion. To re-check either, temporarily break the GROQ filter or project `"marketplaces": []`, confirm `make build` fails, then revert.
 
 ### The dataset is public
 

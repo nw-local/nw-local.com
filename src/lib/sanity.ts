@@ -490,20 +490,70 @@ export interface RetailerPageDownloadable {
   url: string;
 }
 
+export interface RetailerPageMarketplace {
+  label: string;
+  audience?: string;
+  url: string;
+}
+
 export interface RetailerPage {
   headline?: string;
   intro?: PortableText;
   contactEmail?: string;
   contactPhone?: string;
+  marketplaces?: RetailerPageMarketplace[];
   downloadables?: RetailerPageDownloadable[];
 }
 
 export async function getRetailerPage() {
-  return sanityClient.fetch<RetailerPage | null>(
+  const page = await sanityClient.fetch<RetailerPage | null>(
     `*[_type == "retailerPage"][0] {
       headline, intro[] ${PORTABLE_TEXT_PROJECTION},
       contactEmail, contactPhone,
+      marketplaces[] { label, audience, url },
       "downloadables": downloadables[] { label, "url": file.asset->url }
     }`,
   );
+
+  // Both the nav and the footer promote /retailers, and every section on that
+  // page is optional-chained. A missing singleton therefore renders a blank page
+  // behind the most prominent CTA on the site, and nothing else fails: not lint,
+  // not astro check, not the build. Fail the build instead.
+  if( !page ) {
+    throw new Error(
+      `No retailerPage document found in the "${SANITY_DATASET}" dataset. `
+      + "Create and publish one at https://nw-local.sanity.studio/ before building.",
+    );
+  }
+
+  // The storefront cards are the reason the page exists, so an empty array is
+  // not an empty section: it publishes a Wholesale page that promises ordering
+  // and offers no way to order. The optional chain below and the .length > 0
+  // guard in retailers.astro both pass silently on zero entries, so the only
+  // place this can be caught is here.
+  if( !page.marketplaces?.length ) {
+    throw new Error(
+      `retailerPage in the "${SANITY_DATASET}" dataset has no marketplaces. `
+      + "Add at least one Cultivera storefront at https://nw-local.sanity.studio/ before building.",
+    );
+  }
+
+  // Studio validation is not enforced by the Content Lake, so an entry written
+  // through the HTTP API, the MCP tools, or a script can be missing either field
+  // and would render an unlabelled card or a link to nowhere.
+  page.marketplaces.forEach( ( marketplace, index ) => {
+    const missingFields: string[] = [];
+    if( !marketplace.label?.trim() ) missingFields.push( "label" );
+    if( !marketplace.url?.trim() ) missingFields.push( "url" );
+
+    if( missingFields.length ) {
+      throw new Error(
+        `retailerPage.marketplaces[${index}] in the "${SANITY_DATASET}" dataset `
+        + `is missing: ${missingFields.join( ", " )}. `
+        + "Fill it in at https://nw-local.sanity.studio/ before building.",
+      );
+    }
+  });
+
+  return page;
 }
