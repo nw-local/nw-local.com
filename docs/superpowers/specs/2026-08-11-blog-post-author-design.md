@@ -47,7 +47,15 @@ use only".
 | `bio` | `blockContent` | optional rich text, rendered by the existing `PortableText.astro` |
 | `sameAs` | array of URL strings | optional, `rule.uri()` validated. Feeds schema.org `Person.sameAs` |
 
-Registered in `studio/schemaTypes/index.ts`.
+Registered in `studio/schemaTypes/index.ts` **and** added to the `structureTool` list in
+`studio/sanity.config.ts`. That second step is not optional: the Studio uses an explicit structure
+list enumerating document types one at a time, so a type registered in `schemaTypes` alone exists
+but is invisible in the sidebar — leaving nowhere to create the author document during rollout.
+
+The same omission already affects shipped content: `glossaryTerm` (8 documents) and `terpene` (7
+documents) are registered but absent from the structure list, so neither is browsable in the Studio
+today. That is a pre-existing bug unrelated to this work and is reported separately rather than
+folded in here.
 
 `blogPost` gains `author`: a `reference` to `author`, `validation: rule.required()`.
 
@@ -154,17 +162,34 @@ Publish/rebuild ordering applies: a Sanity publish rebuilds against `main`, so c
 
 1. Merge the code PR to `main`. Deploy runs green with no author on the existing post; no byline renders.
 2. `make deploy-studio` so the Studio exposes the new type.
-3. Create the `author` document. Name: **Ben Petty**. Role: **Co-Founder**. Photo: prepared (see
-   Author photo below). **Still needed from the user:** the bio text — a draft grounded in the
-   existing About Us copy is awaiting factual corrections. No biographical claim ships unconfirmed:
-   the About page credits "over 20 years" to the company's growers collectively, not to a named
-   person, and an unverified experience claim on an author page is precisely what E-E-A-T scrutiny
-   punishes.
+3. Create the `author` document. Name **Ben Petty**, role **Co-Founder**, photo prepared (see Author
+   photo below), plus the bio and `sameAs` links below.
 4. Patch and republish `why-cannabis-turns-purple` with the reference, which triggers the rebuild
    that lights everything up.
 
 Issue #29 is open (webhook still points at the pre-rename repo path), so verify the deploy actually
 fires after the step-4 publish and fall back to a manual `workflow_dispatch` if it does not.
+
+### Author content
+
+Bio, confirmed by the user, a single paragraph:
+
+> Ben Petty is a co-founder of Northwest Local Cannabis. He has been in the game for over twenty
+> years — on and off, growing and in distribution — working through Washington's medical and legacy
+> markets long before the licensed system existed. Two decades of learning the plant by hand rather
+> than from a manual.
+
+Written fresh rather than lifted from the About Us page, at the user's request, so the two pages
+complement instead of echo. The experience claim is the user's own wording: "on and off … whether
+growing or in distribution." An earlier draft's flat "over 20 years growing" was both narrower and
+less accurate — the industry-spanning version is the bigger claim *and* the defensible one.
+
+`sameAs` (personal accounts, distinct from the brand accounts in `siteSettings.socialLinks`):
+`ben-petty.com`, `audeos.com`, `linkedin.com/in/benjaminpetty`, `instagram.com/audeos`,
+`tiktok.com/@audeos1`, `twitter.com/audeos`.
+
+`ben-petty.com` also exposes a personal email and phone number. Neither goes into Sanity: the
+dataset is world-readable without a token.
 
 ### Author photo
 
