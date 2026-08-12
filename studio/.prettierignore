@@ -1,0 +1,3 @@
+# Build output and the lockfile. node_modules is ignored by Prettier already.
+dist/
+yarn.lock
