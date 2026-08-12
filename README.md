@@ -46,7 +46,7 @@ cd nw-local.com
 make install
 
 # 3. Environment
-cp .env.example .env  # if present, otherwise see "Environment variables" below
+cp .env.example .env  # then fill it in — see "Environment variables" below
 # fill in SANITY_PROJECT_ID, SANITY_DATASET, SANITY_API_TOKEN, PUBLIC_GOOGLE_ANALYTICS_ID
 
 # 4. Dev

@@ -8,6 +8,14 @@
   --accent-hover: #00cc6e;
   --text-primary: #ffffff;
   --text-secondary: #888888;
+  /* Third rung between the two above, for bold inside body copy. Bold on a dark
+     theme is weak when it differs only in stroke weight, because the eye reads
+     lightness faster than weight. #c4c4c4 is the perceptual midpoint, not the
+     arithmetic one: --text-secondary sits at L* 57 and --text-primary at 100, so
+     the middle is L* 78. Splitting the hex numerically gives #c0c0c0 and lands
+     slightly dark of centre. Stay below --text-primary; bold that approaches
+     white competes with headings instead of sitting a step under them. */
+  --text-emphasis: #c4c4c4;
   --border: #333333;
   --max-width: 1200px;
   --content-width: 720px;
@@ -896,6 +904,7 @@ footer {
 .portable-text h2 { margin: 2rem 0 1rem; }
 .portable-text h3 { margin: 1.5rem 0 0.75rem; }
 .portable-text p { margin-bottom: 1.25em; }
+.portable-text strong { color: var(--text-emphasis); }
 .portable-text ul, .portable-text ol { margin: 0 0 1.25em 1.5em; color: var(--text-secondary); }
 .portable-text li { margin-bottom: 0.5em; }
 .portable-text blockquote {
