@@ -33,6 +33,7 @@ export const retailerPageType = defineType({
       description:
         'Cultivera Market storefronts. Rendered as call-to-action cards in the order listed.',
       type: 'array',
+      validation: (rule) => rule.required().min(1),
       of: [
         {
           type: 'object',
