@@ -10,6 +10,26 @@
 
 **Spec:** `docs/superpowers/specs/2026-08-12-hero-parallax-design.md`
 
+> **Executed and merged as PR #45.** The steps below are kept as the record of
+> how it was built. Three claims in them turned out to be wrong; the shipped
+> code is correct, but do not re-derive anything from these without reading
+> this first:
+>
+> 1. **`overflow: clip` is not required by the timeline.** Tasks 1 and 2 below
+>    say `hidden` would leave the timeline resolving against a box that never
+>    scrolls. That holds for `scroll(nearest)`; it does not hold for the
+>    `scroll(root block)` that shipped, which names the document scroller and
+>    ignores ancestors. `clip` is still right — the image is 140% of the box
+>    height and must be clipped — but for that reason, not this one.
+> 2. **The overhang/travel arithmetic compares different denominators.** Travel
+>    is a share of the image, which is 140% of the box, so +/-10% is +/-14% of
+>    the box against 20% of overhang per side. The margin is 6%, not 10%. See
+>    the corrected section in the spec.
+> 3. **Task 3's expected spread of "roughly 90-100px" is wrong.** Measured on
+>    the built page it is ~192px, and it scales with viewport height, because
+>    `animation-range` is keyed to `100vh` while the hero is content-sized. The
+>    original figure came from a single demo measurement at one window size.
+
 ## Global Constraints
 
 - **No test framework exists in this project.** `yarn astro check` (what CI runs, `ci.yml:23`) must hold at **0 errors, 0 warnings, 5 pre-existing hints**. Plus `make build`. Do not add a test framework.
