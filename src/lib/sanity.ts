@@ -49,7 +49,7 @@ export interface SanityImage {
     _id?: string;
     _ref?: string;
     url?: string;
-    metadata?: unknown;
+    metadata?: { dimensions?: { width?: number; height?: number } };
   };
   alt?: string;
   caption?: string;

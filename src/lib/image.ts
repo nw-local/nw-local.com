@@ -27,3 +27,32 @@ export function imageDimensions( assetRef: string ): ImageDimensions {
   }
   return { width: Number( match[ 1 ] ), height: Number( match[ 2 ] ) };
 }
+
+// Both raw documents and `asset->` projections flow through the components that
+// need dimensions: a raw reference carries `_ref` and no metadata, while a
+// dereferenced asset carries `_id` plus a populated `metadata.dimensions`.
+// Accept either shape so callers do not each reimplement the fallback.
+export interface SanityImageAssetLike {
+  _ref?: string;
+  _id?: string;
+  metadata?: { dimensions?: { width?: number; height?: number } };
+}
+
+export function resolveImageDimensions(
+  asset: SanityImageAssetLike | undefined,
+  context: string,
+): ImageDimensions {
+  const dimensions = asset?.metadata?.dimensions;
+  if( dimensions?.width && dimensions?.height ) {
+    return { width: dimensions.width, height: dimensions.height };
+  }
+
+  const assetId = asset?._ref ?? asset?._id;
+  if( !assetId ) {
+    throw new Error(
+      `${context} has no asset reference. Attach an image in Sanity Studio or remove the field.`,
+    );
+  }
+
+  return imageDimensions( assetId );
+}
