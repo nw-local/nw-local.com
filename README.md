@@ -80,16 +80,11 @@ Run `make` (no args) to print the full target list with descriptions.
 | Prep images         | `make prep-images`   | see [Image workflow](#image-workflow)                |
 | Upload image        | `make upload-image`  | see [Image workflow](#image-workflow)                |
 | Check nightly cron  | `make check-nightly` | fails if the nightly audit's schedule has stalled    |
+| Studio lint         | `cd studio && yarn lint` | separate project; the root's ESLint ignores it   |
+| Studio type check   | `cd studio && yarn typecheck` |                                             |
+| Studio format       | `cd studio && yarn format` | Prettier; `format:check` verifies instead      |
 
-`studio/` is a separate project with its own tooling, which the root's ESLint and Prettier deliberately ignore. Its checks run from inside that directory and are verified by the `studio` job in CI:
-
-```sh
-cd studio
-yarn lint          # ESLint (@sanity/eslint-config-studio)
-yarn typecheck     # tsc --noEmit
-yarn format        # Prettier, writes
-yarn format:check  # Prettier, verifies
-```
+The `studio` job in CI runs the three studio checks on every PR.
 
 ---
 
