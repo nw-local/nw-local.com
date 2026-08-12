@@ -12,7 +12,7 @@ Customer-facing website for **Northwest Local Cannabis**, a Washington State i50
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Deployed](https://img.shields.io/badge/site-nw--local.com-1f6feb)](https://www.nw-local.com)
 
-The site is a static, content-driven catalog of strains, products, blog posts, and retail partners. Content is authored in [Sanity Studio](https://nw-local.sanity.studio/), built into static HTML by [Astro](https://astro.build) at deploy time, and hosted on [GitHub Pages](https://pages.github.com/).
+The site is a static, content-driven catalog of strains, products, and retail partners, alongside a blog and a reference section covering terpenes and cannabis terminology. Content is authored in [Sanity Studio](https://nw-local.sanity.studio/), built into static HTML by [Astro](https://astro.build) at deploy time, and hosted on [GitHub Pages](https://pages.github.com/).
 
 ---
 
@@ -109,7 +109,10 @@ There are deliberately no unit tests — the failure modes of a content-driven s
 │   │   └── Layout.astro       # base layout: BaseHead, Nav, Footer, AgeGate, fetches site settings
 │   ├── lib/
 │   │   ├── sanity.ts          # Sanity client + ALL GROQ queries
-│   │   └── image.ts           # urlFor() — Sanity image URL builder
+│   │   ├── image.ts           # urlFor() — Sanity image URL builder
+│   │   ├── jsonld.ts          # JSON-LD schema builders (see docs/seo.md)
+│   │   ├── date.ts            # build-time date formatting, pinned to UTC
+│   │   └── links.ts           # profile URL → display label
 │   ├── pages/
 │   │   ├── index.astro
 │   │   ├── strains/[...slug].astro   # dynamic strain pages via getStaticPaths
