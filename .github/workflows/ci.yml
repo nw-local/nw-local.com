@@ -27,6 +27,30 @@ jobs:
           SANITY_API_TOKEN: ${{ secrets.SANITY_API_TOKEN }}
           PUBLIC_GOOGLE_ANALYTICS_ID: ${{ secrets.PUBLIC_GOOGLE_ANALYTICS_ID }}
 
+  # studio/ is a separate project with its own package manager, its own ESLint
+  # config, and its own Prettier config, and the root's tooling explicitly
+  # ignores it. Nothing verified it until this job existed, which is how the
+  # Prettier config drifted away from every file it was supposed to govern.
+  # No secrets: the Studio does not read the site's build-time env vars.
+  studio:
+    name: Studio checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22.13"
+          cache: yarn
+          cache-dependency-path: studio/yarn.lock
+      - run: yarn install --frozen-lockfile
+        working-directory: studio
+      - run: yarn lint
+        working-directory: studio
+      - run: yarn typecheck
+        working-directory: studio
+      - run: yarn format:check
+        working-directory: studio
+
   audit:
     name: Audit
     uses: ./.github/workflows/audit.yml
