@@ -31,3 +31,24 @@ jobs:
     name: Audit
     uses: ./.github/workflows/audit.yml
     secrets: inherit
+
+  nightly-freshness:
+    name: Nightly freshness
+    # Pushes to main only. A stale nightly is repo-wide infrastructure breakage
+    # that a contributor's PR neither caused nor can fix; failing their PR on it
+    # would repeat the problem #25 solved by moving external-link checks off
+    # pull requests. Failing here still reddens main and triggers GitHub's
+    # failure email.
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    # Job-level permissions REPLACE the workflow-level block rather than merging
+    # with it, so contents: read must be restated or actions/checkout loses access.
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v6
+      - name: Check the nightly cron is still firing
+        run: ./scripts/check-nightly-freshness.sh
+        env:
+          GH_TOKEN: ${{ github.token }}
