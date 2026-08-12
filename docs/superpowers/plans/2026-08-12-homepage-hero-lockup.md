@@ -713,9 +713,17 @@ Design: `docs/superpowers/specs/2026-08-12-homepage-hero-lockup-design.md`
 - `HeroBackdrop.astro` is new and owns the photo/scrim/content stack. Passthrough when given no image.
 - `resolveImageDimensions` extracted from `PortableTextImage` into `lib/image.ts`, since three call sites now need it.
 
-## This merges as a no-op
+## This merges as a visual no-op except the Wholesale button
 
-Neither Sanity field has content yet, so the live homepage is unchanged until the content steps below run. That is deliberate: publishing in Sanity rebuilds against `main`, so the code has to land first.
+Neither Sanity field has content yet, so the hero itself is unchanged until the content steps below run. That is deliberate: publishing in Sanity rebuilds against `main`, so the code has to land first.
+
+The Wholesale button does change on merge, moving from an inline style to the new `.hero-cta-ghost` class:
+
+- Border colour: `var(--border)` (#333) → `rgba(255, 255, 255, 0.35)`. Spec-sanctioned — the old colour is invisible over a future backdrop photo, so the change is made now rather than staged behind the photo.
+- A hover border-colour transition, which did not exist before: the old inline style's specificity beat `a:hover`, so the button had no hover response at all.
+- A hover text-colour transition, likewise new.
+
+Both CTAs also gain a `:focus-visible` outline in place of the browser's default focus ring.
 
 ## Content steps after merge
 

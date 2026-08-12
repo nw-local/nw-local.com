@@ -17,7 +17,7 @@ export interface ImageDimensions {
   height: number;
 }
 
-export function imageDimensions( assetRef: string ): ImageDimensions {
+function imageDimensions( assetRef: string ): ImageDimensions {
   const match = ASSET_REF_DIMENSIONS.exec( assetRef );
   if( !match ) {
     throw new Error(
@@ -42,16 +42,19 @@ export function resolveImageDimensions(
   asset: SanityImageAssetLike | undefined,
   context: string,
 ): ImageDimensions {
-  const dimensions = asset?.metadata?.dimensions;
-  if( dimensions?.width && dimensions?.height ) {
-    return { width: dimensions.width, height: dimensions.height };
-  }
-
+  // Resolve and validate the asset id first, before consulting metadata, so a
+  // malformed Portable Text block fails the build loudly instead of shipping
+  // a page with a hole in it.
   const assetId = asset?._ref ?? asset?._id;
   if( !assetId ) {
     throw new Error(
       `${context} has no asset reference. Attach an image in Sanity Studio or remove the field.`,
     );
+  }
+
+  const dimensions = asset?.metadata?.dimensions;
+  if( dimensions?.width && dimensions?.height ) {
+    return { width: dimensions.width, height: dimensions.height };
   }
 
   return imageDimensions( assetId );

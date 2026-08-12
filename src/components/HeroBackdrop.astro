@@ -20,8 +20,9 @@ const backdropWidth = backdrop
 
 // Responsive candidates, clamped to the same source-width ceiling as
 // backdropWidth above so a phone never pulls a desktop-sized (or upscaled)
-// file. sizes="100vw" is correct because this image is always full-bleed
-// across the content column.
+// file. The sizes attribute below matches: this box is never the viewport
+// width, it is capped by main's max-width (--max-width: 1200px, minus its
+// 1.5rem side padding), so the slot cannot be 100vw.
 const backdropSrcSetWidths = backdrop
   ? [ ...new Set( [ 480, 800, 1200, 1600, 2000, backdropWidth ].filter( width => width <= backdropWidth ) ) ]
   : [];
@@ -34,13 +35,16 @@ const backdropSrcSet = backdrop
 
 {backdrop ? (
   <div class="hero-backdrop">
+    {/* fetchpriority="high" is deliberate here and on Hero's lockup img: which
+        image is the LCP element depends on fallback state (this photo when
+        present, the lockup when it is not), so one hint cannot cover both
+        without conditional plumbing. */}
     <img
       class="hero-backdrop-image"
       src={urlFor( backdrop ).width( backdropWidth ).format( "webp" ).url()}
       srcset={backdropSrcSet}
-      sizes="100vw"
+      sizes="(min-width: 1200px) 1152px, calc(100vw - 3rem)"
       alt=""
-      aria-hidden="true"
       fetchpriority="high"
     />
     <div class="hero-backdrop-scrim"></div>
