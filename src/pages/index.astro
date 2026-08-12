@@ -5,14 +5,27 @@ import HeroBackdrop from "../components/HeroBackdrop.astro";
 import SectionHeading from "../components/SectionHeading.astro";
 import StrainCard from "../components/StrainCard.astro";
 import FeaturedPost from "../components/FeaturedPost.astro";
+import BlogPostCard from "../components/BlogPostCard.astro";
 import { getSiteSettings, getStrains, getPage, getBlogPosts } from "../lib/sanity";
+
+// The homepage blog section runs the newest posts as full-width FeaturedPost
+// lockups, then the next few as ordinary cards. Both counts are ceilings, not
+// quotas: with fewer posts published the section simply renders what exists, so
+// a two-post blog shows two lockups and no card row.
+const FEATURED_POST_COUNT = 2;
+const CARD_POST_COUNT = 2;
 
 const settings = await getSiteSettings();
 const page = await getPage( "home" );
 const allStrains = await getStrains() ?? [];
 const featuredStrains = allStrains.filter( strain => strain.featured );
 // getBlogPosts() already orders by publishedAt desc.
-const latestPost = ( await getBlogPosts() ?? [] )[ 0 ];
+const recentPosts = await getBlogPosts() ?? [];
+const featuredPosts = recentPosts.slice( 0, FEATURED_POST_COUNT );
+const cardPosts = recentPosts.slice(
+  FEATURED_POST_COUNT,
+  FEATURED_POST_COUNT + CARD_POST_COUNT,
+);
 
 // heroImages is the crossfade rotation; heroImage is the single-photograph
 // field about-us also renders. Falling back to it keeps the homepage backdrop
@@ -51,10 +64,21 @@ const heroImages = page?.heroImages?.length
     </section>
   )}
 
-  {latestPost && (
+  {featuredPosts.length > 0 && (
     <section class="fade-in" style="margin-top:4rem;">
       <SectionHeading title="From the Blog" />
-      <FeaturedPost {...latestPost} />
+      <div style="display:grid;gap:1.5rem;">
+        {featuredPosts.map( post => (
+          <FeaturedPost {...post} />
+        ) )}
+      </div>
+      {cardPosts.length > 0 && (
+        <div class="card-grid" style="margin-top:1.5rem;">
+          {cardPosts.map( post => (
+            <BlogPostCard {...post} />
+          ) )}
+        </div>
+      )}
     </section>
   )}
 
