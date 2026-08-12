@@ -23,13 +23,14 @@ const lockupDimensions = lockup
 // the LCP element depends on fallback state (this lockup when no backdrop
 // photo exists, the backdrop when one does), so one hint cannot cover both
 // without conditional plumbing.
+
+// The h1 below's expression braces hug the h1/img/text so no whitespace text
+// nodes land in the output: Astro preserves template whitespace (unlike
+// JSX), so writing this ternary across its own lines previously emitted
+// "<h1> About Us </h1>" and changed 13 pages. Keep it on one line.
 ---
 
 <section class="hero">
-  {/* The expression braces hug the h1/img/text so no whitespace text nodes
-      land in the output: Astro preserves template whitespace (unlike JSX), so
-      writing this ternary across its own lines previously emitted
-      "<h1> About Us </h1>" and changed 13 pages. Keep it on one line. */}
   <h1 class:list={[ titleClass, { "hero-title-lockup": Boolean( lockup ) } ]}>{lockup && lockupDimensions ? (
     <img
       class="hero-lockup"
