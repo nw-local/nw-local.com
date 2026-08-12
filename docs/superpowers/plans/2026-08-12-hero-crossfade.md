@@ -206,8 +206,8 @@ In `studio/schemaTypes/page.ts`, insert directly after the `heroImage` `defineFi
       of: [
         {
           type: 'image',
-          options: {hotspot: true},
-          fields: [defineField({name: 'alt', title: 'Alternative Text', type: 'string'})],
+          options: { hotspot: true },
+          fields: [defineField({ name: 'alt', title: 'Alternative Text', type: 'string' })],
         },
       ],
       description:
