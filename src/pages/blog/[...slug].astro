@@ -24,12 +24,15 @@ if( !post ) return Astro.redirect( "/blog" );
 
 const formattedDate = formatPostDate( post.publishedAt );
 const ogImage = post.heroImage?.asset ? urlFor( post.heroImage ).width( 1200 ).height( 630 ).format( "jpg" ).url() : undefined;
+const authorImageUrl = post.author?.photo?.asset
+  ? urlFor( post.author.photo ).width( 400 ).height( 400 ).fit( "crop" ).format( "jpg" ).url()
+  : undefined;
 
 const settings = await getSiteSettings();
 const siteUrl = Astro.site?.toString() ?? "https://www.nw-local.com";
 const baseUrl = normalizeSiteUrl( siteUrl );
 const structuredData: StructuredData[] = [
-  buildArticle( post, siteUrl, ogImage, settings ),
+  buildArticle({ post, siteUrl, settings, heroImageUrl: ogImage, authorImageUrl }),
   buildBreadcrumbList( [
     { name: "Home", url: `${baseUrl}/` },
     { name: "Blog", url: `${baseUrl}/blog/` },

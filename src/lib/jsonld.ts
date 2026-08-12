@@ -1,9 +1,11 @@
-import type {
-  BlogPost,
-  PortableText,
-  PortableTextBlock,
-  SiteSettings,
-  Strain,
+import {
+  AUTHOR_BASE_PATH,
+  type Author,
+  type BlogPost,
+  type PortableText,
+  type PortableTextBlock,
+  type SiteSettings,
+  type Strain,
 } from "./sanity";
 
 interface SchemaBase {
@@ -48,20 +50,44 @@ export interface PublisherRef {
   logo?: ImageObject;
 }
 
-export interface AuthorRef {
+// Renamed from AuthorRef: this describes an organization, not the author role.
+// Once `author` can be a Person, a type called AuthorRef that can only be an
+// Organization is actively misleading.
+export interface OrganizationRef {
   "@type": "Organization";
   name: string;
 }
+
+export interface PersonRef {
+  "@type": "Person";
+  name: string;
+  url?: string;
+  image?: string;
+  jobTitle?: string;
+  sameAs?: string[];
+}
+
+export type ArticleAuthor = PersonRef | OrganizationRef;
 
 export interface ArticleSchema extends SchemaBase {
   "@type": "Article";
   headline: string;
   url: string;
   datePublished: string;
-  author: AuthorRef;
+  author: ArticleAuthor;
   publisher: PublisherRef;
   description?: string;
   image?: string;
+}
+
+export interface PersonSchema extends SchemaBase {
+  "@type": "Person";
+  name: string;
+  url: string;
+  image?: string;
+  jobTitle?: string;
+  sameAs?: string[];
+  description?: string;
 }
 
 export interface BreadcrumbItem {
@@ -80,6 +106,7 @@ export type StructuredData =
   | OrganizationSchema
   | ProductSchema
   | ArticleSchema
+  | PersonSchema
   | BreadcrumbListSchema;
 
 export function normalizeSiteUrl( siteUrl: string ): string {
@@ -180,12 +207,40 @@ export function buildProduct(
   return product;
 }
 
-export function buildArticle(
+export interface BuildArticleInput {
+  post: BlogPost;
+  siteUrl: string;
+  settings: SiteSettings | null;
+  heroImageUrl?: string;
+  authorImageUrl?: string;
+}
+
+// Posts written before the author field existed fall back to the site itself, so
+// the Article never ships without an author while content is being backfilled.
+function buildArticleAuthor(
   post: BlogPost,
-  siteUrl: string,
-  heroImageUrl: string | undefined,
-  settings: SiteSettings | null,
-): ArticleSchema {
+  baseUrl: string,
+  publisherName: string,
+  authorImageUrl?: string,
+): ArticleAuthor {
+  const author = post.author;
+  if( !author ) return { "@type": "Organization", name: publisherName };
+
+  const person: PersonRef = {
+    "@type": "Person",
+    name: author.name,
+    url: `${baseUrl}${AUTHOR_BASE_PATH}/${author.slug.current}/`,
+  };
+
+  if( author.role ) person.jobTitle = author.role;
+  if( authorImageUrl ) person.image = authorImageUrl;
+
+  return person;
+}
+
+export function buildArticle( input: BuildArticleInput ): ArticleSchema {
+  const { post, siteUrl, settings, heroImageUrl, authorImageUrl } = input;
+
   const baseUrl = normalizeSiteUrl( siteUrl );
   const url = `${baseUrl}/blog/${post.slug.current}/`;
   const publisherName = settings?.siteTitle ?? "Northwest Local Cannabis";
@@ -204,7 +259,7 @@ export function buildArticle(
     headline: post.title,
     url,
     datePublished: post.publishedAt,
-    author: { "@type": "Organization", name: publisherName },
+    author: buildArticleAuthor( post, baseUrl, publisherName, authorImageUrl ),
     publisher,
   };
 
@@ -212,6 +267,33 @@ export function buildArticle(
   if( post.description ) article.description = post.description;
 
   return article;
+}
+
+export interface BuildPersonInput {
+  author: Author;
+  siteUrl: string;
+  photoUrl?: string;
+}
+
+export function buildPerson( input: BuildPersonInput ): PersonSchema {
+  const { author, siteUrl, photoUrl } = input;
+  const baseUrl = normalizeSiteUrl( siteUrl );
+
+  const person: PersonSchema = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: author.name,
+    url: `${baseUrl}${AUTHOR_BASE_PATH}/${author.slug.current}/`,
+  };
+
+  if( photoUrl ) person.image = photoUrl;
+  if( author.role ) person.jobTitle = author.role;
+  if( author.sameAs && author.sameAs.length > 0 ) person.sameAs = author.sameAs;
+
+  const description = portableTextToPlainText( author.bio );
+  if( description ) person.description = description;
+
+  return person;
 }
 
 export interface BreadcrumbInput {
