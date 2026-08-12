@@ -1,3 +1,4 @@
+import { authorType } from './author'
 import { blockContentType } from './blockContent'
 import { blogPostType } from './blogPost'
 import { glossaryTermType } from './glossaryTerm'
@@ -10,6 +11,7 @@ import { strainType } from './strain'
 import { terpeneType } from './terpene'
 
 export const schemaTypes = [
+  authorType,
   blockContentType,
   blogPostType,
   glossaryTermType,

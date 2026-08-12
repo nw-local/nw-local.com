@@ -114,6 +114,7 @@ There are deliberately no unit tests — the failure modes of a content-driven s
 │   │   ├── index.astro
 │   │   ├── strains/[...slug].astro   # dynamic strain pages via getStaticPaths
 │   │   ├── blog/[...slug].astro      # dynamic blog post pages
+│   │   ├── authors/[...slug].astro   # author bio + their posts (no index page by design)
 │   │   └── ...
 │   └── styles/
 │       └── global.css         # Dark + Electric Green theme via CSS custom properties
@@ -137,12 +138,14 @@ All content types live in `studio/schemaTypes/`. Strain pages and blog post page
 | ----------------- | ------------------------------------------------------------------------------ |
 | `strain`          | Cannabis strains — effects, terpenes, THC/CBD ranges, hero + gallery images   |
 | `product`         | SKUs (flower, preroll, concentrate, edible) referencing a parent strain        |
-| `blogPost`        | Blog posts with rich text body, tags, hero image                               |
+| `blogPost`        | Blog posts with rich text body, tags, hero image, and a required `author` reference |
+| `author`          | Post authors — role, bio, photo, and `sameAs` profile links                   |
 | `retailer`        | Dispensary partners with address, contact info, products carried               |
 | `page`            | Singleton pages (home, about, contact) with flexible body content              |
 | `siteSettings`    | Global config: title, logo, social links, contact info, age gate message      |
 | `retailerPage`    | Wholesale singleton page with downloadable product sheets                      |
 | `terpene`         | Terpene reference documents — aroma, effects, foundIn, hero image             |
+| `glossaryTerm`    | Glossary definitions, backlinked from the content that mentions them          |
 
 Strains link to terpenes by **string name** (not by reference). The strain page resolves the matching `terpene` document by slug at render time. Typos silently produce ghost terpenes, so when adding a strain, check existing terpene names first.
 
@@ -150,7 +153,7 @@ Strains link to terpenes by **string name** (not by reference). The strain page 
 
 ## SEO
 
-Every page emits **JSON-LD structured data** (`Organization` everywhere; `Product`, `Article`, and `BreadcrumbList` on detail pages) via helpers in [`src/lib/jsonld.ts`](src/lib/jsonld.ts) — plus canonical URLs, OG/Twitter tags, an auto-generated sitemap, an RSS feed, and enforced image alt text. Schema tables, architecture, and testing guidance: [docs/seo.md](docs/seo.md).
+Every page emits **JSON-LD structured data** (`Organization` everywhere; `Product`, `Article`, `Person`, and `BreadcrumbList` on detail pages) via helpers in [`src/lib/jsonld.ts`](src/lib/jsonld.ts) — plus canonical URLs, OG/Twitter tags, an auto-generated sitemap, an RSS feed, and enforced image alt text. Schema tables, architecture, and testing guidance: [docs/seo.md](docs/seo.md).
 
 ## Deployment
 
@@ -212,7 +215,16 @@ make upload-image FILE="path/to/_processed/strain-name-bud-closeup.jpg" \
 
 `prep-images` writes to a `_processed/` subdirectory inside the source folder. **Keep `_processed/` around** — it acts as the canonical local manifest of what's currently uploaded for that strain, and the dedup logic uses it to detect duplicates and renames on subsequent runs.
 
-Hero images: landscape 4:3, minimum 1200×900. Portrait images get cropped on the strain detail page.
+Hero images: landscape 4:3, minimum 1200×900. `upload-image` warns when given a portrait image, because a portrait hero gets cropped on the strain detail page.
+
+Author photos are legitimately portrait, so pass `PORTRAIT_OK=1` to suppress that warning:
+
+```sh
+make upload-image FILE="path/to/_processed/ben-petty.jpg" \
+    LABEL="Ben Petty" \
+    DESCRIPTION="SEO-friendly alt text describing the image content" \
+    PORTRAIT_OK=1
+```
 
 ---
 

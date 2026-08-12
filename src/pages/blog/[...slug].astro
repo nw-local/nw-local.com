@@ -1,6 +1,7 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import PortableText from "../../components/PortableText.astro";
+import AuthorByline from "../../components/AuthorByline.astro";
 import { getBlogPosts, getBlogPost, getSiteSettings } from "../../lib/sanity";
 import { urlFor } from "../../lib/image";
 import { formatPostDate } from "../../lib/date";
@@ -24,12 +25,15 @@ if( !post ) return Astro.redirect( "/blog" );
 
 const formattedDate = formatPostDate( post.publishedAt );
 const ogImage = post.heroImage?.asset ? urlFor( post.heroImage ).width( 1200 ).height( 630 ).format( "jpg" ).url() : undefined;
+const authorImageUrl = post.author?.photo?.asset
+  ? urlFor( post.author.photo ).width( 400 ).height( 400 ).fit( "crop" ).format( "jpg" ).url()
+  : undefined;
 
 const settings = await getSiteSettings();
 const siteUrl = Astro.site?.toString() ?? "https://www.nw-local.com";
 const baseUrl = normalizeSiteUrl( siteUrl );
 const structuredData: StructuredData[] = [
-  buildArticle( post, siteUrl, ogImage, settings ),
+  buildArticle({ post, siteUrl, settings, heroImageUrl: ogImage, authorImageUrl }),
   buildBreadcrumbList( [
     { name: "Home", url: `${baseUrl}/` },
     { name: "Blog", url: `${baseUrl}/blog/` },
@@ -46,6 +50,11 @@ const structuredData: StructuredData[] = [
       </p>
       <h1>{post.title}</h1>
       <div class="hero-accent"></div>
+      {post.author && (
+        <div style="margin-top:1rem;">
+          <AuthorByline author={post.author} />
+        </div>
+      )}
       {post.tags && post.tags.length > 0 && (
         <div style="display:flex;gap:0.5rem;margin-top:1rem;">
           {post.tags.map( ( tag: string ) => (

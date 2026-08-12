@@ -1,0 +1,92 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Hero from "../../components/Hero.astro";
+import PortableText from "../../components/PortableText.astro";
+import BlogPostCard from "../../components/BlogPostCard.astro";
+import SectionHeading from "../../components/SectionHeading.astro";
+import { getAuthors, getAuthor, getBlogPostsByAuthor, getSiteSettings, AUTHOR_BASE_PATH } from "../../lib/sanity";
+import { urlFor } from "../../lib/image";
+import {
+  buildPerson,
+  buildBreadcrumbList,
+  normalizeSiteUrl,
+  type StructuredData,
+} from "../../lib/jsonld";
+
+export async function getStaticPaths() {
+  const authors = await getAuthors() ?? [];
+  return authors.map( ( author: { slug: { current: string } }) => ({
+    params: { slug: author.slug.current },
+  }) );
+}
+
+const { slug } = Astro.params;
+const author = await getAuthor( slug! );
+if( !author ) return Astro.redirect( "/blog" );
+
+const posts = await getBlogPostsByAuthor( author._id ) ?? [];
+
+const photoUrl = author.photo?.asset
+  ? urlFor( author.photo ).width( 640 ).height( 640 ).fit( "crop" ).format( "webp" ).url()
+  : undefined;
+const ogImage = author.photo?.asset
+  ? urlFor( author.photo ).width( 1200 ).height( 630 ).fit( "crop" ).format( "jpg" ).url()
+  : undefined;
+const personImageUrl = author.photo?.asset
+  ? urlFor( author.photo ).width( 800 ).height( 800 ).fit( "crop" ).format( "jpg" ).url()
+  : undefined;
+
+const settings = await getSiteSettings();
+const siteName = settings?.siteTitle ?? "Northwest Local Cannabis";
+
+const siteUrl = Astro.site?.toString() ?? "https://www.nw-local.com";
+const baseUrl = normalizeSiteUrl( siteUrl );
+const structuredData: StructuredData[] = [
+  buildPerson({ author, siteUrl, photoUrl: personImageUrl }),
+  buildBreadcrumbList( [
+    { name: "Home", url: `${baseUrl}/` },
+    { name: "Blog", url: `${baseUrl}/blog/` },
+    { name: author.name, url: `${baseUrl}${AUTHOR_BASE_PATH}/${author.slug.current}/` },
+  ] ),
+];
+
+const description = author.role
+  ? `${author.name}, ${author.role} at ${siteName}.`
+  : `Posts by ${author.name}.`;
+---
+
+<Layout title={author.name} description={description} ogImage={ogImage} structuredData={structuredData}>
+  <Hero title={author.name}>
+    {author.role && (
+      <p style="color:var(--text-secondary);margin-top:0.5rem;font-size:1.1rem;">{author.role}</p>
+    )}
+  </Hero>
+
+  <div class="detail-grid">
+    <div>
+      {photoUrl && (
+        <img
+          src={photoUrl}
+          alt={author.photo?.alt ?? author.name}
+          width="640"
+          height="640"
+          style="border-radius:8px;width:100%;object-fit:cover;"
+        />
+      )}
+    </div>
+    <div>
+      {author.bio && <PortableText value={author.bio} />}
+    </div>
+  </div>
+
+  {posts.length > 0 && (
+    <section class="fade-in">
+      <SectionHeading title={`Posts by ${author.name}`} />
+      <div class="card-grid">
+        {posts.map( post => (
+          <BlogPostCard {...post} />
+        ) )}
+      </div>
+    </section>
+  )}
+</Layout>

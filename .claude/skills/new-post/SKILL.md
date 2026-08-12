@@ -24,9 +24,13 @@ Create and publish a blog post for Northwest Local Cannabis.
    - Body content (Portable Text)
    - Tags (array of strings)
    - Publish date (defaults to now)
+   - Author (required) — query `*[_type == "author"]{ _id, name, slug }` and let the user pick one.
+     If no `author` documents exist, **stop and tell the user to create an author first** — do not
+     create the post without one, and do not invent a placeholder.
 
 3. **Confirm with user** — show summary before creating
 
-4. **Create in Sanity** — use MCP tools to create and publish the blog post
+4. **Create in Sanity** — use MCP tools to create and publish the blog post. Set `author` as a
+   reference to the chosen document: `{ "_type": "reference", "_ref": "<author document _id>" }`.
 
 5. **Report** — show the created document ID and URL

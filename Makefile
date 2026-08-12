@@ -27,8 +27,8 @@ studio: ## Start the Sanity Studio dev server at localhost:3333
 deploy-studio: ## Deploy Sanity Studio to nw-local.sanity.studio
 	cd studio && npx sanity deploy
 
-upload-image: ## Upload an image asset to Sanity (vars: FILE, LABEL, DESCRIPTION)
-	@./scripts/upload-image.sh "$(FILE)" "$(LABEL)" "$(DESCRIPTION)"
+upload-image: ## Upload an image asset to Sanity (vars: FILE, LABEL, DESCRIPTION, PORTRAIT_OK)
+	@./scripts/upload-image.sh "$(FILE)" "$(LABEL)" "$(DESCRIPTION)" "$(PORTRAIT_OK)"
 
 prep-images: ## Convert and rename a directory of images for Sanity (vars: DIR, STRAIN, RENAME)
 	@./scripts/prep-images.sh "$(DIR)" "$(STRAIN)" "$(RENAME)"

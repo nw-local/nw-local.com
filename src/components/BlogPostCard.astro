@@ -5,7 +5,7 @@ import type { BlogPostSummary } from "../lib/sanity";
 
 type Props = BlogPostSummary;
 
-const { title, slug, description, publishedAt, heroImage } = Astro.props;
+const { title, slug, description, publishedAt, heroImage, author } = Astro.props;
 const formattedDate = formatPostDate( publishedAt );
 ---
 
@@ -23,7 +23,7 @@ const formattedDate = formatPostDate( publishedAt );
   </div>
   <div class="card-body">
     <p style="font-size:0.75rem;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:0.5rem;">
-      {formattedDate}
+      {formattedDate}{author && ` · ${author.name}`}
     </p>
     <h3>{title}</h3>
     <p>{description}</p>
