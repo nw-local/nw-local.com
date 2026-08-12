@@ -16,8 +16,8 @@ const latestPost = ( await getBlogPosts() ?? [] )[ 0 ];
 
 // heroImages is the crossfade rotation; heroImage is the single-photograph
 // field about-us also renders. Falling back to it keeps the homepage backdrop
-// alive in the window between this shipping and an editor filling in the
-// array, since Sanity publishes rebuild against main.
+// alive if an editor ever clears the array in Studio, since heroImage stays
+// populated independently.
 const heroImages = page?.heroImages?.length
   ? page.heroImages
   : ( page?.heroImage ? [ page.heroImage ] : [] );
