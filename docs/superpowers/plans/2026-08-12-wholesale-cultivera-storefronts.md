@@ -548,22 +548,26 @@ Expected: 0 errors.
 
 - [ ] **Step 4: Build and assert the rendered output**
 
+Astro minifies the built HTML onto a single line, so `grep -c` counts matching
+lines rather than occurrences and would report `1` for everything. Count
+occurrences with `grep -o | wc -l`.
+
 ```bash
 make build
-grep -c "Shop on Cultivera" dist/retailers/index.html
-grep -c "wa.cultiveramarket.com" dist/retailers/index.html
-grep -o "northwest-local-cannabis-llcwholesale_1" dist/retailers/index.html
-grep -c "licensed buyer account is required" dist/retailers/index.html
+grep -o "Shop on Cultivera" dist/retailers/index.html | wc -l
+grep -o "wa.cultiveramarket.com" dist/retailers/index.html | wc -l
+grep -o "northwest-local-cannabis-llcwholesale_1" dist/retailers/index.html | wc -l
+grep -o "licensed buyer account is required" dist/retailers/index.html | wc -l
 ```
 
-Expected: build succeeds; the first two greps print `2`; the third prints the wholesale slug once; the fourth prints `1`.
+Expected: build succeeds; the first two print `2`; the third prints `1`; the fourth prints `1`.
 
 - [ ] **Step 5: Assert the page is no longer a stub**
 
 The original defect was a page with an `<h1>` and nothing else. Confirm it now has section headings:
 
 ```bash
-grep -c "<h3" dist/retailers/index.html
+grep -o "<h3" dist/retailers/index.html | wc -l
 ```
 
 Expected: `3` or more. Before this work it was `0`.
@@ -628,12 +632,25 @@ Expected: no output. The string should appear nowhere in the built site. If it a
 
 - [ ] **Step 4: Assert the new label and the unchanged route**
 
+Astro minifies the built HTML onto a single line, so `grep -c` counts matching
+lines and would report `1` regardless of how many times the string occurs. Count
+occurrences with `grep -o | wc -l` instead.
+
 ```bash
-grep -c ">Wholesale<" dist/index.html
-grep -c 'href="/retailers"' dist/index.html
+grep -o ">Wholesale<" dist/index.html | wc -l
+grep -o 'href="/retailers"' dist/index.html | wc -l
 ```
 
-Expected: the first prints `2` (nav and footer); the second prints `2`.
+Expected: the first prints `3`, the second prints `4`.
+
+The homepage already links to this route twice, independently of the nav and
+footer, and `src/pages/index.astro:30` has read `<a href="/retailers"
+class="hero-cta-ghost">Wholesale</a>` since before this branch. So `>Wholesale<`
+is nav + footer + homepage hero CTA, and `href="/retailers"` is those three plus
+the homepage card at `index.astro:60`. Neither homepage reference is modified by
+this work. Worth noting that the homepage was already calling this page
+Wholesale while the nav and footer called it For Retailers, so the relabel
+resolves a pre-existing inconsistency rather than introducing a new name.
 
 - [ ] **Step 5: Assert the route still resolves**
 
