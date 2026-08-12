@@ -79,12 +79,15 @@ Run `make` (no args) to print the full target list with descriptions.
 | Upgrade deps (major)| `make upgrade-latest`| ignores semver — review `yarn outdated` before/after |
 | Prep images         | `make prep-images`   | see [Image workflow](#image-workflow)                |
 | Upload image        | `make upload-image`  | see [Image workflow](#image-workflow)                |
+| Check nightly cron  | `make check-nightly` | fails if the nightly audit's schedule has stalled    |
 
 ---
 
 ## Automated testing
 
-Three GitHub Actions workflows guard the site: [`ci.yml`](.github/workflows/ci.yml) (type check + audit on every PR and push to `main`), the reusable [`audit.yml`](.github/workflows/audit.yml) (build, sitemap validation, Lychee link check, Lighthouse), and [`nightly.yml`](.github/workflows/nightly.yml) (the same audit on a daily cron, catching content drift between PRs).
+Three GitHub Actions workflows guard the site: [`ci.yml`](.github/workflows/ci.yml) (type check + audit on every PR and push to `main`, plus a nightly-freshness check on pushes only), the reusable [`audit.yml`](.github/workflows/audit.yml) (build, sitemap validation, Lychee link check, Lighthouse), and [`nightly.yml`](.github/workflows/nightly.yml) (the same audit on a daily cron, catching content drift between PRs).
+
+Because the nightly is the only place external links get checked, a stalled cron is itself a failure mode — and a silent one, since GitHub disables schedules in public repos after 60 days of inactivity without changing the workflow's reported state. `make check-nightly` (run in CI on pushes to `main`) fails when the last completed scheduled run is more than 3 days old. See the Invariants section of `CLAUDE.md`.
 
 There are deliberately no unit tests — the failure modes of a content-driven static site are broken queries, broken links, and regressed SEO/perf signals, not logic bugs. Full rationale, per-step details, and the considered/rejected list: [docs/testing.md](docs/testing.md).
 
@@ -115,6 +118,7 @@ There are deliberately no unit tests — the failure modes of a content-driven s
 │   └── styles/
 │       └── global.css         # Dark + Electric Green theme via CSS custom properties
 ├── scripts/
+│   ├── check-nightly-freshness.sh  # fails if the nightly audit's cron has stalled
 │   ├── prep-images.sh         # HEIC→JPG, dedup, slug-rename
 │   └── upload-image.sh        # POSTs to Sanity asset endpoint
 └── studio/                    # Sanity Studio project (schemas, deployment config)
