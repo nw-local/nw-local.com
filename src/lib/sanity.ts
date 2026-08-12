@@ -219,6 +219,53 @@ export async function getProductsByStrain( strainId: string ) {
   );
 }
 
+// --- Authors ---
+
+export interface AuthorSummary {
+  _id: string;
+  name: string;
+  slug: SanitySlug;
+  role?: string;
+  photo?: SanityImage;
+}
+
+export interface Author extends AuthorSummary {
+  bio?: PortableText;
+  sameAs?: string[];
+}
+
+// Every surface that shows a byline needs the same compact author shape, so the
+// projection is defined once and reused by all three blog-facing queries.
+const AUTHOR_SUMMARY_PROJECTION = `{
+  _id, name, slug, role,
+  photo { asset->, alt, crop, hotspot }
+}`;
+
+// The author route is spelled once. jsonld.ts builds absolute URLs from the same
+// constant, so the HTML href and the JSON-LD url can never drift apart.
+export const AUTHOR_BASE_PATH = "/authors";
+
+export function authorHref( slug: SanitySlug ): string {
+  return `${AUTHOR_BASE_PATH}/${slug.current}`;
+}
+
+export async function getAuthors() {
+  return sanityClient.fetch<AuthorSummary[]>(
+    `*[_type == "author"] | order(name asc) ${AUTHOR_SUMMARY_PROJECTION}`,
+  );
+}
+
+export async function getAuthor( slug: string ) {
+  return sanityClient.fetch<Author | null>(
+    `*[_type == "author" && slug.current == $slug][0] {
+      _id, name, slug, role, sameAs,
+      photo { asset->, alt, crop, hotspot },
+      bio[] ${PORTABLE_TEXT_PROJECTION}
+    }`,
+    { slug },
+  );
+}
+
 // --- Blog ---
 
 export interface BlogPostSummary {
@@ -229,6 +276,9 @@ export interface BlogPostSummary {
   publishedAt: string;
   tags?: string[];
   heroImage?: SanityImage;
+  // Optional in TypeScript even though Sanity validation requires it: code
+  // deploys before the content backfill, so posts can briefly have no author.
+  author?: AuthorSummary;
 }
 
 export interface BlogPost extends BlogPostSummary {
@@ -239,7 +289,8 @@ export async function getBlogPosts() {
   return sanityClient.fetch<BlogPostSummary[]>(
     `*[_type == "blogPost"] | order(publishedAt desc) {
       _id, title, slug, description, publishedAt, tags,
-      heroImage { asset->, alt, crop, hotspot }
+      heroImage { asset->, alt, crop, hotspot },
+      author-> ${AUTHOR_SUMMARY_PROJECTION}
     }`,
   );
 }
@@ -249,9 +300,21 @@ export async function getBlogPost( slug: string ) {
     `*[_type == "blogPost" && slug.current == $slug][0] {
       _id, title, slug, description, publishedAt, tags,
       heroImage { asset->, alt, crop, hotspot },
+      author-> ${AUTHOR_SUMMARY_PROJECTION},
       body[] ${PORTABLE_TEXT_PROJECTION}
     }`,
     { slug },
+  );
+}
+
+export async function getBlogPostsByAuthor( authorId: string ) {
+  return sanityClient.fetch<BlogPostSummary[]>(
+    `*[_type == "blogPost" && author._ref == $authorId] | order(publishedAt desc) {
+      _id, title, slug, description, publishedAt, tags,
+      heroImage { asset->, alt, crop, hotspot },
+      author-> ${AUTHOR_SUMMARY_PROJECTION}
+    }`,
+    { authorId },
   );
 }
 
