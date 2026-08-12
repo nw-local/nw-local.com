@@ -16,6 +16,24 @@ For a content-driven static site with no business logic, heavy testing is overki
 - **Check links** — [Lychee](https://lychee.cli.rs/) walks every link in built HTML (internal + external). Accepts 200/301/302 plus 403/429 (bot-blockers and rate limits) so well-known breeder sites that block automated requests don't cause false positives. Blocking — broken links fail the check.
 - **Lighthouse audit** (informational, doesn't block PRs) — runs Lighthouse against the homepage, a strain page, and the about page; reports Performance, SEO, Accessibility, and Best Practices scores. HTML reports are uploaded to temporary public storage and linked in the workflow logs. Configured in [`lighthouserc.json`](../lighthouserc.json).
 
+## Manual verification of built output
+
+Content-change plans (e.g. `docs/superpowers/plans/`) frequently verify a Sanity publish by grepping
+`dist/` directly, outside CI. Two gotchas recur:
+
+- **Count occurrences with `grep -o 'pattern' file | wc -l`, never `grep -c`.** `grep -c` counts
+  matching *lines*, and Astro emits minified single-line HTML, so `grep -c` silently returns `1`
+  regardless of how many times a pattern actually occurs. This has already bitten once and shipped:
+  `docs/superpowers/plans/2026-08-11-blog-post-author.md` uses `grep -c` against built output at
+  three places, and `grep -c 'dc:creator' dist/rss.xml` returns `1` today when there are in fact `2`
+  occurrences — that plan's verification step was silently wrong. (That plan is left as-is; this note
+  exists so the mistake isn't repeated.)
+- **Glossary anchor text is whitespace-padded, and each term appears twice.** `GlossaryTerm.astro`
+  renders its `<slot />` on its own line, so a glossary anchor's inner text is `> EC <`, not `>EC<` —
+  a grep for `>EC<` finds nothing even when the mark is correctly placed. The hover card also emits a
+  second `<a>` to the same href, with `class="glossary-tip-cta"`, so a plain `href="..."` grep
+  double-counts. Match on `class="glossary-term"` to select only the real mark.
+
 ## Considered for future addition
 
 - **Playwright smoke test** — build the site and verify the homepage and a strain detail page render with expected content. Would catch dead pages from broken queries or missing layouts that Lighthouse may not surface.

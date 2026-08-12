@@ -23,6 +23,33 @@ Three decisions were settled before design:
    while `anthocyanin` links to a glossary entry. No migration, no duplicate content, no URL
    changes.
 
+## Authoring conventions
+
+These govern every glossary entry, not just the initial 8. Established by user correction during the
+[2026-08-12 terms expansion](./2026-08-12-glossary-terms-expansion-design.md) design, and promoted
+here as the canonical location since that document is dated and will eventually be archived.
+
+### 1. Definitions must stand alone
+
+A definition explains the term as it exists in the world. It may state a general fact about the term
+(calcium moves almost entirely by transpirational flow; anthocyanins are a flavonoid subclass). It
+may not reference the argument, conclusions or framing of whatever article prompted it.
+
+The failure mode is subtle, because an article-specific clause still reads as true. The original
+`Chlorophyll` entry ended on "which is why purpling can look sudden", which is accurate, useful
+inside the purple post, and meaningless to a reader who arrived from a search for "what is
+chlorophyll".
+
+### 2. No em dashes in published copy
+
+`shortDefinition` is published copy and renders in three places, so the site-wide copy rule applies:
+no em dashes, no constructed aphorisms, no restating the same fact twice in different words. Use
+commas, periods or parentheses. Em dashes at density read as AI-written and undermine the
+credibility the copy exists to build.
+
+This rule governs published copy only. It does not apply to code comments, commit messages or design
+docs.
+
 ## Data model
 
 ### New document: `glossaryTerm`
