@@ -44,7 +44,7 @@ const cyclePercent = ( seconds: number ) => `${( ( seconds / cycleSeconds ) * 10
 // validation is Studio-side only, so an API write of a fourth image would
 // break the rotation silently.
 //
-// See docs/superpowers/specs/2026-08-12-hero-crossfade-design.md.
+// Shipped in PR #47.
 const crossfadeKeyframes = slides.slice( 1 ).map( ( _slide, offset ) => {
   const index = offset + 1;
   const fadeInStart = index * PERIOD_SECONDS - FADE_SECONDS;

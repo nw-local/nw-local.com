@@ -15,6 +15,8 @@ Output lands in a `_processed/` subdirectory inside the source folder.
 
 **Keep `_processed/` around.** It is the canonical local manifest of what is currently uploaded for that strain, and the dedup logic reads it to detect duplicates and renames on later runs. Deleting it doesn't lose data, but the next run loses its ability to tell a rename from a new upload.
 
+**Do not route transparent artwork through `prep-images`.** The conversion at `scripts/prep-images.sh:111` is `sips -s format jpeg`, and JPEG has no alpha channel, so a white-on-transparent PNG comes out as a white slab on an opaque background. PNG is in the script's accepted input list, so nothing warns you; the file converts happily and the damage is only visible once it is composited over something. Logos, wordmarks, and the hero lockup go to Sanity directly via `make upload-image` on the original file. `prep-images` is for photography.
+
 ### The dedup contract
 
 Deduplication hashes the **converted JPG**, not the source file, and matches that SHA-1 against `sha1hash` on Sanity's image assets. The `sips -s formatOptions 90` setting in `scripts/prep-images.sh` is therefore part of the contract: changing the quality value changes every hash, every already-uploaded image starts reading as new, and duplicates upload silently.
