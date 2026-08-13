@@ -13,26 +13,37 @@ For a content-driven static site with no business logic, heavy testing is overki
 - **Type check** (CI only) — `yarn astro check`. Catches broken GROQ query types, missing required fields on Sanity entity types, and Astro template errors. The data layer in [`src/lib/sanity.ts`](../src/lib/sanity.ts) parameterizes each `fetch<T>()` call with a typed entity (`Strain`, `Product`, etc.), so consumers in `.astro` pages get strict typing for free.
 - **Build** — `yarn build`. Uploads `dist/` as an artifact for the audit jobs below.
 - **Validate sitemap** — `xmllint` checks `dist/sitemap-index.xml` and `dist/sitemap-0.xml` are well-formed and contain `<loc>` entries.
-- **Check links** — [Lychee](https://lychee.cli.rs/) walks every link in built HTML (internal + external). Accepts 200/301/302 plus 403/429 (bot-blockers and rate limits) so well-known breeder sites that block automated requests don't cause false positives. Blocking — broken links fail the check.
+- **Check links** — [Lychee](https://lychee.cli.rs/) walks every link in built HTML (internal + external). Accepts 200/301/302 plus 403/429 (bot-blockers and rate limits) so well-known breeder sites that block automated requests don't cause false positives. Blocking — broken links fail the check. A green result on the two `wa.cultiveramarket.com` storefront URLs is not evidence those URLs are right. Cultivera Market is a client-rendered SPA: the server returns the same shell for every path and resolves the slug in JavaScript afterwards. Requests for both real slugs and a deliberately fabricated control slug returned byte-identical 200s (7,659 bytes, same SHA), so an HTTP status check there asserts nothing and fails open — the same trap as the GROQ `match` operator in `CLAUDE.md`'s invariants. The slugs are correct because the operator confirmed them, and that is the only available source of truth. If one is ever mistyped, the link checker will stay green and the page will send licensed buyers to an empty storefront.
 - **Lighthouse audit** (informational, doesn't block PRs) — runs Lighthouse against the homepage, a strain page, and the about page; reports Performance, SEO, Accessibility, and Best Practices scores. HTML reports are uploaded to temporary public storage and linked in the workflow logs. Configured in [`lighthouserc.json`](../lighthouserc.json).
 
 ## Manual verification of built output
 
-Content-change plans (e.g. `docs/superpowers/plans/`) frequently verify a Sanity publish by grepping
-`dist/` directly, outside CI. Two gotchas recur:
+Content changes are routinely verified by grepping `dist/` directly, outside CI — publish in Sanity,
+`make build`, then assert the markup landed. With no test framework, these greps are the whole
+automated surface, so it matters that they assert what they look like they assert. Two gotchas recur:
 
 - **Count occurrences with `grep -o 'pattern' file | wc -l`, never `grep -c`.** `grep -c` counts
   matching *lines*, and Astro emits minified single-line HTML, so `grep -c` silently returns `1`
-  regardless of how many times a pattern actually occurs. This has already bitten once and shipped:
-  `docs/superpowers/plans/2026-08-11-blog-post-author.md` uses `grep -c` against built output at
-  three places, and `grep -c 'dc:creator' dist/rss.xml` returns `1` today when there are in fact `2`
-  occurrences — that plan's verification step was silently wrong. (That plan is left as-is; this note
-  exists so the mistake isn't repeated.)
+  regardless of how many times a pattern actually occurs. Confirm it on the feed: `grep -c
+  'dc:creator' dist/rss.xml` returns `1`, while `grep -o 'dc:creator' dist/rss.xml | wc -l` returns
+  two per post (an opening and a closing tag each). A verification step written the first way reads
+  as satisfied for the wrong reason, and one has already shipped that way.
 - **Glossary anchor text is whitespace-padded, and each term appears twice.** `GlossaryTerm.astro`
   renders its `<slot />` on its own line, so a glossary anchor's inner text is `> EC <`, not `>EC<` —
   a grep for `>EC<` finds nothing even when the mark is correctly placed. The hover card also emits a
   second `<a>` to the same href, with `class="glossary-tip-cta"`, so a plain `href="..."` grep
   double-counts. Match on `class="glossary-term"` to select only the real mark.
+- **A scroll-driven or compositor-driven animation cannot be verified by reading it straight after a
+  scroll.** Two traps, both of which make working code look broken and broken code look fine. First,
+  these animations are committed on the compositor, so calling `getComputedStyle` immediately after
+  `window.scrollTo` returns a stale frame — sample after two `requestAnimationFrame` ticks, not one,
+  or a working parallax reads as frozen. Second, a *misconfigured* scroll timeline does not error,
+  warn, or log; it renders as a completely static element, and `getAnimations()` will still report a
+  live animation with `playState: "running"`. Confirming the animation exists therefore proves
+  nothing about whether its timeline can advance. The only sound check is to sample the transform at
+  several scroll offsets and assert it changes between the first two and progresses monotonically
+  across the rest. Drive the built `dist/` with a throwaway static server for this; never start the
+  dev server.
 
 ## Considered for future addition
 

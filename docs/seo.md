@@ -24,6 +24,8 @@ The author's `sameAs` array links the `Person` entity to their external profiles
 
 Note that `sameAs` appears on two different entities and they must not be conflated: `Organization.sameAs` carries the brand's accounts from `siteSettings.socialLinks`, while `Person.sameAs` carries the author's personal ones. Each entity links only to profiles representing that same entity.
 
+The feed carries the byline as `<dc:creator>` in the Dublin Core namespace, not as RSS's own per-item `<author>`. That is not a stylistic preference: RSS 2.0 defines `<author>` as an email address, and `@astrojs/rss` types the field accordingly ("The item author's email address"), so putting a plain name there emits a spec-invalid feed that strict readers reject. `dc:creator` is the element that actually means "a name". It requires the `xmlns:dc` declaration on the channel, and because `@astrojs/rss` injects `customData` raw, anything interpolated into it has to be escaped first — see `escapeXml()` in [`src/pages/rss.xml.ts`](../src/pages/rss.xml.ts).
+
 ## Foundation beyond JSON-LD
 
 - Canonical URLs, OG tags, and Twitter card tags emitted by `BaseHead.astro`

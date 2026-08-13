@@ -1111,7 +1111,16 @@ footer {
   }
 
   /* Falls back to the base rules above: first slide opaque, the rest
-     transparent. One still photograph, no rotation. */
+     transparent. One still photograph, no rotation.
+
+     This is also the whole of the accessibility answer for the rotation, and
+     that is a decision rather than an oversight. WCAG 2.2.2 asks for a pause
+     mechanism on content that updates automatically for more than five
+     seconds, and the hold here is eight. Honouring prefers-reduced-motion was
+     judged the better trade than putting a visible pause control on a
+     decorative backdrop that carries no information. If an audit flags 2.2.2
+     on the homepage, this is the answer to give it, not a bug to fix by
+     adding the control. */
   .hero-backdrop-slide {
     animation-name: none;
   }

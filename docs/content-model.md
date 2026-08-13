@@ -27,6 +27,14 @@ Strain, product, blog post, author, terpene, and glossary pages are statically g
 
 The strain page resolves the matching `terpene` document by slug at render time. A typo silently produces a ghost terpene that links nowhere, so check existing terpene names before adding a strain.
 
+### A glossary definition must stand alone
+
+`shortDefinition` explains the term as it exists in the world. It may state a general fact about the term (calcium moves almost entirely by transpirational flow; anthocyanins are a flavonoid subclass). It may not reference the argument, conclusions, or framing of whatever article prompted it.
+
+The failure mode is subtle, because an article-specific clause still reads as true. The original `Chlorophyll` entry ended on "which is why purpling can look sudden" — accurate, useful inside the post that prompted it, and meaningless to a reader who arrived from a search for "what is chlorophyll". Four of the first eight entries had to be rewritten for this in [#39](https://github.com/nw-local/nw-local.com/pull/39).
+
+The term is also the entry point to a page of its own and gets cited from any post, so an entry written at one article ages badly the moment a second one links it. `shortDefinition` renders in the hover card, the A-Z index, and the term page, and is capped at 200 characters by `rule.required().max(200)`.
+
 ### `rule.required()` is Studio-side only
 
 Sanity's `required()` validation stops a human clicking Publish in the Studio UI. It does **not** stop writes through the HTTP API, the MCP tools, or a script — those will happily create a document missing a required field, and nothing in lint, type-check, or the build will notice.
