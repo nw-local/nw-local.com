@@ -905,6 +905,14 @@ footer {
 .portable-text h3 { margin: 1.5rem 0 0.75rem; }
 .portable-text p { margin-bottom: 1.25em; }
 .portable-text strong { color: var(--text-emphasis); }
+/* A mark that is both bold and a link renders as <a><strong>, so the rule above
+   lands on the inner element and wins: an element's own colour always beats a
+   value inherited from its parent, whatever the parent's specificity. Without
+   this, bold links paint --text-emphasis instead of their link colour, and bold
+   glossary terms also stop lighting up on .glossary-term:hover, since that sets
+   colour on the anchor. `inherit` tracks the anchor's computed colour, so it
+   covers both link kinds and both states without naming any of them. */
+.portable-text a strong { color: inherit; }
 .portable-text ul, .portable-text ol { margin: 0 0 1.25em 1.5em; color: var(--text-secondary); }
 .portable-text li { margin-bottom: 0.5em; }
 .portable-text blockquote {
