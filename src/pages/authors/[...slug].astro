@@ -12,6 +12,7 @@ import {
   buildBreadcrumbList,
   normalizeSiteUrl,
   type StructuredData,
+  requireSiteUrl,
 } from "../../lib/jsonld";
 
 export async function getStaticPaths() {
@@ -40,7 +41,7 @@ const personImageUrl = author.photo?.asset
 const settings = await getSiteSettings();
 const siteName = settings?.siteTitle ?? "Northwest Local Cannabis";
 
-const siteUrl = Astro.site?.toString() ?? "https://www.nw-local.com";
+const siteUrl = requireSiteUrl( Astro.site );
 const baseUrl = normalizeSiteUrl( siteUrl );
 const structuredData: StructuredData[] = [
   buildPerson({ author, siteUrl, photoUrl: personImageUrl }),

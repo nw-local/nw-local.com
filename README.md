@@ -10,7 +10,7 @@ Customer-facing website for **Northwest Local Cannabis**, a Washington State i50
 [![Node](https://img.shields.io/badge/node-%E2%89%A522.20-339933?logo=node.js&logoColor=white)](https://nodejs.org)
 [![Yarn](https://img.shields.io/badge/yarn-package%20manager-2C8EBB?logo=yarn&logoColor=white)](https://yarnpkg.com)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
-[![Deployed](https://img.shields.io/badge/site-nw--local.com-1f6feb)](https://www.nw-local.com)
+[![Deployed](https://img.shields.io/badge/site-nw--local.com-1f6feb)](https://nw-local.com)
 
 The site is a static, content-driven catalog of strains, products, and retail partners, alongside a blog and a reference section covering terpenes and cannabis terminology. Content is authored in [Sanity Studio](https://nw-local.sanity.studio/), built into static HTML by [Astro](https://astro.build) at deploy time, and hosted on [GitHub Pages](https://pages.github.com/).
 
@@ -196,7 +196,7 @@ Each skill encodes the full workflow (research → preview → user approval →
 
 ## Useful links
 
-- Production site: <https://www.nw-local.com>
+- Production site: <https://nw-local.com>
 - Sanity Studio: <https://nw-local.sanity.studio/>
 - Sanity project management: <https://www.sanity.io/manage/personal/project/nyd3p2n0>
 - Astro docs: <https://docs.astro.build>

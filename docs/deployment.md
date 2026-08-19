@@ -14,7 +14,7 @@ GitHub Actions: .github/workflows/deploy.yml
         │
         ├── checkout
         ├── withastro/action@v6 (install, build with secrets injected)
-        └── actions/deploy-pages@v5 → https://www.nw-local.com
+        └── actions/deploy-pages@v5 → https://nw-local.com
 ```
 
 The build fetches all content from Sanity at build time, so a deploy reflects whatever is *published* in Sanity at the moment it runs — not whatever was there when the commit was written.

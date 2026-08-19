@@ -113,6 +113,21 @@ export function normalizeSiteUrl( siteUrl: string ): string {
   return siteUrl.endsWith( "/" ) ? siteUrl.slice( 0, -1 ) : siteUrl;
 }
 
+// `Astro.site` is whatever `site` in astro.config.mjs says, so it is defined on
+// every build; this throws rather than substituting a literal because the seven
+// call sites used to carry their own `?? "https://www.nw-local.com"` fallback,
+// and that fallback was both unreachable and wrong. It named the www host after
+// the site moved to the apex, so the one situation it existed to handle would
+// have silently published a second, contradictory hostname into canonical tags
+// and JSON-LD @ids — while BaseHead.astro, which reads Astro.site directly with
+// no fallback, kept emitting the right one. A fallback that disagrees with its
+// neighbours is worse than no fallback, and one host literal is easier to keep
+// correct than seven.
+export function requireSiteUrl( site: URL | undefined ): string {
+  if( !site ) throw new Error( "Missing `site` in astro.config.mjs — canonical URLs, the sitemap, and JSON-LD all derive from it" );
+  return site.toString();
+}
+
 function isTextSpan( child: unknown ): child is { text: string } {
   if( typeof child !== "object" || child === null ) return false;
   if( !( "text" in child ) ) return false;

@@ -14,6 +14,7 @@ import {
   buildBreadcrumbList,
   normalizeSiteUrl,
   type StructuredData,
+  requireSiteUrl,
 } from "../../lib/jsonld";
 
 export async function getStaticPaths() {
@@ -27,7 +28,7 @@ const { slug } = Astro.params;
 const term = await getGlossaryTerm( slug! );
 if( !term ) return Astro.redirect( "/glossary" );
 
-const siteUrl = Astro.site?.toString() ?? "https://www.nw-local.com";
+const siteUrl = requireSiteUrl( Astro.site );
 const baseUrl = normalizeSiteUrl( siteUrl );
 const structuredData: StructuredData[] = [
   buildBreadcrumbList( [

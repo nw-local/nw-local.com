@@ -10,6 +10,7 @@ import {
   buildBreadcrumbList,
   normalizeSiteUrl,
   type StructuredData,
+  requireSiteUrl,
 } from "../../lib/jsonld";
 
 export async function getStaticPaths() {
@@ -25,7 +26,7 @@ if( !terpene ) return Astro.redirect( "/terpenes" );
 
 const ogImage = terpene.heroImage?.asset ? urlFor( terpene.heroImage ).width( 1200 ).height( 630 ).format( "jpg" ).url() : undefined;
 
-const siteUrl = Astro.site?.toString() ?? "https://www.nw-local.com";
+const siteUrl = requireSiteUrl( Astro.site );
 const baseUrl = normalizeSiteUrl( siteUrl );
 const structuredData: StructuredData[] = [
   buildBreadcrumbList( [
