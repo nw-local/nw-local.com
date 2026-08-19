@@ -3,7 +3,7 @@ export
 
 .DEFAULT_GOAL := help
 
-.PHONY: help install dev build preview studio deploy-studio upload-image prep-images check-nightly lint format upgrade upgrade-latest
+.PHONY: help install dev build preview studio deploy-studio upload-image prep-images check-nightly check-analytics lint format upgrade upgrade-latest
 
 help: ## Show this help message with all available targets
 	@grep -hE '^[a-zA-Z_-]+:.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
@@ -35,6 +35,9 @@ prep-images: ## Convert and rename a directory of images for Sanity (vars: DIR, 
 
 check-nightly: ## Verify the nightly audit's cron is still firing
 	@./scripts/check-nightly-freshness.sh
+
+check-analytics: ## Verify ./dist/ ships a working Google Analytics snippet
+	@./scripts/check-analytics-snippet.sh
 
 lint: ## Run ESLint
 	yarn lint

@@ -80,6 +80,7 @@ Run `make` (no args) to print the full target list with descriptions.
 | Prep images         | `make prep-images`   | see [Image workflow](#image-workflow)                |
 | Upload image        | `make upload-image`  | see [Image workflow](#image-workflow)                |
 | Check nightly cron  | `make check-nightly` | fails if the nightly audit's schedule has stalled    |
+| Check analytics     | `make check-analytics` | asserts `./dist/` ships a GA snippet that records hits |
 | Studio lint         | `cd studio && yarn lint` | separate project; the root's ESLint ignores it   |
 | Studio type check   | `cd studio && yarn typecheck` |                                             |
 | Studio format       | `cd studio && yarn format` | Prettier; `format:check` verifies instead      |
@@ -90,9 +91,11 @@ The `studio` job in CI runs the three studio checks on every PR.
 
 ## Automated testing
 
-Three GitHub Actions workflows guard the site: [`ci.yml`](.github/workflows/ci.yml) (type check + audit on every PR and push to `main`, plus a nightly-freshness check on pushes only), the reusable [`audit.yml`](.github/workflows/audit.yml) (build, sitemap validation, Lychee link check, Lighthouse), and [`nightly.yml`](.github/workflows/nightly.yml) (the same audit on a daily cron, catching content drift between PRs).
+Three GitHub Actions workflows guard the site: [`ci.yml`](.github/workflows/ci.yml) (type check + audit on every PR and push to `main`, plus a nightly-freshness check on pushes only), the reusable [`audit.yml`](.github/workflows/audit.yml) (build, sitemap validation, analytics-snippet check, Lychee link check, Lighthouse), and [`nightly.yml`](.github/workflows/nightly.yml) (the same audit on a daily cron, catching content drift between PRs).
 
 Because the nightly is the only place external links get checked, a stalled cron is itself a failure mode — and a silent one, since GitHub disables schedules in public repos after 60 days of inactivity without changing the workflow's reported state. `make check-nightly` (run in CI on pushes to `main`) fails when the last completed scheduled run is more than 3 days old. See the Invariants section of `CLAUDE.md`.
+
+`make check-analytics` guards a failure of the same silent shape: a Google Analytics snippet can load, return 200, and initialise while recording nothing, so the check asserts the built HTML still pushes an `arguments` object rather than trusting that the tag is present. It runs on every PR, because the regression it exists to catch was introduced by a formatting pass.
 
 There are deliberately no unit tests — the failure modes of a content-driven static site are broken queries, broken links, and regressed SEO/perf signals, not logic bugs. Full rationale, per-step details, and the considered/rejected list: [docs/testing.md](docs/testing.md).
 
