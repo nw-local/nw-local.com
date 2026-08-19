@@ -60,6 +60,26 @@ jobs:
           fi
           echo "Sitemap structure valid"
 
+  validate-analytics:
+    name: Validate analytics snippet
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v7
+        with:
+          name: dist
+          path: dist/
+      # Runs on pull requests as well as the nightly, unlike nightly-freshness:
+      # this failure IS caused by the contributor's diff and IS fixable in it,
+      # which is precisely the case where failing the PR is the useful thing to
+      # do. The regression it guards against was introduced by an unrelated
+      # formatting pass, so the check has to sit where such a pass gets reviewed.
+      - name: Check the GA snippet can actually record hits
+        run: ./scripts/check-analytics-snippet.sh dist
+      # No secrets: the check reads the built HTML and asserts on the snippet's
+      # shape, never on the measurement id's value.
+
   validate-links:
     name: Check links
     runs-on: ubuntu-latest

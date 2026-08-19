@@ -80,6 +80,7 @@ Run `make` (no args) to print the full target list with descriptions.
 | Prep images         | `make prep-images`   | see [Image workflow](#image-workflow)                |
 | Upload image        | `make upload-image`  | see [Image workflow](#image-workflow)                |
 | Check nightly cron  | `make check-nightly` | fails if the nightly audit's schedule has stalled    |
+| Check analytics     | `make check-analytics` | asserts `./dist/` ships a GA snippet that records hits |
 | Studio lint         | `cd studio && yarn lint` | separate project; the root's ESLint ignores it   |
 | Studio type check   | `cd studio && yarn typecheck` |                                             |
 | Studio format       | `cd studio && yarn format` | Prettier; `format:check` verifies instead      |
