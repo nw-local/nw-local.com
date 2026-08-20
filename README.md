@@ -27,7 +27,7 @@ The site is a static, content-driven catalog of strains, products, and retail pa
 | Package manager  | yarn                                                   |
 | Integrations     | `@astrojs/rss`, `@astrojs/sitemap`, `astro-portabletext` |
 | Image handling   | `sharp`, `@sanity/image-url`                           |
-| Analytics        | Google Analytics 4                                     |
+| Analytics        | Google Analytics 4 (production builds only)             |
 
 There are no Markdown files in the repo — every piece of content (strains, products, blog posts, pages, retailers, site settings) lives in Sanity and is fetched at build time via GROQ queries in `src/lib/sanity.ts`.
 
