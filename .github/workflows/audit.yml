@@ -44,6 +44,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
+      # checkout must precede download-artifact: it cleans the workspace, so
+      # doing it second would delete the dist/ the later steps assert against.
+      # It is needed at all because this job now runs a repo script.
+      - uses: actions/checkout@v6
       - uses: actions/download-artifact@v7
         with:
           name: dist
@@ -59,6 +63,13 @@ jobs:
             grep -q '<loc>' dist/sitemap-0.xml || { echo "sitemap-0.xml has no <loc> entries"; exit 1; }
           fi
           echo "Sitemap structure valid"
+      # Extracted to a script rather than inlined here, matching
+      # check-nightly-freshness.sh and check-analytics-snippet.sh: logic that
+      # lives in YAML can only be exercised by pushing a commit, and this check
+      # shipped with a `grep -om1` bug that made it fail on correct input while
+      # passing its own mismatch case vacuously. Running it locally caught that.
+      - name: Check robots.txt exists and points at this build's sitemap
+        run: ./scripts/check-robots.sh dist
 
   validate-analytics:
     name: Validate analytics snippet
