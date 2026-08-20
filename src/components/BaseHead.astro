@@ -2,6 +2,7 @@
 import "../styles/global.css";
 import JsonLd from "./JsonLd.astro";
 import type { StructuredData } from "../lib/jsonld";
+import { GOOGLE_ANALYTICS_ID } from "../lib/analytics";
 
 interface Props {
   title: string
@@ -9,10 +10,6 @@ interface Props {
   ogImage?: string
   structuredData?: StructuredData[]
 }
-
-const GOOGLE_ANALYTICS_ID = import.meta.env.PUBLIC_GOOGLE_ANALYTICS_ID;
-
-if( !GOOGLE_ANALYTICS_ID ) throw new Error( "Missing PUBLIC_GOOGLE_ANALYTICS_ID env var" );
 
 // The Google Analytics snippet at the bottom of this file is copied verbatim
 // from Google and must stay that way. Two details in it are load-bearing, and

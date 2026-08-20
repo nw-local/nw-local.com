@@ -47,7 +47,7 @@ make install
 
 # 3. Environment
 cp .env.example .env  # then fill it in — see "Environment variables" below
-# fill in SANITY_PROJECT_ID, SANITY_DATASET, SANITY_API_TOKEN, PUBLIC_GOOGLE_ANALYTICS_ID
+# fill in SANITY_API_TOKEN — the project id and dataset are already in the template
 
 # 4. Dev
 make dev
@@ -143,16 +143,17 @@ Webhook config, why Pages deploys are serialized behind a concurrency group, and
 
 ## Environment variables
 
-All four are required for both local development and CI.
+All three are required for both local development and CI.
 
 | Variable                       | Purpose                                                  |
 | ------------------------------ | -------------------------------------------------------- |
 | `SANITY_PROJECT_ID`            | Sanity project ID (`nyd3p2n0`)                           |
 | `SANITY_DATASET`               | Sanity dataset name (`production`)                       |
 | `SANITY_API_TOKEN`             | Read-only token for build-time content fetching          |
-| `PUBLIC_GOOGLE_ANALYTICS_ID`   | GA4 measurement ID (e.g. `G-XXXXXXXXXX`)                 |
 
 Local: put them in `.env` at the repo root. CI: stored as GitHub Actions secrets.
+
+The GA4 measurement ID is **not** among them. It is a public identifier that ships in the HTML of every page, so it lives in [`src/lib/analytics.ts`](src/lib/analytics.ts) under version control rather than in `.env` and CI secrets, where it bought no secrecy and quietly broke fresh checkouts.
 
 A separate `SANITY_WRITE_TOKEN` is used **only** by the image-upload helper script (`make upload-image`) when adding new image assets. It is not needed to build or run the site.
 
