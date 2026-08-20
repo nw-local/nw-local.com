@@ -78,7 +78,8 @@ Required in `.env` (and as GitHub Actions secrets):
 - `SANITY_PROJECT_ID` — Sanity project ID (`nyd3p2n0`)
 - `SANITY_DATASET` — Sanity dataset name (`production`)
 - `SANITY_API_TOKEN` — Read-only API token for build-time fetching
-- `PUBLIC_GOOGLE_ANALYTICS_ID` — Google Analytics 4 measurement ID (e.g. `G-XXXXXXXXXX`)
+
+The GA4 measurement ID is deliberately **not** an env var. It is a public identifier — it ships in the HTML of every page, and Astro's `PUBLIC_` prefix means "inlined into the client bundle" — so it lives in `src/lib/analytics.ts` under version control. Storing it as a secret bought no secrecy and cost real things: it was invisible without console access, never appeared in a diff, and was one more file a fresh worktree lacked. `.env.example` never listed it while the README told contributors to set it, so following the setup instructions produced a build that threw. Do not move it back into `.env`; the only genuinely secret build input is `SANITY_API_TOKEN`.
 
 ## Deployment
 
