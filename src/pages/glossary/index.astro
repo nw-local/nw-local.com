@@ -6,11 +6,12 @@ import {
   buildBreadcrumbList,
   normalizeSiteUrl,
   type StructuredData,
+  requireSiteUrl,
 } from "../../lib/jsonld";
 
 const terms = await getGlossaryTerms() ?? [];
 
-const siteUrl = Astro.site?.toString() ?? "https://www.nw-local.com";
+const siteUrl = requireSiteUrl( Astro.site );
 const baseUrl = normalizeSiteUrl( siteUrl );
 const structuredData: StructuredData[] = [
   buildBreadcrumbList( [

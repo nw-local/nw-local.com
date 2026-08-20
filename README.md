@@ -10,7 +10,7 @@ Customer-facing website for **Northwest Local Cannabis**, a Washington State i50
 [![Node](https://img.shields.io/badge/node-%E2%89%A522.20-339933?logo=node.js&logoColor=white)](https://nodejs.org)
 [![Yarn](https://img.shields.io/badge/yarn-package%20manager-2C8EBB?logo=yarn&logoColor=white)](https://yarnpkg.com)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
-[![Deployed](https://img.shields.io/badge/site-nw--local.com-1f6feb)](https://www.nw-local.com)
+[![Deployed](https://img.shields.io/badge/site-nw--local.com-1f6feb)](https://nw-local.com)
 
 The site is a static, content-driven catalog of strains, products, and retail partners, alongside a blog and a reference section covering terpenes and cannabis terminology. Content is authored in [Sanity Studio](https://nw-local.sanity.studio/), built into static HTML by [Astro](https://astro.build) at deploy time, and hosted on [GitHub Pages](https://pages.github.com/).
 
@@ -93,9 +93,7 @@ The `studio` job in CI runs the three studio checks on every PR.
 
 Three GitHub Actions workflows guard the site: [`ci.yml`](.github/workflows/ci.yml) (type check + audit on every PR and push to `main`, plus a nightly-freshness check on pushes only), the reusable [`audit.yml`](.github/workflows/audit.yml) (build, sitemap validation, analytics-snippet check, Lychee link check, Lighthouse), and [`nightly.yml`](.github/workflows/nightly.yml) (the same audit on a daily cron, catching content drift between PRs).
 
-Because the nightly is the only place external links get checked, a stalled cron is itself a failure mode — and a silent one, since GitHub disables schedules in public repos after 60 days of inactivity without changing the workflow's reported state. `make check-nightly` (run in CI on pushes to `main`) fails when the last completed scheduled run is more than 3 days old. See the Invariants section of `CLAUDE.md`.
-
-`make check-analytics` guards a failure of the same silent shape: a Google Analytics snippet can load, return 200, and initialise while recording nothing, so the check asserts the built HTML still pushes an `arguments` object rather than trusting that the tag is present. It runs on every PR, because the regression it exists to catch was introduced by a formatting pass.
+Two of those steps guard *silent* failures — a stalled nightly cron, and a Google Analytics snippet that loads and initialises while recording nothing — where every positive signal stays green and only an absence reveals the problem. Why each exists and what it asserts: [docs/testing.md](docs/testing.md).
 
 There are deliberately no unit tests — the failure modes of a content-driven static site are broken queries, broken links, and regressed SEO/perf signals, not logic bugs. Full rationale, per-step details, and the considered/rejected list: [docs/testing.md](docs/testing.md).
 
@@ -196,7 +194,7 @@ Each skill encodes the full workflow (research → preview → user approval →
 
 ## Useful links
 
-- Production site: <https://www.nw-local.com>
+- Production site: <https://nw-local.com>
 - Sanity Studio: <https://nw-local.sanity.studio/>
 - Sanity project management: <https://www.sanity.io/manage/personal/project/nyd3p2n0>
 - Astro docs: <https://docs.astro.build>

@@ -14,6 +14,7 @@ import {
   buildProduct,
   normalizeSiteUrl,
   type StructuredData,
+  requireSiteUrl,
 } from "../../lib/jsonld";
 
 export async function getStaticPaths() {
@@ -37,7 +38,7 @@ const lightboxImages = ( strain.gallery ?? [] ).map( ( image: { asset: unknown; 
   alt: image.alt ?? strain.name,
 }) );
 
-const siteUrl = Astro.site?.toString() ?? "https://www.nw-local.com";
+const siteUrl = requireSiteUrl( Astro.site );
 const baseUrl = normalizeSiteUrl( siteUrl );
 const structuredData: StructuredData[] = [
   buildProduct( strain, siteUrl, ogImage, "Northwest Local Cannabis" ),
