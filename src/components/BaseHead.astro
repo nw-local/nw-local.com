@@ -16,6 +16,16 @@ interface Props {
 // this rationale lives here rather than beside them because comments inside a
 // define:vars script are shipped to every visitor, while frontmatter is not.
 //
+// The whole block is gated on import.meta.env.PROD, which `astro build` sets
+// true and `astro dev` sets false, so the dev server stops reporting into the
+// production property. This is not hygiene for its own sake: over the fourteen
+// days after analytics started working again, the property recorded 16
+// pageviews from `localhost` against 1 from `nw-local.com` — 94% of the data
+// was someone developing. A GA "internal traffic" filter would have discarded
+// those hits after collection; not sending them is simpler and cannot be
+// misconfigured. `make preview` still serves a production build, so a local
+// smoke test of the real artifact keeps its tag.
+//
 // 1. `function gtag(){ dataLayer.push(arguments) }` — gtag.js does not execute
 //    the entries it finds on dataLayer, it inspects them, and it only treats an
 //    entry as a gtag command when that entry is an `arguments` object. Rest
@@ -66,12 +76,16 @@ const resolvedOgImage = ogImage ?? new URL( "/og-default.jpg", Astro.site ).toSt
 
 {structuredData.map( data => <JsonLd data={data} /> )}
 
-<script async src={`https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ANALYTICS_ID}`}></script>
-<script define:vars={{ GOOGLE_ANALYTICS_ID }}>
-  // Vendor snippet: `arguments` and `window.gtag` are load-bearing. See the frontmatter above.
-  window.dataLayer = window.dataLayer || [];
-  function gtag() {dataLayer.push( arguments );}
-  window.gtag = gtag;
-  gtag( "js", new Date() );
-  gtag( "config", GOOGLE_ANALYTICS_ID );
-</script>
+{import.meta.env.PROD && (
+  <Fragment>
+    <script async src={`https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ANALYTICS_ID}`}></script>
+    <script define:vars={{ GOOGLE_ANALYTICS_ID }}>
+      // Vendor snippet: `arguments` and `window.gtag` are load-bearing. See the frontmatter above.
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {dataLayer.push( arguments );}
+      window.gtag = gtag;
+      gtag( "js", new Date() );
+      gtag( "config", GOOGLE_ANALYTICS_ID );
+    </script>
+  </Fragment>
+)}
