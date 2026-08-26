@@ -82,6 +82,15 @@ Update an existing cannabis strain in the Northwest Local Cannabis catalog via S
    - For description changes, follow the same writing guidelines as `/new-strain`: original voice, inline links, Learn More section
    - Apply only the requested changes
 
+7a. **If the change is a rename** — `name` is never the only field that carries the old name. Work the full list before publishing:
+   - `name` and `slug.current` on the strain
+   - The `description` prose, and the *link text* of any Learn More bullet. Ask whether external links naming the old strain should stay: when a rename is requested by the genetics provider, links to the old name's Leafly/SeedFinder/seed-shop pages re-establish exactly the association the rename was meant to break, and that is the user's call rather than a default
+   - `heroImage.alt` and every `gallery[].alt` — **these are what the page renders**, and they are separate from the asset's `description`. Patching only the asset changes what the Studio shows and leaves the visitor-facing alt untouched. See the alt-text invariant in the repo's `CLAUDE.md`
+   - `originalFilename`, `label`, and `description` on each `sanity.imageAsset`. Safe to rename: the CDN URL is built from the asset `_id` (the file's SHA-1), so no image URL changes and `prep-images` dedup is unaffected
+   - Any `product` referencing the strain, and any `blogPost`, `page`, or `glossaryTerm` mentioning it. Use `count(string::split(lower(field), "oldname")) > 1`, never `match` — `match` tokenizes and returns everything
+   - **Verify by grepping built `dist/` HTML for the old name, not by trusting a GROQ result.** The build flattens every field onto one surface; a projection that looks exhaustive routinely misses sibling fields like `alt` and `caption`
+   - The slug change 404s the old URL. Offer a `redirects` entry in `astro.config.mjs`, and **publish the Sanity rename before that PR merges** — the reverse order breaks both URLs. See the redirect invariant in `CLAUDE.md`
+
 8. **Ask if featured** — show current featured status and ask if it should be changed. Default to current value if the user declines.
 
 9. **Preview and publish:**

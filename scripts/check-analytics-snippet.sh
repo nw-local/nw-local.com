@@ -39,6 +39,7 @@ fi
 normalise() { tr -d ' \t\n\r'; }
 
 pages_total=0
+pages_redirect=0
 pages_missing_loader=0
 pages_broken_push=0
 pages_missing_global=0
@@ -51,9 +52,35 @@ failures=()
 # assertion here reads as satisfied for the wrong reason.
 occurrences() { printf '%s' "$1" | grep -o -- "$2" | wc -l | tr -d ' '; }
 
+# A configured entry in astro.config.mjs `redirects` emits an HTML stub at the
+# old path: a meta refresh, a canonical to the new URL, a noindex, and nothing
+# else. It carries no analytics snippet, and should not -- the browser leaves
+# before a hit could be recorded, and counting the bounce would corrupt the very
+# reports this check exists to protect.
+#
+# The exemption deliberately requires all three signals rather than the meta
+# refresh alone. Skipping on one loose match is how a check starts failing open,
+# which is the failure this script's header exists to describe: a real page that
+# somehow gained a refresh tag would be waved through, and the absence of hits
+# from it would again be something no job was looking for. A page that trips
+# some but not all of these is not a stub and is asserted against normally.
+#
+# Stubs are counted and reported rather than silently dropped, so the page total
+# still reconciles against the build's own page count.
+is_redirect_stub() {
+  [ "$( occurrences "$1" 'http-equiv="refresh"' )" -gt 0 ] &&
+  [ "$( occurrences "$1" 'name="robots"content="noindex"' )" -gt 0 ] &&
+  [ "$( occurrences "$1" 'googletagmanager\.com' )" -eq 0 ]
+}
+
 while IFS= read -r page; do
   pages_total=$(( pages_total + 1 ))
   flat="$( normalise < "$page" )"
+
+  if is_redirect_stub "$flat"; then
+    pages_redirect=$(( pages_redirect + 1 ))
+    continue
+  fi
 
   if [ "$( occurrences "$flat" 'googletagmanager\.com/gtag/js?id=G-' )" -eq 0 ]; then
     pages_missing_loader=$(( pages_missing_loader + 1 ))
@@ -90,4 +117,8 @@ if [ "${#failures[@]}" -gt 0 ]; then
   exit 1
 fi
 
-echo "Analytics snippet OK on all $pages_total page(s)"
+if [ "$pages_redirect" -gt 0 ]; then
+  echo "Analytics snippet OK on $(( pages_total - pages_redirect )) page(s); $pages_redirect redirect stub(s) exempt"
+else
+  echo "Analytics snippet OK on all $pages_total page(s)"
+fi
