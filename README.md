@@ -105,9 +105,9 @@ There are deliberately no unit tests — the failure modes of a content-driven s
 
 ```text
 .
-├── astro.config.mjs   # site URL + integrations
+├── astro.config.mjs   # site URL, integrations, slug redirects
 ├── Makefile           # all run/build/image commands
-├── docs/              # deployment, content model, SEO, testing, images
+├── docs/              # deployment, content model, SEO, testing, images, marketing
 ├── public/            # static assets served as-is
 ├── scripts/           # image prep/upload, CI health checks
 ├── src/               # Astro site: pages, components, layouts, lib
