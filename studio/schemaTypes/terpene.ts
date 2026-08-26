@@ -22,7 +22,7 @@ export const terpeneType = defineType({
       name: 'tagline',
       title: 'Tagline',
       type: 'string',
-      description: 'Short one-line summary (e.g., "Earthy, musky — promotes relaxation")',
+      description: 'Short one-line summary (e.g., "Earthy and musky, promoting relaxation")',
     }),
     defineField({
       name: 'aroma',
@@ -45,7 +45,7 @@ export const terpeneType = defineType({
       title: 'Description',
       type: 'blockContent',
       description:
-        'Detailed description of this terpene — what it is, where it occurs in nature, how it affects the cannabis experience',
+        'Detailed description of this terpene: what it is, where it occurs in nature, how it affects the cannabis experience',
     }),
     defineField({
       name: 'foundIn',
