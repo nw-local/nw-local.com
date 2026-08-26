@@ -7,6 +7,7 @@ import {
   type SiteSettings,
   type Strain,
 } from "./sanity";
+import { childrenToText } from "./portableText";
 
 interface SchemaBase {
   "@context": "https://schema.org";
@@ -128,12 +129,6 @@ export function requireSiteUrl( site: URL | undefined ): string {
   return site.toString();
 }
 
-function isTextSpan( child: unknown ): child is { text: string } {
-  if( typeof child !== "object" || child === null ) return false;
-  if( !( "text" in child ) ) return false;
-  return typeof child.text === "string";
-}
-
 export function portableTextToPlainText( blocks?: PortableText, maxParagraphs = 2 ): string {
   if( !blocks ) return "";
 
@@ -143,13 +138,7 @@ export function portableTextToPlainText( blocks?: PortableText, maxParagraphs = 
     if( paragraphs.length >= maxParagraphs ) break;
     if( !isParagraphBlock( block ) ) continue;
 
-    const children = block.children;
-    if( !Array.isArray( children ) ) continue;
-
-    const text = children
-      .filter( isTextSpan )
-      .map( child => child.text )
-      .join( "" );
+    const text = childrenToText( block.children );
 
     if( text.length > 0 ) paragraphs.push( text );
   }

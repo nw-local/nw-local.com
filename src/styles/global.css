@@ -899,6 +899,37 @@ footer {
   margin-bottom: 1rem;
 }
 
+/* --- Blog post --- */
+
+/* These three carried their declarations as inline style attributes on the
+   elements in blog/[...slug].astro. An inline style beats any stylesheet rule,
+   including one inside @media print, so the print sheet below could only have
+   reached them with !important. Moving them here keeps the print overrides
+   ordinary. */
+.post-article {
+  max-width: var(--content-width);
+  margin: 0 auto;
+}
+
+.post-hero {
+  width: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+}
+
+.post-tags {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+/* Provenance for a printed or PDF'd article. Hidden on screen, where the
+   address bar already answers the question. */
+.print-source {
+  display: none;
+}
+
 /* --- Portable Text --- */
 
 .portable-text h2 { margin: 2rem 0 1rem; }
@@ -1280,5 +1311,332 @@ footer {
 
   .strain-search-sort {
     flex-direction: column;
+  }
+}
+
+/* --- Print ---
+ *
+ * Last in the file deliberately. A media query contributes nothing to
+ * specificity, so `@media print { .portable-text a { ... } }` ties with the
+ * plain `.portable-text a` rule above and wins only on source order. Placed
+ * earlier, every rule in here would silently lose.
+ *
+ * Two tiers: a site-wide baseline that makes any page printable at all, then a
+ * layer that tunes the long-form article pages people actually print.
+ */
+
+@media print {
+
+  /* The theme is entirely custom properties, and several are applied through
+     inline style attributes in page templates. Redefining the properties at the
+     root reaches those too, because an inline style only *references* the
+     variable: it does not pin the value. This one block is what turns the whole
+     site light, without a single per-element color override below. */
+  :root {
+    --bg: #ffffff;
+    --bg-rgb: 255, 255, 255;
+    --bg-surface: #ffffff;
+    --text-primary: #000000;
+    --text-secondary: #333333;
+    --text-emphasis: #000000;
+    --accent: #000000;
+    --accent-hover: #000000;
+    --border: #999999;
+  }
+
+  @page {
+    margin: 18mm;
+  }
+
+  /* Browsers omit background paint when printing but keep foreground color, so
+     a page left alone here is white on white: the text does not print at all.
+     Stating both is what fixes it. */
+  body {
+    background: #ffffff;
+    color: #000000;
+    font-size: 11pt;
+    line-height: 1.5;
+  }
+
+  /* The column and the gutters are the printer's job now. */
+  main {
+    max-width: none;
+    padding: 0;
+  }
+
+  /* Interface, not content: navigation, the age gate, filtering and paging
+     controls, the lightbox, and the hover-only glossary card.
+
+     `body > header` rather than `header`, and this is load-bearing: Nav.astro
+     renders a <header> as a direct child of body, but a blog post wraps its own
+     title, date, and byline in a <header> too. A bare type selector matches
+     both, so hiding the site nav also deletes the article's masthead and the
+     printed page opens mid-sentence with no title on it. */
+  body > header,
+  body > footer,
+  .filter-bar,
+  .strain-controls,
+  .pagination,
+  .lightbox,
+  .glossary-tip,
+  .hero-cta-row,
+  .marketplace-card-cta {
+    display: none;
+  }
+
+  /* .hero-backdrop is not in that list, and deliberately. It reads as pure
+     decoration, but HeroBackdrop.astro renders the page's <slot /> inside
+     .hero-backdrop-content, so the wrapper holds the homepage's logo lockup,
+     tagline, and calls to action. Hiding it prints a homepage with no title on
+     it, the same way a bare `header` selector printed an article with no title.
+     Strip the photograph layers and the full-bleed geometry; keep the content. */
+  .hero-backdrop {
+    width: auto;
+    margin-inline: 0;
+    margin-top: 0;
+    overflow: visible;
+  }
+
+  .hero-backdrop-slide,
+  .hero-backdrop-scrim {
+    display: none;
+  }
+
+  /* The lockup is white artwork on transparency, drawn to sit on a dark page,
+     so on a white one it is white on white. Hiding it is not the fix: it is the
+     only content the homepage h1 has, and removing it prints a page with a
+     literally empty title. Inverting is safe specifically because the artwork is
+     monochrome, measured at 0.003 mean saturation, so invert maps it to black
+     without inventing a hue. Do not extend this selector to photographs. */
+  .hero-lockup {
+    filter: invert(1);
+  }
+
+  /* The bar itself follows --accent to black, but its glow is a hardcoded
+     rgba(0, 255, 136, ...) that no variable flip can reach, so the divider
+     prints a black bar wrapped in a green halo. */
+  .hero-accent {
+    box-shadow: none;
+  }
+
+  /* AgeGate.astro writes `display:flex` onto this element inline from its
+     script, and an inline style outranks a stylesheet. This is the only place
+     in the print sheet that needs !important, and it needs it for that reason
+     alone. */
+  .age-gate {
+    display: none !important;
+  }
+
+  /* .fade-in starts at opacity 0 and is revealed by an IntersectionObserver on
+     scroll. Anything below the fold has never intersected, so without this the
+     homepage, strain, terpene, and author pages print their lower half blank. */
+  .fade-in {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  /* Motion has no meaning on paper, and the text-glimmer keyframes on article
+     paragraphs animate a text-shadow that a printer would resolve to a smudge. */
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  /* Backgrounds do not print, so a badge styled only by fill would come out as
+     invisible text. An outline carries the same grouping in ink the printer
+     will actually lay down.
+
+     The [data-type] half of the selector is what makes this work. The three
+     variants above are written as .product-badge[data-type="indica"] and so on,
+     which outranks a bare .product-badge no matter where it sits in the file.
+     Matching the attribute unqualified ties on specificity, and this block wins
+     on source order. */
+  .product-badge,
+  .product-badge[data-type] {
+    background: none;
+    border: 1px solid var(--border);
+    color: #000000;
+  }
+
+  /* --- Articles --- */
+
+  /* h1/h2 are drawn oversized and stretched horizontally as a display effect.
+     At print resolution the stretch reads as a rendering fault rather than a
+     style, and the size boost pushes an h1 past the width of the page box.
+     Neutralizing the two custom properties undoes both in one place, exactly
+     the way the responsive block above retunes --heading-base-size. */
+  h1, h2 {
+    --heading-size-boost: 1;
+    --heading-stretch-x: 1;
+    transform: none;
+    max-width: none;
+    -webkit-text-stroke: 0;
+  }
+
+  h1 { --heading-base-size: 20pt; }
+  h2 { --heading-base-size: 14pt; }
+  h3 { font-size: 12pt; }
+
+  /* A heading stranded at the foot of a page is the most common print defect
+     and the cheapest to prevent. */
+  h1, h2, h3, h4 {
+    break-after: avoid;
+    break-inside: avoid;
+  }
+
+  p {
+    orphans: 3;
+    widows: 3;
+  }
+
+  .post-article {
+    max-width: none;
+  }
+
+  /* Chosen as decoration rather than content: the hero photograph would consume
+     most of the first sheet before a sentence appears, and the byline portrait
+     and tag pills are screen affordances. The author's name and role, the date,
+     and every figure and table inside the article body all still print. */
+  .post-hero,
+  .author-byline-avatar,
+  .post-tags {
+    display: none;
+  }
+
+  /* The dotted accent rule under a glossary term points at a tooltip that
+     cannot open and a page the reader cannot reach from paper. */
+  .glossary-term {
+    text-decoration: none;
+    color: #000000;
+  }
+
+  /* Links are black like the body copy once --accent flips, so an underline is
+     the only thing left marking them as references. Restricted to the same
+     external links that get their URL spelled out below: underlining a link
+     whose destination is not printed promises the reader a way to follow it
+     that paper cannot deliver, and the glossary marks up twenty-five to thirty
+     of those per article. */
+  .portable-text a[href^="http"]:not([href*="nw-local.com"]) {
+    text-decoration: underline;
+  }
+
+  /* Citations are the reason these articles get printed, and a DOI is useless
+     if its destination is invisible. Two exclusions. Internal links are the
+     inline glossary terms, twenty-five to thirty per article, pointing at pages
+     that only exist to support the piece. And .link-shows-href marks a link
+     whose anchor text is already the URL, which is how the reference lists at
+     the foot of these articles are written: without it every citation there
+     prints its DOI twice, once as the link and again in parentheses.
+     PortableTextLink.astro sets that class, because CSS cannot compare an
+     element's text to its own attribute. */
+  .portable-text a[href^="http"]:not([href*="nw-local.com"]):not(.link-shows-href)::after {
+    content: " (" attr(href) ")";
+    font-size: 0.85em;
+    word-break: break-all;
+  }
+
+  /* Keep a figure and its caption on one sheet; a caption alone overleaf is
+     unreadable. The height cap stops a tall diagram from claiming a whole page
+     on its own. */
+  .portable-text figure,
+  .portable-text blockquote {
+    break-inside: avoid;
+  }
+
+  .portable-text figure img {
+    max-height: 4in;
+    width: auto;
+    max-width: 100%;
+    margin: 0 auto;
+  }
+
+  .portable-text figcaption,
+  .portable-text .pt-table-caption {
+    break-before: avoid;
+  }
+
+  /* .pt-table-scroll is overflow-x: auto for narrow viewports. Print has no
+     scrolling, so a print renderer resolves that overflow by clipping: every
+     column past the page edge is simply cut off, silently. Restoring visible
+     overflow is what keeps the wide tables in these articles whole. */
+  .portable-text .pt-table-scroll {
+    overflow: visible;
+    border: none;
+    border-radius: 0;
+  }
+
+  .portable-text table {
+    /* 34rem exceeds the printable width at these margins, which would
+       reintroduce the clipping the rule above just fixed. */
+    min-width: 0;
+    width: 100%;
+    font-size: 9pt;
+  }
+
+  /* position: sticky is meaningless in paged media and interferes with the
+     header-group promotion, which is what repeats the column headers onto each
+     sheet a long table spans. */
+  .portable-text thead {
+    display: table-header-group;
+  }
+
+  .portable-text thead th {
+    position: static;
+    color: #000000;
+    border-bottom: 1.5pt solid #000000;
+  }
+
+  .portable-text tbody th,
+  .portable-text tbody td {
+    border-bottom: 0.5pt solid var(--border);
+  }
+
+  .portable-text tbody tr {
+    break-inside: avoid;
+  }
+
+  /* The highlighted row marks itself with a tinted fill and an inset accent
+     rule, and neither prints: an inset box-shadow is a background effect. A
+     real left border reproduces the marker in ink. The bold on its cells
+     survives untouched, which was always the row's primary emphasis channel. */
+  .portable-text tbody tr.is-highlighted {
+    background: none;
+    box-shadow: none;
+  }
+
+  .portable-text tbody tr.is-highlighted th {
+    border-left: 3pt solid #000000;
+  }
+
+  /* A tinted fill is how inline code separates itself from prose on screen; on
+     paper that fill is dropped and the code becomes indistinguishable. */
+  .portable-text code {
+    background: none;
+    border: 0.5pt solid var(--border);
+  }
+
+  /* Provenance line, hidden on screen. */
+  .print-source {
+    display: block;
+    margin-top: 2rem;
+    padding-top: 0.75rem;
+    border-top: 0.5pt solid var(--border);
+    font-size: 8pt;
+    color: var(--text-secondary);
+    break-inside: avoid;
+  }
+
+  .print-source-site {
+    font-weight: 700;
+  }
+
+  /* A colon rather than a bullet or a dash, matching the house rule on
+     visitor-facing copy. */
+  .print-source-site::after {
+    content: ": ";
+    font-weight: 400;
   }
 }

@@ -3,6 +3,7 @@ import { PortableText as PT } from "astro-portabletext";
 import PortableTextImage from "./PortableTextImage.astro";
 import PortableTextTable from "./PortableTextTable.astro";
 import GlossaryTerm from "./GlossaryTerm.astro";
+import PortableTextLink from "./PortableTextLink.astro";
 
 const { value } = Astro.props;
 
@@ -10,6 +11,11 @@ const { value } = Astro.props;
 // a display:none div — so without this mapping every inline image in a body
 // field disappears silently. Custom marks fall back to a bare span, which would
 // strip a glossary link down to plain text.
+//
+// `link` is the one entry here that overrides a built-in rather than filling a
+// gap. The built-in emits a bare `<a href>` with no guard against a missing
+// href; the override adds that guard and flags links whose text already is
+// their href, which the print stylesheet needs to avoid printing a URL twice.
 const components = {
   type: {
     image: PortableTextImage,
@@ -17,6 +23,7 @@ const components = {
   },
   mark: {
     glossaryRef: GlossaryTerm,
+    link: PortableTextLink,
   },
 };
 ---

@@ -33,18 +33,25 @@ const authorImageUrl = post.author?.photo?.asset
 const settings = await getSiteSettings();
 const siteUrl = requireSiteUrl( Astro.site );
 const baseUrl = normalizeSiteUrl( siteUrl );
+const postUrl = `${baseUrl}/blog/${post.slug.current}/`;
 const structuredData: StructuredData[] = [
   buildArticle({ post, siteUrl, settings, heroImageUrl: ogImage, authorImageUrl }),
   buildBreadcrumbList( [
     { name: "Home", url: `${baseUrl}/` },
     { name: "Blog", url: `${baseUrl}/blog/` },
-    { name: post.title, url: `${baseUrl}/blog/${post.slug.current}/` },
+    { name: post.title, url: postUrl },
   ] ),
 ];
+
+// Shown only when the page is printed, so a PDF that gets forwarded still says
+// where it came from. The scheme and the trailing slash are stripped because a
+// reader retypes this rather than clicking it; the canonical form stays in the
+// breadcrumb above, which is what machines read.
+const printSourceUrl = postUrl.replace( /^https?:\/\//, "" ).replace( /\/$/, "" );
 ---
 
 <Layout title={post.title} description={post.description} ogImage={ogImage} structuredData={structuredData}>
-  <article style="max-width:var(--content-width);margin:0 auto;">
+  <article class="post-article">
     <header style="margin-bottom:2rem;">
       <p style="font-size:0.75rem;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:0.5rem;">
         {formattedDate}
@@ -57,7 +64,7 @@ const structuredData: StructuredData[] = [
         </div>
       )}
       {post.tags && post.tags.length > 0 && (
-        <div style="display:flex;gap:0.5rem;margin-top:1rem;">
+        <div class="post-tags">
           {post.tags.map( ( tag: string ) => (
             <span class="product-badge">{tag}</span>
           ) )}
@@ -67,14 +74,19 @@ const structuredData: StructuredData[] = [
 
     {post.heroImage?.asset && (
       <img
+        class="post-hero"
         src={urlFor( post.heroImage ).width( 1200 ).height( 600 ).format( "webp" ).url()}
         alt={post.heroImage.alt ?? ""}
         width="1200"
         height="600"
-        style="border-radius:8px;margin-bottom:2rem;width:100%;object-fit:cover;"
       />
     )}
 
     {post.body && <PortableText value={post.body} />}
+
+    <p class="print-source">
+      {settings?.siteTitle && <span class="print-source-site">{settings.siteTitle}</span>}
+      <span class="print-source-url">{printSourceUrl}</span>
+    </p>
   </article>
 </Layout>
