@@ -1,0 +1,40 @@
+---
+import type { MarkProps } from "astro-portabletext/types";
+import { childrenToText } from "../lib/portableText";
+
+// The shape Sanity's built-in `link` annotation stores.
+type LinkDef = {
+  href?: string;
+};
+
+type Props = MarkProps<LinkDef>;
+
+const { node } = Astro.props;
+const href = node.markDef.href;
+
+// astro-portabletext's built-in link renderer emits `<a href={markDef.href}>`
+// with no guard, so a link annotation saved without an href becomes an anchor
+// with no destination: valid HTML, invisible in review, dead on the page. Same
+// reasoning as PortableTextImage and PortableTextTable, and the same reason
+// rule.required() in the Studio does not cover it, since the Content Lake
+// accepts API writes that skip it.
+if( !href ) {
+  throw new Error(
+    `Link annotation ${node.markKey} has no href. `
+    + "A link mark without a destination renders as a dead anchor.",
+  );
+}
+
+// A reference list writes its citations as bare URLs, so the anchor text and the
+// href are already the same string. The print stylesheet appends the href after
+// external links, which would print those twice: once as the link text and again
+// in parentheses. CSS cannot compare an element's text to its own attribute, so
+// the comparison happens here and the result rides along as a class.
+//
+// Trailing slashes are normalised away because a citation is routinely written
+// without one while the href carries it, and the two still name one destination.
+const normalize = ( url: string ) => url.trim().replace( /\/+$/, "" );
+const showsItsOwnHref = normalize( childrenToText( node.children ) ) === normalize( href );
+---
+
+<a href={href} class={showsItsOwnHref ? "link-shows-href" : undefined}><slot /></a>
