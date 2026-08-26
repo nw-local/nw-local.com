@@ -1,0 +1,162 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1880" height="1264" viewBox="0 0 1880 1264">
+  <!--
+    Fig. 3 for /blog/co2-enrichment-in-commercial-cannabis/, illustrating the
+    "Calcium delivery falls" section (blocks h48 through p51).
+
+    The diagnostic signal in that section is *where* the symptom appears, not
+    what a damaged leaf looks like, so the figure contrasts two deficiency
+    patterns rather than depicting tissue damage. Drawing a photorealistic
+    spotted leaf would put the emphasis on appearance, which is the part that
+    does not discriminate between causes.
+
+    Content maps to the article: p50 for mass flow and the lack of phloem
+    mobility, p51 for the newest tissue being both the fastest expanding and the
+    least transpiring, and p49 for the feed EC line in the callout band.
+
+    Same 40-character discipline inside the plant cards as fig2: they are 420
+    wide with 34 of padding, and an over-long line runs out through the border
+    with nothing downstream to catch it.
+  -->
+  <style>
+    .fig     { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
+    .title   { font-size: 52px; font-weight: 700; fill: #1A1A1A; letter-spacing: -0.6px; }
+    .deck    { font-size: 30px; fill: #545454; }
+    .label   { font-size: 22px; font-weight: 700; letter-spacing: 1.7px; }
+    .head    { font-size: 26px; font-weight: 700; fill: #1A1A1A; }
+    .sub     { font-size: 21px; fill: #6E6E6E; }
+    .note    { font-size: 23px; fill: #545454; }
+    .tag     { font-size: 19px; font-weight: 700; letter-spacing: 1.2px; }
+    .axis    { font-size: 18px; fill: #8E8E8E; letter-spacing: 1.2px; }
+    .step    { font-size: 24px; fill: #1A1A1A; }
+    .num     { font-size: 22px; font-weight: 700; fill: #FFFFFF; }
+    .callout { font-size: 30px; font-weight: 700; fill: #C0392B; }
+    .foot    { font-size: 23px; fill: #8E8E8E; }
+    .brand   { font-size: 23px; font-weight: 700; fill: #6B2D8B; }
+    .teal    { fill: #147868; }
+    .red     { fill: #C0392B; }
+    .rule    { stroke: #D5D5D6; stroke-width: 1.5; }
+    .stem    { stroke: #8E8E8E; stroke-width: 5; stroke-linecap: round; }
+    .ok      { fill: #ABCFC4; stroke: #147868; stroke-width: 2; }
+    .bad     { fill: #E8B4AE; stroke: #C0392B; stroke-width: 2; }
+  </style>
+
+  <rect width="1880" height="1264" fill="#F7F7F8"/>
+
+  <g class="fig">
+    <!-- Header -->
+    <text class="title" x="80" y="118">Why calcium shows up in the new growth</text>
+    <text class="deck" x="80" y="176">Calcium travels with water and does not move again once it arrives. Cutting transpiration cuts delivery, and the</text>
+    <text class="deck" x="80" y="218">shortfall lands on the tissue that is building fastest and transpiring least.</text>
+    <line class="rule" x1="80" y1="272" x2="1800" y2="272"/>
+
+    <text class="label teal" x="80" y="330">WHERE THE SYMPTOM APPEARS</text>
+    <text class="label teal" x="1000" y="330">THE CHAIN THAT DELIVERS IT</text>
+
+    <!-- Plant A: a phloem-mobile nutrient -->
+    <g>
+      <rect x="80" y="360" width="420" height="580" rx="14" fill="#F2F2F3" stroke="#D5D5D6" stroke-width="1.5"/>
+      <text class="head" x="114" y="406">A mobile nutrient</text>
+      <text class="sub" x="114" y="438">nitrogen, magnesium, potassium</text>
+
+      <text class="axis" x="414" y="502" text-anchor="end">NEWEST</text>
+      <text class="axis" x="414" y="806" text-anchor="end">OLDEST</text>
+
+      <line class="stem" x1="290" y1="800" x2="290" y2="502"/>
+
+      <!-- Top two levels stay clean: the plant refills them from below. -->
+      <path class="ok" d="M 280 540 C 252 514, 216 512, 190 524 C 218 546, 252 551, 280 540 Z"/>
+      <path class="ok" d="M 300 540 C 328 514, 364 512, 390 524 C 362 546, 328 551, 300 540 Z"/>
+      <path class="ok" d="M 280 615 C 252 589, 216 587, 190 599 C 218 621, 252 626, 280 615 Z"/>
+      <path class="ok" d="M 300 615 C 328 589, 364 587, 390 599 C 362 621, 328 626, 300 615 Z"/>
+      <!-- Bottom two levels are stripped to supply the top. -->
+      <path class="bad" d="M 280 690 C 252 664, 216 662, 190 674 C 218 696, 252 701, 280 690 Z"/>
+      <path class="bad" d="M 300 690 C 328 664, 364 662, 390 674 C 362 696, 328 701, 300 690 Z"/>
+      <path class="bad" d="M 280 765 C 252 739, 216 737, 190 749 C 218 771, 252 776, 280 765 Z"/>
+      <path class="bad" d="M 300 765 C 328 739, 364 737, 390 749 C 362 771, 328 776, 300 765 Z"/>
+
+      <!-- Drawn after the leaves so the transport arrow reads on top of the stem. -->
+      <line x1="290" y1="782" x2="290" y2="522" stroke="#147868" stroke-width="4" stroke-dasharray="10 8"/>
+      <path d="M 290 502 L 280 524 L 300 524 Z" fill="#147868"/>
+
+      <text class="tag teal" x="114" y="854">REMOBILIZED UPWARD</text>
+      <text class="note" x="114" y="890">The plant strips old leaves to feed</text>
+      <text class="note" x="114" y="918">new ones, so damage starts low.</text>
+    </g>
+
+    <!-- Plant B: calcium -->
+    <g>
+      <rect x="520" y="360" width="420" height="580" rx="14" fill="#F2F2F3" stroke="#D5D5D6" stroke-width="1.5"/>
+      <text class="head" x="554" y="406">Calcium</text>
+      <text class="sub" x="554" y="438">almost no phloem mobility</text>
+
+      <text class="axis" x="854" y="502" text-anchor="end">NEWEST</text>
+      <text class="axis" x="854" y="806" text-anchor="end">OLDEST</text>
+
+      <line class="stem" x1="730" y1="800" x2="730" y2="502"/>
+
+      <!-- The pattern inverts: the shortfall lands on the newest tissue. -->
+      <path class="bad" d="M 720 540 C 692 514, 656 512, 630 524 C 658 546, 692 551, 720 540 Z"/>
+      <path class="bad" d="M 740 540 C 768 514, 804 512, 830 524 C 802 546, 768 551, 740 540 Z"/>
+      <path class="bad" d="M 720 615 C 692 589, 656 587, 630 599 C 658 621, 692 626, 720 615 Z"/>
+      <path class="bad" d="M 740 615 C 768 589, 804 587, 830 599 C 802 621, 768 626, 740 615 Z"/>
+      <path class="ok" d="M 720 690 C 692 664, 656 662, 630 674 C 658 696, 692 701, 720 690 Z"/>
+      <path class="ok" d="M 740 690 C 768 664, 804 662, 830 674 C 802 696, 768 701, 740 690 Z"/>
+      <path class="ok" d="M 720 765 C 692 739, 656 737, 630 749 C 658 771, 692 776, 720 765 Z"/>
+      <path class="ok" d="M 740 765 C 768 739, 804 737, 830 749 C 802 771, 768 776, 740 765 Z"/>
+
+      <circle cx="730" cy="652" r="17" fill="#F2F2F3" stroke="#C0392B" stroke-width="4"/>
+      <line x1="719" y1="663" x2="741" y2="641" stroke="#C0392B" stroke-width="4"/>
+
+      <text class="tag red" x="554" y="854">CANNOT BE MOVED AGAIN</text>
+      <text class="note" x="554" y="890">New tissue transpires least, receives</text>
+      <text class="note" x="554" y="918">least, and cannot borrow from below.</text>
+    </g>
+
+    <!-- Delivery chain -->
+    <g>
+      <rect x="1000" y="360" width="800" height="92" rx="12" fill="#E6F2EE" stroke="#ABCFC4" stroke-width="1.5"/>
+      <circle cx="1040" cy="406" r="20" fill="#147868"/>
+      <text class="num" x="1040" y="414" text-anchor="middle">1</text>
+      <text class="step" x="1080" y="415">Transpiration pulls water up through the xylem</text>
+
+      <path d="M 1400 456 L 1400 466 M 1392 466 L 1400 476 L 1408 466 Z" stroke="#8E8E8E" stroke-width="3" fill="#8E8E8E"/>
+
+      <rect x="1000" y="484" width="800" height="92" rx="12" fill="#E6F2EE" stroke="#ABCFC4" stroke-width="1.5"/>
+      <circle cx="1040" cy="530" r="20" fill="#147868"/>
+      <text class="num" x="1040" y="538" text-anchor="middle">2</text>
+      <text class="step" x="1080" y="539">Calcium rides along with it by mass flow</text>
+
+      <path d="M 1400 580 L 1400 590 M 1392 590 L 1400 600 L 1408 590 Z" stroke="#8E8E8E" stroke-width="3" fill="#8E8E8E"/>
+
+      <rect x="1000" y="608" width="800" height="92" rx="12" fill="#F1E8F5" stroke="#C6A9D6" stroke-width="1.5"/>
+      <circle cx="1040" cy="654" r="20" fill="#6B2D8B"/>
+      <text class="num" x="1040" y="662" text-anchor="middle">3</text>
+      <text class="step" x="1080" y="663">Enrichment closes stomata, so less water moves</text>
+
+      <path d="M 1400 704 L 1400 714 M 1392 714 L 1400 724 L 1408 714 Z" stroke="#8E8E8E" stroke-width="3" fill="#8E8E8E"/>
+
+      <rect x="1000" y="732" width="800" height="92" rx="12" fill="#FDF0EE" stroke="#D5ADAE" stroke-width="1.5"/>
+      <circle cx="1040" cy="778" r="20" fill="#C0392B"/>
+      <text class="num" x="1040" y="786" text-anchor="middle">4</text>
+      <text class="step" x="1080" y="787">Less calcium arrives at the leaf</text>
+
+      <path d="M 1400 828 L 1400 838 M 1392 838 L 1400 848 L 1408 838 Z" stroke="#8E8E8E" stroke-width="3" fill="#8E8E8E"/>
+
+      <rect x="1000" y="856" width="800" height="92" rx="12" fill="#FDF0EE" stroke="#D5ADAE" stroke-width="1.5"/>
+      <circle cx="1040" cy="902" r="20" fill="#C0392B"/>
+      <text class="num" x="1040" y="910" text-anchor="middle">5</text>
+      <text class="step" x="1080" y="911">Phloem cannot move it, so new tissue goes short</text>
+    </g>
+
+    <!-- Callout -->
+    <rect x="80" y="988" width="1720" height="104" rx="14" fill="#FDF0EE" stroke="#D5ADAE" stroke-width="1.5"/>
+    <text class="callout" x="118" y="1034">Feed EC unchanged does not mean calcium delivered unchanged.</text>
+    <text class="note" x="118" y="1068">Watch total daily irrigation volume, and calcium in particular.</text>
+
+    <!-- Footer -->
+    <line class="rule" x1="80" y1="1150" x2="1800" y2="1150"/>
+    <text class="foot" x="80" y="1192">Schematic. The diagnostic signal is where deficiency appears, not what a damaged leaf looks like, and leaf drawings are</text>
+    <text class="foot" x="80" y="1226">illustrative rather than traced. Confirm with tissue or runoff testing before changing a feed.</text>
+    <text class="brand" x="1800" y="1192" text-anchor="end">Northwest Local Cannabis</text>
+  </g>
+</svg>

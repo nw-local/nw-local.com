@@ -3,7 +3,7 @@ export
 
 .DEFAULT_GOAL := help
 
-.PHONY: help install dev build preview studio deploy-studio upload-image prep-images check-nightly check-analytics check-robots check-content-style lint format upgrade upgrade-latest
+.PHONY: help install dev build preview studio deploy-studio upload-image prep-images render-figures check-nightly check-analytics check-robots check-content-style lint format upgrade upgrade-latest
 
 help: ## Show this help message with all available targets
 	@grep -hE '^[a-zA-Z_-]+:.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
@@ -32,6 +32,9 @@ upload-image: ## Upload an image asset to Sanity (vars: FILE, LABEL, DESCRIPTION
 
 prep-images: ## Convert and rename a directory of images for Sanity (vars: DIR, STRAIN, RENAME)
 	@./scripts/prep-images.sh "$(DIR)" "$(STRAIN)" "$(RENAME)"
+
+render-figures: ## Rasterize figures/**/*.svg to PNG for upload (vars: FIGURE)
+	@./scripts/render-figures.sh "$(FIGURE)"
 
 check-nightly: ## Verify the nightly audit's cron is still firing
 	@./scripts/check-nightly-freshness.sh

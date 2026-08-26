@@ -17,6 +17,12 @@ pnpm-debug.log*
 .env
 .env.production
 
+# rendered figures
+# The SVG under figures/ is the source and is tracked; the PNG beside it is a
+# build artifact of `make render-figures`, and the copy that matters lives in
+# Sanity once it is uploaded.
+figures/**/*.png
+
 # macOS-specific files
 .DS_Store
 
