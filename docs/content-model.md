@@ -17,7 +17,27 @@ All content types are defined in `studio/schemaTypes/`. Sanity is the single sou
 | `terpene` | Terpene reference documents — aroma, effects, foundIn, hero image |
 | `glossaryTerm` | Glossary definitions, backlinked from the content that mentions them |
 
-`blockContent` is also registered, but it is an object type used for rich text bodies, not a document.
+`blockContent` is also registered, but it is an object type used for rich text bodies, not a document. `tableBlock` is likewise an object type, available inside any `blockContent` body.
+
+## Block content
+
+`blockContent` is the shared rich-text array behind every body field. Beyond ordinary blocks it accepts:
+
+| Member | Purpose |
+|---|---|
+| `image` | Inline figure with `alt` and `caption`. Both live **outside** `children`, so a GROQ audit shaped like `body[].children[...]` misses them entirely |
+| `tableBlock` | Reference table: optional `caption`, a `headers` array, and `rows` of `cells`. One row may set `highlight` |
+| `glossaryRef` | A mark, not a member. Annotates a span with a reference to a `glossaryTerm` or `terpene` |
+
+### Tables carry plain strings, not rich text
+
+`tableBlock` cells are plain strings on purpose: the content is setpoints and short labels, and nesting Portable Text inside cells would mean a second renderer and a much heavier editing surface for no gain. The practical consequence is that **a glossary link cannot live inside a table cell** — link the term in the prose around the table instead.
+
+Captions are plain strings too. Anything that generates this content by templating markup has to skip captions, headers, and cells, or the markup publishes as literal text.
+
+### A ragged table fails the build
+
+`PortableTextTable.astro` throws when a row's cell count does not match the header count, because a ragged row silently shifts every later cell into the wrong column — worse than a missing table, since it still looks like data. The schema repeats the check as a Studio validation so an editor sees it while they can still fix it, but per the `rule.required()` gotcha below, only the renderer's throw actually stops bad content reaching the site.
 
 Strain, product, blog post, author, terpene, and glossary pages are statically generated via `getStaticPaths()`.
 

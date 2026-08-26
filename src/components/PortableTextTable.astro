@@ -1,0 +1,76 @@
+---
+export interface PortableTextTableRow {
+  _key?: string;
+  cells?: string[];
+  highlight?: boolean;
+}
+
+export interface PortableTextTableNode {
+  _type: "tableBlock";
+  _key?: string;
+  caption?: string;
+  headers?: string[];
+  rows?: PortableTextTableRow[];
+}
+
+interface Props {
+  node: PortableTextTableNode;
+}
+
+const { node } = Astro.props;
+
+// Same contract as PortableTextImage: astro-portabletext renders an unhandled
+// or malformed node into a display:none div, so a broken table would vanish
+// from the page rather than fail. Reject it at build time instead.
+//
+// rule.required() in the Studio schema does not help here. Per CLAUDE.md it is
+// Studio-side only, and the Content Lake accepts API writes that skip it, which
+// is exactly how this content gets written.
+const where = `Table block ${node._key ?? "(no _key)"}`;
+
+const headers = node.headers ?? [];
+if( headers.length === 0 ) {
+  throw new Error( `${where} has no column headers.` );
+}
+
+const rows = node.rows ?? [];
+if( rows.length === 0 ) {
+  throw new Error( `${where} has no rows.` );
+}
+
+// A ragged row silently shifts every cell after it into the wrong column, which
+// is worse than a missing table because it still looks like data.
+const ragged = rows
+  .map( ( row, index ) => ({ index, count: row.cells?.length ?? 0 }) )
+  .filter( row => row.count !== headers.length );
+
+if( ragged.length > 0 ) {
+  const detail = ragged.map( row => `row ${row.index + 1} has ${row.count}` ).join( ", " );
+  throw new Error(
+    `${where} is ragged: ${headers.length} headers but ${detail}. `
+    + "Every row needs one cell per column.",
+  );
+}
+---
+
+<figure class="pt-table-figure">
+  {node.caption && <figcaption class="pt-table-caption">{node.caption}</figcaption>}
+  <div class="pt-table-scroll" tabindex="0" role="region" aria-label={node.caption ?? "Table"}>
+    <table>
+      <thead>
+        <tr>{headers.map( header => <th scope="col">{header}</th> )}</tr>
+      </thead>
+      <tbody>
+        {rows.map( row => (
+          <tr class={row.highlight ? "is-highlighted" : undefined}>
+            {row.cells?.map( ( cell, index ) => (
+              index === 0
+                ? <th scope="row">{cell}</th>
+                : <td>{cell}</td>
+            ) )}
+          </tr>
+        ) )}
+      </tbody>
+    </table>
+  </div>
+</figure>
