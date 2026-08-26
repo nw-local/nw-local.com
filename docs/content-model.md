@@ -33,6 +33,8 @@ All content types are defined in `studio/schemaTypes/`. Sanity is the single sou
 
 `tableBlock` cells are plain strings on purpose: the content is setpoints and short labels, and nesting Portable Text inside cells would mean a second renderer and a much heavier editing surface for no gain. The practical consequence is that **a glossary link cannot live inside a table cell** — link the term in the prose around the table instead.
 
+Emphasis therefore works per row, not per phrase. Setting `highlight` on a row renders its whole row bold, and that is the only emphasis channel a table has, so pick the row that carries the point rather than trying to stress a clause inside a cell. Use it once per table: highlighting everything highlights nothing.
+
 Captions are plain strings too. Anything that generates this content by templating markup has to skip captions, headers, and cells, or the markup publishes as literal text.
 
 ### A ragged table fails the build

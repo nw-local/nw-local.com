@@ -1021,9 +1021,21 @@ footer {
   white-space: nowrap;
 }
 
+/* The highlighted row carries weight as well as a marker. Cells are plain
+   strings with no marks, so a row cannot bold part of itself the way a
+   paragraph can; the row flag is the only emphasis channel a table has, and a
+   border alone was too quiet to read as "this is the one that matters" while
+   scanning. Bolding every cell in the row is the whole point rather than a
+   side effect. --text-emphasis is the same rung `strong` uses in body copy, so
+   an emphasised cell matches bold prose instead of inventing a second weight. */
 .portable-text tbody tr.is-highlighted {
   background: rgba(var(--bg-rgb), 0.35);
   box-shadow: inset 3px 0 0 var(--accent);
+}
+.portable-text tbody tr.is-highlighted th,
+.portable-text tbody tr.is-highlighted td {
+  color: var(--text-emphasis);
+  font-weight: 700;
 }
 .portable-text tbody tr.is-highlighted th { color: var(--text-primary); }
 
