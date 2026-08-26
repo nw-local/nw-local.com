@@ -77,6 +77,8 @@ make upload-image FILE="figures/co2-enrichment/fig2-leaf-cupping.png" \
 
 **Upload PNG, never SVG.** `PortableTextImage.astro` calls `.format( "webp" )` and sizes the layout box from the asset's dimension metadata. Sanity's CDN ignores format conversion on SVG, so an SVG upload serves untransformed while `resolveImageDimensions` governs the box: two halves of the pipeline quietly disagreeing.
 
+**The render is byte-deterministic.** Re-rendering an unchanged SVG reproduces the same PNG, verified by SHA-1 against the uploaded assets for both CO₂ figures. That matters twice: it is what makes "the SVG is the source" true rather than aspirational, and because Sanity keys assets on `sha1hash`, re-uploading an unchanged figure returns the existing asset instead of creating a duplicate. Only an actual edit to the SVG produces a new asset.
+
 **Headless Chrome is the rasterizer**, because it is the only one present on a stock macOS box here — librsvg, cairosvg, and matplotlib are all absent, and ImageMagick's SVG delegate only shells out to the `rsvg-convert` that is missing. Chrome writes the screenshot and then does not reliably exit, so `render-figures.sh` polls for a PNG whose size has stopped changing and stops the browser itself rather than waiting on the process.
 
 ### House style
