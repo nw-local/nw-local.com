@@ -1052,16 +1052,21 @@ footer {
   white-space: nowrap;
 }
 
-/* The highlighted row carries weight as well as a marker. Cells are plain
-   strings with no marks, so a row cannot bold part of itself the way a
-   paragraph can; the row flag is the only emphasis channel a table has, and a
-   border alone was too quiet to read as "this is the one that matters" while
-   scanning. Bolding every cell in the row is the whole point rather than a
+/* The highlighted row is marked by weight and a slight lift, and nothing else.
+   Cells are plain strings with no marks, so a row cannot bold part of itself
+   the way a paragraph can; bolding every cell is the whole point rather than a
    side effect. --text-emphasis is the same rung `strong` uses in body copy, so
-   an emphasised cell matches bold prose instead of inventing a second weight. */
+   an emphasised cell matches bold prose instead of inventing a second weight.
+
+   An accent-coloured inset rule down the left of the row was tried and removed.
+   Two reasons. --accent is the call-to-action colour, so a green bar running
+   down a row of data made the table read as a dashboard widget rather than as a
+   reference table. And when the highlighted row was the LAST row, the inset
+   shadow met the scroll container's border-radius and curved around the
+   bottom-left corner, which looked like a stray focus ring rather than a
+   deliberate marker. The bold added in #64 already carries the emphasis. */
 .portable-text tbody tr.is-highlighted {
   background: rgba(var(--bg-rgb), 0.35);
-  box-shadow: inset 3px 0 0 var(--accent);
 }
 .portable-text tbody tr.is-highlighted th,
 .portable-text tbody tr.is-highlighted td {
@@ -1598,13 +1603,14 @@ footer {
     break-inside: avoid;
   }
 
-  /* The highlighted row marks itself with a tinted fill and an inset accent
-     rule, and neither prints: an inset box-shadow is a background effect. A
-     real left border reproduces the marker in ink. The bold on its cells
-     survives untouched, which was always the row's primary emphasis channel. */
+  /* The highlighted row marks itself on screen with a tinted fill, and a fill
+     does not print. A real left border reproduces the marker in ink. The bold
+     on its cells survives untouched, which is the row's primary emphasis
+     channel in both media. (This rule also used to cancel an inset accent
+     shadow; that shadow was removed from the screen styles, so there is
+     nothing left to cancel.) */
   .portable-text tbody tr.is-highlighted {
     background: none;
-    box-shadow: none;
   }
 
   .portable-text tbody tr.is-highlighted th {
