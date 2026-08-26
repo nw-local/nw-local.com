@@ -61,6 +61,20 @@ automated surface, so it matters that they assert what they look like they asser
   several scroll offsets and assert it changes between the first two and progresses monotonically
   across the rest. Drive the built `dist/` with a throwaway static server for this; never start the
   dev server.
+- **The print stylesheet is invisible to every check here, and reading the CSS does not substitute
+  for rendering it.** `@media print` rules never run during a build, a type check, a link check, or
+  a Lighthouse audit, and a page that prints as a blank sheet is byte-identical on screen — this is
+  the same shape as the analytics snippet above, where the only symptom was an absence. Grep proves
+  the block shipped, nothing more. Render it: copy `dist/` aside, rewrite the absolute `/_astro/`
+  asset paths relative (a `file://` URL resolves a leading slash against the filesystem root, so the
+  stylesheet silently 404s and the page renders in Times New Roman, which reads as "the print rules
+  did nothing"), then `Google Chrome --headless --print-to-pdf` the page and rasterize with
+  `pdftoppm` to look at it. Do not build the relative prefix with `seq 1 $depth`: BSD `seq` counts
+  *down* when the first operand exceeds the last, so `seq 1 0` emits two lines where GNU `seq` emits
+  none, and a depth-0 page comes out with a `../../` prefix and no stylesheet at all. That bug made
+  a correct stylesheet look broken. Two print regressions were caught this way and by nothing else:
+  a bare `header` selector that deleted every article's own title block, and a `.hero-backdrop`
+  selector that deleted the homepage's entire masthead.
 
 ## Considered for future addition
 
