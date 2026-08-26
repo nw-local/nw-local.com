@@ -164,7 +164,7 @@ A separate `SANITY_WRITE_TOKEN` is used **only** by the image-upload helper scri
 
 ## Image workflow
 
-Two scripts orchestrated by `make` — `prep-images` converts and dedups against Sanity, `upload-image` uploads with alt text:
+Three scripts orchestrated by `make` — `prep-images` converts and dedups photography against Sanity, `render-figures` rasterizes authored article diagrams, and `upload-image` uploads either with alt text:
 
 ```sh
 make prep-images DIR="path/to/images" STRAIN="Strain Name"
@@ -175,7 +175,9 @@ make upload-image FILE="path/to/_processed/strain-name-bud-closeup.jpg" \
 
 **Keep the generated `_processed/` directory** — it is the local manifest the dedup logic reads on later runs.
 
-Renames, the hashing contract, orientation handling, and hotspot cropping: [docs/images.md](docs/images.md).
+Article diagrams are authored as SVG under `figures/<post-slug>/`, rendered with `make render-figures`, and uploaded as PNG like any other asset. **Upload PNG, never SVG** — the reason, and the figure house style, are in the docs below.
+
+Renames, the hashing contract, orientation handling, hotspot cropping, and the figure house style: [docs/images.md](docs/images.md).
 
 ---
 
