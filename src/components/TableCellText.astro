@@ -1,0 +1,30 @@
+---
+// One table cell's text, with newlines rendered as real line breaks.
+//
+// Temperatures in these articles are written Fahrenheit first with the Celsius
+// conversion in parentheses, which makes a cell roughly twice as wide as the
+// number it carries. Breaking before the conversion keeps the column narrow
+// enough to read on a phone and stops the pair wrapping at whatever point the
+// column width happens to land on.
+//
+// The break is emitted as a <br> rather than left to `white-space: pre-line`
+// for two reasons. The intent lives in the markup, where it survives a later
+// change to the table's CSS, and it does not depend on the newline surviving
+// HTML minification, which is a build-tool behaviour rather than a guarantee.
+interface Props {
+  value: string;
+}
+
+const { value } = Astro.props;
+
+// Trimming each line keeps the rendered output identical whether an editor
+// typed "72 °F\n(22 °C)" or indented the second line. Empty lines are dropped
+// so a stray double newline cannot open a visible gap inside a table row.
+const lines = value
+  .split( "\n" )
+  .map( line => line.trim() )
+  .filter( line => line.length > 0 );
+---
+{lines.map( ( line, index ) => (
+  index === 0 ? line : <Fragment><br />{line}</Fragment>
+) )}

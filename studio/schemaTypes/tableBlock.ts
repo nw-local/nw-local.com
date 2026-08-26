@@ -57,7 +57,15 @@ export const tableBlockType = defineType({
               name: 'cells',
               title: 'Cells',
               type: 'array',
-              of: [{ type: 'string' }],
+              // `text` rather than `string` so a cell can hold a line break.
+              // Sanity renders a string field as a single-line input, which
+              // cannot accept one, so a newline written through the API would
+              // be uneditable here and could be dropped on the next save. The
+              // column headers above stay `string` deliberately: a header short
+              // enough to be a good header never needs to break.
+              of: [{ type: 'text', rows: 2 }],
+              description:
+                'One per column. A line break inside a cell renders as a line break, which is how a temperature keeps its Celsius conversion on its own line.',
               validation: (rule) => rule.required().min(1),
             }),
             defineField({
@@ -72,7 +80,10 @@ export const tableBlockType = defineType({
           preview: {
             select: { cells: 'cells', highlight: 'highlight' },
             prepare: ({ cells, highlight }) => ({
-              title: (cells ?? []).join('  ·  ') || '(empty row)',
+              title:
+                (cells ?? [])
+                  .map((cell: unknown) => String(cell ?? '').replace(/\s+/g, ' '))
+                  .join('  ·  ') || '(empty row)',
               subtitle: highlight ? 'highlighted' : undefined,
             }),
           },
