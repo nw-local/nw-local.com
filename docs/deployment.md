@@ -73,3 +73,13 @@ So content that depends on new code has to wait for that code to merge. Publishi
 4. Confirm the publish triggered a deploy
 
 Code must therefore tolerate content that has not been backfilled yet — see the Organization author fallback described in [seo.md](seo.md) for a worked example.
+
+### The exception: slug renames
+
+A rename that adds a `redirects` entry to `astro.config.mjs` inverts the order above. **Publish the Sanity rename first, then merge the code.**
+
+Astro's docs say configured redirects rank below "matching physical page files", which reads as a promise that the entry stays dormant until the content rebuild stops emitting the old slug. It does not. Precedence is decided by route specificity, and a static redirect pattern outranks the rest route in `src/pages/strains/[...slug].astro`, so the entry replaces the real page the moment it lands. Merging first therefore points a working URL at a slug that does not exist yet and breaks both ends instead of one; publishing first costs only the old URL 404ing for the length of the rebuild.
+
+Nothing errors in either direction. The build succeeds and deploys clean, and the only build-time symptom is the page count dropping by one, so read that number on any change touching routing.
+
+Renaming a strain also means patching both copies of its alt text and its image asset metadata. The full checklist is step 7a of [`.claude/skills/update-strain/SKILL.md`](../.claude/skills/update-strain/SKILL.md), and the reasoning is in the Invariants section of [`CLAUDE.md`](../CLAUDE.md).
