@@ -8,6 +8,7 @@ import { retailerPageType } from './retailerPage'
 import { retailerType } from './retailer'
 import { siteSettingsType } from './siteSettings'
 import { strainType } from './strain'
+import { tableBlockType } from './tableBlock'
 import { terpeneType } from './terpene'
 
 export const schemaTypes = [
@@ -21,5 +22,6 @@ export const schemaTypes = [
   retailerType,
   siteSettingsType,
   strainType,
+  tableBlockType,
   terpeneType,
 ]

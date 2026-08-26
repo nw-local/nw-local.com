@@ -121,7 +121,7 @@ The age-gate overlay (`src/components/AgeGate.astro`) is client-side and uses `l
 
 ## Sanity content model
 
-Ten document types live in `studio/schemaTypes/`: `strain`, `product`, `blogPost`, `author`, `retailer`, `page`, `siteSettings`, `retailerPage`, `terpene`, and `glossaryTerm`. Detail pages are statically generated via `getStaticPaths()`.
+Ten document types live in `studio/schemaTypes/`: `strain`, `product`, `blogPost`, `author`, `retailer`, `page`, `siteSettings`, `retailerPage`, `terpene`, and `glossaryTerm`. Detail pages are statically generated via `getStaticPaths()`. Two further entries there are object types rather than documents: `blockContent`, the shared rich-text body, and `tableBlock`, a reference table usable inside it.
 
 Full table, plus the gotchas worth knowing before you add content or write against the schema: [docs/content-model.md](docs/content-model.md).
 

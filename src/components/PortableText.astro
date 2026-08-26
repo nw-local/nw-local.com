@@ -1,6 +1,7 @@
 ---
 import { PortableText as PT } from "astro-portabletext";
 import PortableTextImage from "./PortableTextImage.astro";
+import PortableTextTable from "./PortableTextTable.astro";
 import GlossaryTerm from "./GlossaryTerm.astro";
 
 const { value } = Astro.props;
@@ -12,6 +13,7 @@ const { value } = Astro.props;
 const components = {
   type: {
     image: PortableTextImage,
+    tableBlock: PortableTextTable,
   },
   mark: {
     glossaryRef: GlossaryTerm,
