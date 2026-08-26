@@ -93,9 +93,9 @@ The `studio` job in CI runs the three studio checks on every PR.
 
 ## Automated testing
 
-Three GitHub Actions workflows guard the site: [`ci.yml`](.github/workflows/ci.yml) (type check + audit on every PR and push to `main`, plus a nightly-freshness check on pushes only), the reusable [`audit.yml`](.github/workflows/audit.yml) (build, sitemap validation, analytics-snippet check, Lychee link check, Lighthouse), and [`nightly.yml`](.github/workflows/nightly.yml) (the same audit on a daily cron, catching content drift between PRs).
+Three GitHub Actions workflows guard the site: [`ci.yml`](.github/workflows/ci.yml) (type check + audit on every PR and push to `main`, plus a nightly-freshness check on pushes only), the reusable [`audit.yml`](.github/workflows/audit.yml) (build, sitemap and robots.txt validation, analytics-snippet check, content-style check, Lychee link check, Lighthouse), and [`nightly.yml`](.github/workflows/nightly.yml) (the same audit on a daily cron, catching content drift between PRs).
 
-Two of those steps guard *silent* failures — a stalled nightly cron, and a Google Analytics snippet that loads and initialises while recording nothing — where every positive signal stays green and only an absence reveals the problem. Why each exists and what it asserts: [docs/testing.md](docs/testing.md).
+Four of those steps guard *silent* failures — a stalled nightly cron, a Google Analytics snippet that loads and initialises while recording nothing, British spelling or a lone Celsius figure in published prose, and a `robots.txt` that was never created in the first place — where every positive signal stays green and only an absence reveals the problem. Print styles are a fifth case that no workflow can cover at all, since `@media print` never executes during a build or an audit. Why each exists, what it asserts, and how to verify print output by hand: [docs/testing.md](docs/testing.md).
 
 There are deliberately no unit tests — the failure modes of a content-driven static site are broken queries, broken links, and regressed SEO/perf signals, not logic bugs. Full rationale, per-step details, and the considered/rejected list: [docs/testing.md](docs/testing.md).
 
