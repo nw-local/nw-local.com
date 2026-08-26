@@ -37,6 +37,19 @@ Emphasis therefore works per row, not per phrase. Setting `highlight` on a row r
 
 Captions are plain strings too. Anything that generates this content by templating markup has to skip captions, headers, and cells, or the markup publishes as literal text.
 
+### A line break in a cell is the one formatting channel
+
+Cells carry no markup, but they do honor newlines: `TableCellText.astro` splits a cell on `\n` and renders each break as a real `<br>`, for column headers, row headers, and data cells alike. This exists for paired temperature units. `82 to 85 °F (28 to 29 °C)` is about twice as wide as the number it carries, so a table with a day and a night column wraps it at whatever point the column width lands on, splitting the pair somewhere arbitrary. Writing the conversion on its own line keeps the column narrow and the pair intact:
+
+```
+82 to 85 °F
+(28 to 29 °C)
+```
+
+Two things follow. **`cells` is `text`, not `string`** — Sanity renders a string field as a single-line input that cannot accept a newline, so a cell written through the API would be uneditable in the Studio and could lose its break on the next save. Column *headers* are still `string` on purpose: a header short enough to be a good header never needs to break.
+
+And the break is a `<br>` rather than `white-space: pre-line` on the cells. Both work — Astro's minifier does preserve a raw newline inside a `<td>` — but `pre-line` would put the intent in a CSS property that a later change to the table styles could drop silently, with no build failure and no visible diff outside the rendered page.
+
 ### A ragged table fails the build
 
 `PortableTextTable.astro` throws when a row's cell count does not match the header count, because a ragged row silently shifts every later cell into the wrong column — worse than a missing table, since it still looks like data. The schema repeats the check as a Studio validation so an editor sees it while they can still fix it, but per the `rule.required()` gotcha below, only the renderer's throw actually stops bad content reaching the site.
