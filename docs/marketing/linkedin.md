@@ -10,12 +10,12 @@ Source brand voice: `siteSettings` in Sanity and the `About Us` page (`page` doc
 
 **Farming**
 
-LinkedIn does not have a dedicated Cannabis industry. Farming was chosen to reinforce the grower-first identity established in the About page ("built by growers who were cultivating the plant long before the legal market existed") and to align with the craft cultivation positioning, rather than co-categorizing the brand with tobacco companies.
+LinkedIn does not have a dedicated Cannabis industry. Farming was chosen to reinforce the grower-first identity established in the About page ("more than 20 years of hands-on cultivation experience, developed across the Pacific Northwest's traditional and medical markets") and to align with the craft cultivation positioning, rather than co-categorizing the brand with tobacco companies.
 
 Alternates considered:
 
-- **Tobacco Manufacturing** — most common pick across state-licensed cannabis producer/processors and the strongest for industry-filter discoverability, but it leans toward the processing/packaging half of the business and pulls the brand into a category whose values diverge from cannabis-craft positioning.
-- **Wholesale** or **Wholesale Import and Export** — accurate B2B framing, less cannabis-specific discoverability.
+- **Tobacco Manufacturing**: most common pick across state-licensed cannabis producer/processors and the strongest for industry-filter discoverability, but it leans toward the processing/packaging half of the business and pulls the brand into a category whose values diverge from cannabis-craft positioning.
+- **Wholesale** or **Wholesale Import and Export**: accurate B2B framing, less cannabis-specific discoverability.
 
 ## Tagline (max 120 characters)
 
@@ -32,14 +32,12 @@ Alternates considered:
 
 ## About section (max 2,000 characters)
 
-LinkedIn truncates to ~250 characters in feed/search previews — the first paragraph carries the positioning on its own.
+LinkedIn truncates to ~250 characters in feed/search previews, so the first paragraph carries the positioning on its own.
 
 ```text
-Northwest Local Cannabis is a Washington State i502 licensed producer and processor, built by growers who were cultivating the plant long before the legal market existed.
+Northwest Local Cannabis is a Washington State i502 licensed producer and processor. Our team brings more than 20 years of hands-on cultivation experience, developed across the Pacific Northwest's traditional and medical markets and carried forward into the regulated market we operate in today.
 
-With more than 20 years of hands-on experience across Seattle's medical and legacy scenes, we bring real plant knowledge to every batch we grow. No shortcuts. No compromises. Just quality genetics grown right.
-
-—
+We produce small-batch craft cannabis, applying the same standards we have always brought to the plant: careful genetics, deliberate cultivation, and consistent quality in every harvest.
 
 What we grow and process:
 • Small-batch craft flower
@@ -47,8 +45,6 @@ What we grow and process:
 • Concentrates
 
 We work with Washington's licensed retailers and source from select breeders, focusing on rare and exclusive cuts with consistency from harvest to harvest. Full catalog at nw-local.com.
-
-—
 
 For retail buyers and wholesale inquiries: nw-local.com/retailers
 
@@ -60,9 +56,9 @@ Must be 21 or older. For use only by adults 21+. Keep out of reach of children. 
 ### Shorter variant
 
 ```text
-Northwest Local Cannabis — Washington State i502 licensed producer and processor.
+Northwest Local Cannabis is a Washington State i502 licensed producer and processor.
 
-Built by growers with 20+ years across Seattle's medical and legacy markets. Small-batch craft flower, pre-rolls, and concentrates. Rare cuts, exclusive phenotypes, no shortcuts.
+Grower-led, with more than 20 years of cultivation experience across the Pacific Northwest's traditional and medical markets. Small-batch craft flower, pre-rolls, and concentrates, with a focus on rare cuts and exclusive phenotypes.
 
 Full catalog and retail partners at nw-local.com.
 
@@ -99,7 +95,7 @@ B2B Cannabis
 - **Wholesale / retail buyers:** https://nw-local.com/retailers
 - **Consumer dispensary locator:** https://nw-local.com/find-us
 
-The `/retailers` and `/find-us` split is intentional — `/retailers` is the B2B page (wholesale inquiries, downloadable product sheets) and `/find-us` is the consumer-facing locator. Always link the B2B page from LinkedIn.
+The `/retailers` and `/find-us` split is intentional: `/retailers` is the B2B page (wholesale inquiries, downloadable product sheets) and `/find-us` is the consumer-facing locator. Always link the B2B page from LinkedIn.
 
 ## Compliance notes
 
