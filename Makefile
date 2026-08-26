@@ -3,7 +3,7 @@ export
 
 .DEFAULT_GOAL := help
 
-.PHONY: help install dev build preview studio deploy-studio upload-image prep-images check-nightly check-analytics check-robots lint format upgrade upgrade-latest
+.PHONY: help install dev build preview studio deploy-studio upload-image prep-images check-nightly check-analytics check-robots check-content-style lint format upgrade upgrade-latest
 
 help: ## Show this help message with all available targets
 	@grep -hE '^[a-zA-Z_-]+:.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
@@ -41,6 +41,9 @@ check-analytics: ## Verify ./dist/ ships a working Google Analytics snippet
 
 check-robots: ## Verify ./dist/robots.txt points crawlers at this build's sitemap
 	@./scripts/check-robots.sh
+
+check-content-style: ## Verify ./dist/ uses US spelling and pairs every temperature
+	@./scripts/check-content-style.py
 
 lint: ## Run ESLint
 	yarn lint
