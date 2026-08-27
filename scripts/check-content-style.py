@@ -1,7 +1,16 @@
 #!/usr/bin/env python3
 #
-# Fail if the built site ships British spellings, or a temperature carrying
-# only one unit.
+# Fail if the built site ships British spellings, a temperature carrying only
+# one unit, or a temperature pair written Celsius first.
+#
+# Ordering is a separate rule from pairing because a pair can be complete and
+# still wrong. `13 to 24 °C (55 to 75 °F)` carries both units, so the pairing
+# check passed it every run while it sat in the Botrytis glossary entry, and a
+# glossary tooltip renders into every article that links the term. Tooltip text
+# gets proofread about as often as alt text, which is to say never. CLAUDE.md
+# puts °F first because the audience is US based and works in Fahrenheit, and
+# says to flip a figure lifted from a paper in Celsius rather than preserve the
+# source's order.
 #
 # Both rules live in CLAUDE.md, and before this script nothing executed them.
 # That is the failure mode this repo has hit repeatedly: a convention written
@@ -179,6 +188,7 @@ def main() -> int:
 
     spelling_hits = defaultdict(set)
     temperature_hits = defaultdict(set)
+    ordering_hits = defaultdict(set)
 
     for page in pages:
         where = str(page.relative_to(DIST))
@@ -196,18 +206,51 @@ def main() -> int:
                 spelling_hits[(british, american)].add(where)
                 break
 
+        # Collected up front because the ordering rule below has to compare a
+        # Celsius mention against its neighbors, which a single pass over
+        # finditer cannot see.
+        temps = []
         for match in TEMPERATURE.finditer(text):
             if is_exempt(spans, match.start(), match.end()):
                 continue
             spelled = match.group("word")
             unit = (match.group("sym") or spelled[0]).upper()
-            start = max(0, match.start() - PAIR_WINDOW)
-            window = text[start:match.end() + PAIR_WINDOW]
-            if re.search(PARTNER[unit], window, re.I):
+            temps.append((match.start(), match.end(), unit,
+                          " ".join(match.group(0).split())))
+
+        for begin, finish, unit, mention in temps:
+            start = max(0, begin - PAIR_WINDOW)
+            window = text[start:finish + PAIR_WINDOW]
+            if not re.search(PARTNER[unit], window, re.I):
+                if not FORMULA_CONTEXT.search(window):
+                    temperature_hits[mention].add(where)
                 continue
-            if FORMULA_CONTEXT.search(window):
+            if unit != "C" or FORMULA_CONTEXT.search(window):
                 continue
-            temperature_hits[" ".join(match.group(0).split())].add(where)
+
+            # Paired, so the only question left is which unit leads. Compare
+            # against the NEAREST Fahrenheit mention rather than any Fahrenheit
+            # in the window: two pairs written close together both fall inside
+            # one window, so a neighbor's correctly-placed °F would otherwise
+            # excuse an inverted pair sitting right next to it. A tie goes to
+            # the preceding mention, which is the correct order.
+            nearest_before = nearest_after = None
+            for other_begin, other_finish, other_unit, _ in temps:
+                if other_unit != "F":
+                    continue
+                if other_finish <= begin:
+                    gap = begin - other_finish
+                    if gap <= PAIR_WINDOW and (nearest_before is None
+                                               or gap < nearest_before):
+                        nearest_before = gap
+                elif other_begin >= finish:
+                    gap = other_begin - finish
+                    if gap <= PAIR_WINDOW and (nearest_after is None
+                                               or gap < nearest_after):
+                        nearest_after = gap
+            if nearest_after is not None and (nearest_before is None
+                                              or nearest_after < nearest_before):
+                ordering_hits[mention].add(where)
 
     failures = 0
 
@@ -236,6 +279,20 @@ def main() -> int:
                 print(f"      {place}")
         print()
 
+    if ordering_hits:
+        failures += 1
+        total = sum(len(v) for v in ordering_hits.values())
+        print(f"FAIL: {len(ordering_hits)} temperature(s) put Celsius first, "
+              f"across {total} placement(s).")
+        print("  Fahrenheit leads, Celsius follows in parentheses: "
+              "55 to 75 °F (13 to 24 °C).")
+        print("  Flip the figure rather than preserving the order a cited paper used.")
+        for mention, places in sorted(ordering_hits.items()):
+            print(f"  {mention}")
+            for place in sorted(places):
+                print(f"      {place}")
+        print()
+
     # A stale allowlist entry is not a build failure, but it is reported every
     # run: it exempts nothing today and silently widens what is exempt the
     # moment a page happens to contain it.
@@ -252,7 +309,7 @@ def main() -> int:
 
     exempted = f", {len(used)} allowlisted phrase(s) skipped" if used else ""
     print(f"check-content-style: {len(pages)} pages clean "
-          f"(US spelling, temperatures paired{exempted}).")
+          f"(US spelling, temperatures paired °F first{exempted}).")
     return 0
 
 
