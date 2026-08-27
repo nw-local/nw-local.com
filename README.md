@@ -86,6 +86,8 @@ Run `make` (no args) to print the full target list with descriptions.
 | Check content style | `make check-content-style` | asserts US spelling and that every temperature carries °F and °C, in that order |
 | Check heading anchors | `make check-anchors` | asserts section anchor ids are unique per page          |
 | Check drop lookup   | `make check-drop-lookup` | asserts the drop collision rule holds whatever order Sanity returns rows in |
+| Check threshold tables | `make check-threshold-tables` | asserts a table whose caption promises a numeric limit actually holds it |
+| Test psychrometrics | `make test-threshold-tables` | unit tests for the Magnus helpers; needs no build |
 | Studio lint         | `cd studio && yarn lint` | separate project; the root's ESLint ignores it   |
 | Studio type check   | `cd studio && yarn typecheck` |                                             |
 | Studio format       | `cd studio && yarn format` | Prettier; `format:check` verifies instead      |
@@ -100,7 +102,7 @@ Four GitHub Actions workflows guard the site: [`ci.yml`](.github/workflows/ci.ym
 
 Five of those steps guard *silent* failures — a stalled nightly cron, a Google Analytics snippet that loads and initialises while recording nothing, British spelling or a lone Celsius figure in published prose, a `robots.txt` that was never created in the first place, and two headings sharing an anchor id so a section link resolves to the wrong section — where every positive signal stays green and only an absence reveals the problem. Print styles are a sixth case that no workflow can cover at all, since `@media print` never executes during a build or an audit. Why each exists, what it asserts, and how to verify print output by hand: [docs/testing.md](docs/testing.md).
 
-There is deliberately no test framework — the failure modes of a content-driven static site are broken queries, broken links, and regressed SEO/perf signals, not logic bugs. The one exception proves the rule: `scripts/check-drop-lookup.ts` asserts the drop collision rule, because [`src/lib/drops.ts`](src/lib/drops.ts) is the only module here that is pure logic rather than fetch-and-render, and its rule (strongest drop status wins, whatever order Sanity returned the rows in) produces a page that renders perfectly while showing the wrong drop. Full rationale, per-step details, and the considered/rejected list: [docs/testing.md](docs/testing.md).
+There is deliberately no test framework — the failure modes of a content-driven static site are broken queries, broken links, and regressed SEO/perf signals, not logic bugs. Two exceptions prove the rule, and both cover pure computation that renders perfectly while being wrong. `scripts/check-drop-lookup.ts` asserts the drop collision rule, because [`src/lib/drops.ts`](src/lib/drops.ts) is the only module here that is pure logic rather than fetch-and-render, and its rule (strongest drop status wins, whatever order Sanity returned the rows in) produces a page that shows the wrong drop. `scripts/test-threshold-tables.py` covers the psychrometric helpers behind published setpoint tables, where a cell rounded the wrong way breaks the limit its own caption promised. Full rationale, per-step details, and the considered/rejected list: [docs/testing.md](docs/testing.md).
 
 ---
 
@@ -141,7 +143,7 @@ Every page emits **JSON-LD structured data** (`Organization` everywhere; `Produc
 
 The site auto-deploys to GitHub Pages on every push to `main`, via [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml). Publishing content in Sanity also triggers a rebuild through a webhook (~1-2 min end-to-end), because the build fetches all content at build time.
 
-Deploys are not unconditional: the build runs `make check-content-style` against the freshly built `dist/`, and a failure skips the deploy job and leaves the previous site live. **If published content does not appear, check that run first** — a British spelling, an unpaired temperature, or a Celsius-first pair will hold it back, and nothing else announces it.
+Deploys are not unconditional: the build runs `make check-content-style` and `make check-threshold-tables` against the freshly built `dist/`, and a failure in either skips the deploy job and leaves the previous site live. **If published content does not appear, check that run first** — a British spelling, an unpaired temperature, a Celsius-first pair, or a table cell that breaks the limit its caption promised will each hold it back, and nothing else announces it.
 
 The Studio itself is hosted separately at <https://nw-local.sanity.studio/> and deploys with `make deploy-studio` — **not** with the site. A schema or sidebar change needs that command before editors see it.
 
