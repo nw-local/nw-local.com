@@ -1,11 +1,13 @@
 ---
 import { urlFor } from "../lib/image";
 import ProductBadge from "./ProductBadge.astro";
+import { dropHref } from "../lib/drops";
+import type { DropRef } from "../lib/drops";
 import type { ProductSummary, ProductWithDescription } from "../lib/sanity";
 
-type Props = ProductSummary | ProductWithDescription;
+type Props = ( ProductSummary | ProductWithDescription ) & { drop?: DropRef };
 
-const { name, category, weight, available, image } = Astro.props;
+const { name, category, weight, available, image, drop } = Astro.props;
 const strain = "strain" in Astro.props ? Astro.props.strain : undefined;
 const displayImage = image ?? strain?.heroImage;
 ---
@@ -36,6 +38,12 @@ const displayImage = image ?? strain?.heroImage;
         </a>
         {" · "}
         <ProductBadge type={strain.strainType} />
+      </p>
+    )}
+    {drop && (
+      <p style="display:flex;align-items:center;gap:0.5rem;">
+        <ProductBadge type={drop.status} />
+        <a href={dropHref( drop.slug )}>{drop.name}</a>
       </p>
     )}
   </div>

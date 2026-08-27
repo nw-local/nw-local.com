@@ -3,9 +3,11 @@ import Layout from "../layouts/Layout.astro";
 import Hero from "../components/Hero.astro";
 import ProductCard from "../components/ProductCard.astro";
 import FilterBar from "../components/FilterBar.astro";
-import { getProducts } from "../lib/sanity";
+import { getProducts, getDrops } from "../lib/sanity";
+import { buildDropLookup } from "../lib/drops";
 
 const products = await getProducts() ?? [];
+const dropLookup = buildDropLookup( await getDrops() ?? [] );
 
 const CATEGORY_FILTERS = [
   { value: "flower", label: "Flower" },
@@ -23,7 +25,7 @@ const CATEGORY_FILTERS = [
   <div class="card-grid">
     {products.map( product => (
       <div data-filter-item data-category={product.category}>
-        <ProductCard {...product} />
+        <ProductCard {...product} drop={dropLookup.byProductId.get( product._id )} />
       </div>
     ) )}
   </div>

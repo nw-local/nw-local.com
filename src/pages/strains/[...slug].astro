@@ -6,7 +6,8 @@ import ProductBadge from "../../components/ProductBadge.astro";
 import ProductCard from "../../components/ProductCard.astro";
 import SectionHeading from "../../components/SectionHeading.astro";
 import ImageLightbox from "../../components/ImageLightbox.astro";
-import { getStrains, getStrain, getProductsByStrain } from "../../lib/sanity";
+import { getStrains, getStrain, getProductsByStrain, getDrops } from "../../lib/sanity";
+import { buildDropLookup, dropHref } from "../../lib/drops";
 import { urlFor } from "../../lib/image";
 import { formatMonthYear } from "../../lib/date";
 import {
@@ -17,14 +18,30 @@ import {
   requireSiteUrl,
 } from "../../lib/jsonld";
 
+// getDrops() is called here rather than in the frontmatter on purpose: Astro
+// runs getStaticPaths() once per route file and the frontmatter once per
+// generated page, so fetching below would be one network round trip per strain.
 export async function getStaticPaths() {
   const strains = await getStrains() ?? [];
-  return strains.map( ( strain: { slug: { current: string } }) => ({
-    params: { slug: strain.slug.current },
-  }) );
+  const drops = await getDrops() ?? [];
+  const dropLookup = buildDropLookup( drops );
+  return strains.map( ( strain: { _id: string; slug: { current: string } }) => {
+    // byStrainId answers "is any product of this strain in a drop", which is a
+    // strain-level statement and is exactly what the "In this drop" line below
+    // says. It is not a per-SKU answer: a drop bundles selected SKUs, so a drop
+    // holding the eighth and not the pre-roll must not badge the pre-roll.
+    // Carry the winning drop's product ids so each card can test membership.
+    const drop = dropLookup.byStrainId.get( strain._id );
+    const winningDrop = drops.find( candidate => candidate._id === drop?._id );
+    return {
+      params: { slug: strain.slug.current },
+      props: { drop, dropProductIds: winningDrop?.productIds ?? [] },
+    };
+  });
 }
 
 const { slug } = Astro.params;
+const { drop, dropProductIds } = Astro.props;
 const strain = await getStrain( slug! );
 if( !strain ) return Astro.redirect( "/strains" );
 
@@ -125,12 +142,16 @@ const structuredData: StructuredData[] = [
 
   <ImageLightbox images={lightboxImages} />
 
+  {drop && (
+    <p class="strain-drop-line">In this drop: <a href={dropHref( drop.slug )}>{drop.name}</a></p>
+  )}
+
   {products.length > 0 && (
     <section class="fade-in">
       <SectionHeading title="Products" />
       <div class="card-grid">
         {products.map( product => (
-          <ProductCard {...product} />
+          <ProductCard {...product} drop={dropProductIds.includes( product._id ) ? drop : undefined} />
         ) )}
       </div>
     </section>

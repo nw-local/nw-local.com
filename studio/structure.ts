@@ -33,6 +33,7 @@ export const STRUCTURE: StructureEntry[] = [
   { kind: 'divider' },
   { kind: 'list', type: 'strain', title: 'Strains' },
   { kind: 'list', type: 'product', title: 'Products' },
+  { kind: 'list', type: 'drop', title: 'Drops' },
   { kind: 'divider' },
   { kind: 'list', type: 'blogPost', title: 'Blog Posts' },
   { kind: 'list', type: 'author', title: 'Authors' },

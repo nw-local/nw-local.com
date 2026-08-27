@@ -716,6 +716,25 @@ footer {
   line-height: 1.5;
 }
 
+/* Set explicitly rather than left to inherit: .card-body p sets no color of
+   its own, so an unstyled child would land at whatever brightness the
+   ancestor chain resolves to, not at the value the stylesheet reads as. That
+   silent-inheritance trap is how 34 inline code chips shipped at 1.00:1
+   contrast against their own paragraph. */
+.drop-card-date {
+  color: var(--text-secondary);
+}
+
+/* Same reasoning as .drop-card-date above, and the same reason it is not left
+   bare: this line sits between the gallery and the products grid with no
+   ancestor setting a colour for it, so "inherits" resolves to whatever the
+   nearest ancestor happens to be rather than to the value the stylesheet reads
+   as. --text-emphasis is the rung that sits above body copy without competing
+   with a heading, which is the weight a one line pointer to the drop wants. */
+.strain-drop-line {
+  color: var(--text-emphasis);
+}
+
 /* --- Product Badge --- */
 
 .product-badge {
@@ -733,6 +752,15 @@ footer {
 .product-badge[data-type="indica"] { background: #2a1f4e; color: #b89aff; }
 .product-badge[data-type="sativa"] { background: #1f3a1f; color: #88ff88; }
 .product-badge[data-type="hybrid"] { background: #3a2f1f; color: #ffcc66; }
+
+/* Of the three drop statuses, only "available" is a call to action, so only
+   it gets --accent. "upcoming" and "soldOut" reuse the muted neutral
+   treatment the base .product-badge rule already defines, rather than
+   inventing a second dull color: three glowing badges in one grid would
+   spend the accent on nothing. */
+.product-badge[data-type="upcoming"] { background: var(--border); color: var(--text-secondary); }
+.product-badge[data-type="available"] { background: rgba(0, 255, 136, 0.15); color: var(--accent); }
+.product-badge[data-type="soldOut"] { background: var(--border); color: var(--text-secondary); }
 
 .detail-label {
   font-size: 0.75rem;
@@ -1368,6 +1396,25 @@ footer {
   .strain-search-sort {
     flex-direction: column;
   }
+}
+
+/* --- Drop detail --- */
+
+.drop-meta {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.25rem 0.75rem;
+  margin: 1.5rem 0;
+}
+
+.drop-meta dt {
+  color: var(--text-emphasis);
+  font-weight: 600;
+}
+
+.drop-meta dd {
+  color: var(--text-secondary);
+  margin: 0;
 }
 
 /* --- Print ---

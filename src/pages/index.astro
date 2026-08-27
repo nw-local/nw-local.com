@@ -6,7 +6,10 @@ import SectionHeading from "../components/SectionHeading.astro";
 import StrainCard from "../components/StrainCard.astro";
 import FeaturedPost from "../components/FeaturedPost.astro";
 import BlogPostCard from "../components/BlogPostCard.astro";
-import { getSiteSettings, getStrains, getPage, getBlogPosts } from "../lib/sanity";
+import DropCard from "../components/DropCard.astro";
+import { getSiteSettings, getStrains, getPage, getBlogPosts, getDrops } from "../lib/sanity";
+import { compareDropStrength } from "../lib/drops";
+import type { DropStatus } from "../lib/sanity";
 
 // The homepage blog section runs the newest posts as full-width FeaturedPost
 // lockups, then the next few as ordinary cards. Both counts are ceilings, not
@@ -34,6 +37,24 @@ const cardPosts = recentPosts.slice(
 const heroImages = page?.heroImages?.length
   ? page.heroImages
   : ( page?.heroImage ? [ page.heroImage ] : [] );
+
+// The newest available drop, falling back to the newest upcoming one.
+// compareDropStrength already ranks available above upcoming above sold out, so
+// the first entry after sorting is the answer, and a sold out first entry means
+// there is nothing live to feature.
+const sortedDrops = ( await getDrops() ?? [] ).sort( compareDropStrength );
+const featuredDrop = sortedDrops[0]?.status === "soldOut" ? undefined : sortedDrops[0];
+
+// The section used to be headed "Current Drop" whatever it held, so an upcoming
+// drop was announced as current and then badged "Upcoming" on the card directly
+// under the heading. Exhaustive over DropStatus rather than covering the two
+// statuses that reach it, so widening the filter above cannot silently produce
+// an undefined heading.
+const DROP_SECTION_HEADINGS: Record<DropStatus, string> = {
+  available: "Current Drop",
+  upcoming: "Next Drop",
+  soldOut: "Latest Drop",
+};
 ---
 
 <Layout
@@ -52,6 +73,15 @@ const heroImages = page?.heroImages?.length
       </div>
     </Hero>
   </HeroBackdrop>
+
+  {featuredDrop && (
+    <section class="fade-in" style="margin-top:3rem;">
+      <SectionHeading title={DROP_SECTION_HEADINGS[featuredDrop.status]} />
+      <div class="card-grid">
+        <DropCard {...featuredDrop} />
+      </div>
+    </section>
+  )}
 
   {featuredStrains.length > 0 && (
     <section class="fade-in" style="margin-top:3rem;">

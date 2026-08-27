@@ -12,7 +12,7 @@ Customer-facing website for **Northwest Local Cannabis**, a Washington State i50
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Deployed](https://img.shields.io/badge/site-nw--local.com-1f6feb)](https://nw-local.com)
 
-The site is a static, content-driven catalog of strains, products, and retail partners, alongside a blog and a reference section covering terpenes and cannabis terminology. Content is authored in [Sanity Studio](https://nw-local.sanity.studio/), built into static HTML by [Astro](https://astro.build) at deploy time, and hosted on [GitHub Pages](https://pages.github.com/).
+The site is a static, content-driven catalog of strains, products, limited release drops, and retail partners, alongside a blog and a reference section covering terpenes and cannabis terminology. Content is authored in [Sanity Studio](https://nw-local.sanity.studio/), built into static HTML by [Astro](https://astro.build) at deploy time, and hosted on [GitHub Pages](https://pages.github.com/).
 
 ---
 
@@ -29,7 +29,7 @@ The site is a static, content-driven catalog of strains, products, and retail pa
 | Image handling   | `sharp`, `@sanity/image-url`                           |
 | Analytics        | Google Analytics 4 (production builds only)             |
 
-There are no Markdown files in the repo — every piece of content (strains, products, blog posts, pages, retailers, site settings) lives in Sanity and is fetched at build time via GROQ queries in `src/lib/sanity.ts`.
+There are no Markdown files in the repo — every piece of content (strains, products, drops, blog posts, pages, retailers, site settings) lives in Sanity and is fetched at build time via GROQ queries in `src/lib/sanity.ts`.
 
 ---
 
@@ -85,6 +85,7 @@ Run `make` (no args) to print the full target list with descriptions.
 | Check robots.txt    | `make check-robots`  | asserts `robots.txt` points crawlers at this build's sitemap |
 | Check content style | `make check-content-style` | asserts US spelling and that every temperature carries °F and °C |
 | Check heading anchors | `make check-anchors` | asserts section anchor ids are unique per page          |
+| Check drop lookup   | `make check-drop-lookup` | asserts the drop collision rule holds whatever order Sanity returns rows in |
 | Studio lint         | `cd studio && yarn lint` | separate project; the root's ESLint ignores it   |
 | Studio type check   | `cd studio && yarn typecheck` |                                             |
 | Studio format       | `cd studio && yarn format` | Prettier; `format:check` verifies instead      |
@@ -95,11 +96,11 @@ The `studio` job in CI runs the three studio checks on every PR.
 
 ## Automated testing
 
-Four GitHub Actions workflows guard the site: [`ci.yml`](.github/workflows/ci.yml) (type check + audit on every PR and push to `main`, plus a nightly-freshness check on pushes only), the reusable [`audit.yml`](.github/workflows/audit.yml) (build, sitemap and robots.txt validation, analytics-snippet check, content-style check, heading-anchor check, Lychee link check, Lighthouse), [`nightly.yml`](.github/workflows/nightly.yml) (the same audit on a daily cron, catching content drift between PRs), and [`deploy.yml`](.github/workflows/deploy.yml), which re-runs the content-style check as a blocking step. That last one is not redundant: publishing in Sanity dispatches `deploy.yml` directly, so content reaches production without ever touching the other three.
+Four GitHub Actions workflows guard the site: [`ci.yml`](.github/workflows/ci.yml) (type check, studio checks, the drop-lookup rule check, and the audit on every PR and push to `main`, plus a nightly-freshness check on pushes only), the reusable [`audit.yml`](.github/workflows/audit.yml) (build, sitemap and robots.txt validation, analytics-snippet check, content-style check, heading-anchor check, Lychee link check, Lighthouse), [`nightly.yml`](.github/workflows/nightly.yml) (the same audit on a daily cron, catching content drift between PRs), and [`deploy.yml`](.github/workflows/deploy.yml), which re-runs the content-style check as a blocking step. That last one is not redundant: publishing in Sanity dispatches `deploy.yml` directly, so content reaches production without ever touching the other three.
 
 Five of those steps guard *silent* failures — a stalled nightly cron, a Google Analytics snippet that loads and initialises while recording nothing, British spelling or a lone Celsius figure in published prose, a `robots.txt` that was never created in the first place, and two headings sharing an anchor id so a section link resolves to the wrong section — where every positive signal stays green and only an absence reveals the problem. Print styles are a sixth case that no workflow can cover at all, since `@media print` never executes during a build or an audit. Why each exists, what it asserts, and how to verify print output by hand: [docs/testing.md](docs/testing.md).
 
-There are deliberately no unit tests — the failure modes of a content-driven static site are broken queries, broken links, and regressed SEO/perf signals, not logic bugs. Full rationale, per-step details, and the considered/rejected list: [docs/testing.md](docs/testing.md).
+There is deliberately no test framework — the failure modes of a content-driven static site are broken queries, broken links, and regressed SEO/perf signals, not logic bugs. The one exception proves the rule: `scripts/check-drop-lookup.ts` asserts the drop collision rule, because [`src/lib/drops.ts`](src/lib/drops.ts) is the only module here that is pure logic rather than fetch-and-render, and its rule (strongest drop status wins, whatever order Sanity returned the rows in) produces a page that renders perfectly while showing the wrong drop. Full rationale, per-step details, and the considered/rejected list: [docs/testing.md](docs/testing.md).
 
 ---
 
@@ -110,6 +111,7 @@ There are deliberately no unit tests — the failure modes of a content-driven s
 ├── astro.config.mjs   # site URL, integrations, slug redirects
 ├── Makefile           # all run/build/image commands
 ├── docs/              # deployment, content model, SEO, testing, images, marketing
+│   └── superpowers/   # design specs and implementation plans for shipped work
 ├── figures/           # article figure sources: SVG, plus src/ photographs
 ├── public/            # static assets served as-is
 ├── scripts/           # image prep/upload, CI health checks
@@ -125,7 +127,7 @@ The age-gate overlay (`src/components/AgeGate.astro`) is client-side and uses `l
 
 ## Sanity content model
 
-Ten document types live in `studio/schemaTypes/`: `strain`, `product`, `blogPost`, `author`, `retailer`, `page`, `siteSettings`, `retailerPage`, `terpene`, and `glossaryTerm`. Detail pages are statically generated via `getStaticPaths()`. Two further entries there are object types rather than documents: `blockContent`, the shared rich-text body, and `tableBlock`, a reference table usable inside it.
+Eleven document types live in `studio/schemaTypes/`: `strain`, `product`, `drop`, `blogPost`, `author`, `retailer`, `page`, `siteSettings`, `retailerPage`, `terpene`, and `glossaryTerm`. Detail pages are statically generated via `getStaticPaths()`. Two further entries there are object types rather than documents: `blockContent`, the shared rich-text body, and `tableBlock`, a reference table usable inside it.
 
 Full table, plus the gotchas worth knowing before you add content or write against the schema: [docs/content-model.md](docs/content-model.md).
 

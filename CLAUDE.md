@@ -87,6 +87,7 @@ No test framework is configured.
 |---------------|---------|
 | `strain` | Cannabis strains with effects, terpenes, THC/CBD ranges, gallery |
 | `product` | SKUs (flower, preroll, concentrate, edible) referencing a parent strain |
+| `drop` | Limited release batches: a dated release bundling products from one or more harvests, with an editor-set status |
 | `author` | Post authors with role, bio, photo, and profile links |
 | `blogPost` | Blog posts with rich text body, tags, hero image, author reference |
 | `retailer` | Dispensary partners with address, contact info, products carried |

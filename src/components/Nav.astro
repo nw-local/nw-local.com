@@ -1,6 +1,7 @@
 ---
 import { urlFor } from "../lib/image";
 import type { SiteSettings } from "../lib/sanity";
+import { DROP_BASE_PATH } from "../lib/drops";
 
 interface Props {
   settings: SiteSettings | null;
@@ -14,6 +15,7 @@ const NAV_LINKS = [
   { href: "/about-us", label: "About" },
   { href: "/strains", label: "Strains" },
   { href: "/products", label: "Products" },
+  { href: DROP_BASE_PATH, label: "Drops" },
   { href: "/find-us", label: "Find Us" },
   { href: "/blog", label: "Blog" },
   { href: "/contact", label: "Contact" },

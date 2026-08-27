@@ -1,0 +1,36 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Hero from "../../components/Hero.astro";
+import DropCard from "../../components/DropCard.astro";
+import FilterBar from "../../components/FilterBar.astro";
+import { getDrops } from "../../lib/sanity";
+import { compareDropStrength, DROP_STATUS_LABELS } from "../../lib/drops";
+
+// compareDropStrength orders by status rank then dropDate desc, which is the
+// same question the lookup maps ask. Available drops lead, so the page opens on
+// what a visitor can actually buy.
+const drops = ( await getDrops() ?? [] ).sort( compareDropStrength );
+
+// Built from DROP_STATUS_LABELS rather than written out again, so a filter
+// button and the badge on the card it filters to always read the same words.
+// The map's declaration order is the button order: strongest status first.
+const STATUS_FILTERS = Object.entries( DROP_STATUS_LABELS ).map( ( [ value, label ] ) => ({ value, label }) );
+---
+
+<Layout title="Drops" description="Limited release batches from Northwest Local Cannabis. See what is available now, what is coming, and what has sold out.">
+  <Hero title="Drops" subtitle="Limited release batches, while they last." />
+
+  <FilterBar filters={STATUS_FILTERS} filterAttribute="data-status" />
+
+  <div class="card-grid">
+    {drops.map( drop => (
+      <div data-filter-item data-status={drop.status}>
+        <DropCard {...drop} />
+      </div>
+    ) )}
+  </div>
+
+  {drops.length === 0 && (
+    <p style="text-align:center;margin-top:2rem;">No drops yet. Check back soon.</p>
+  )}
+</Layout>

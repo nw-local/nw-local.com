@@ -1,4 +1,6 @@
 ---
+import { DROP_STATUS_LABELS } from "../lib/drops";
+
 interface Props {
   type: string
   label?: string
@@ -15,6 +17,9 @@ const LABELS: Record<string, string> = {
   concentrate: "Concentrate",
   edible: "Edible",
   other: "Other",
+  // Drop statuses come from drops.ts so the badge and the drops index filter
+  // cannot word the same status two ways.
+  ...DROP_STATUS_LABELS,
 };
 ---
 

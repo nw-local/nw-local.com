@@ -1,0 +1,160 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Hero from "../../components/Hero.astro";
+import PortableText from "../../components/PortableText.astro";
+import ProductBadge from "../../components/ProductBadge.astro";
+import ProductCard from "../../components/ProductCard.astro";
+import RetailerCard from "../../components/RetailerCard.astro";
+import SectionHeading from "../../components/SectionHeading.astro";
+import { getDrops, getDrop } from "../../lib/sanity";
+import type { DropPortal, DropStatus, ProductSummary } from "../../lib/sanity";
+import { DROP_BASE_PATH } from "../../lib/drops";
+import { urlFor } from "../../lib/image";
+import { formatPostDate } from "../../lib/date";
+import {
+  buildBreadcrumbList,
+  normalizeSiteUrl,
+  type StructuredData,
+  requireSiteUrl,
+} from "../../lib/jsonld";
+
+export async function getStaticPaths() {
+  const drops = await getDrops() ?? [];
+  return drops.map( drop => ({
+    params: { slug: drop.slug.current },
+  }) );
+}
+
+const { slug } = Astro.params;
+const drop = await getDrop( slug! );
+if( !drop ) return Astro.redirect( DROP_BASE_PATH );
+
+// Keyed by DropPortal rather than string, so the map is exhaustive by
+// construction and a lotPortal value always has a label. That is what makes the
+// unqualified fallback below unnecessary rather than merely unused.
+const PORTAL_LABELS: Record<DropPortal, string> = {
+  bamboo: "Bamboo",
+  cultivera: "Cultivera",
+};
+
+// The bare date badge read as an unlabeled "UPCOMING · SEPTEMBER 3, 2026"
+// with nothing saying what the date meant. An upcoming drop has not dropped
+// yet, so its label is future tense; available and sold out drops already
+// happened, so both read the same past tense label.
+const DATE_LABELS: Record<DropStatus, string> = {
+  upcoming: "Dropping",
+  available: "Dropped",
+  soldOut: "Dropped",
+};
+
+// A lot carries a Bamboo id and a Cultivera id, so an unqualified number is
+// ambiguous. Render the identifier only when we can say which portal it is from.
+const lotLabel = drop.lotIdentifier && drop.lotPortal
+  ? `${PORTAL_LABELS[drop.lotPortal]} lot ${drop.lotIdentifier}`
+  : null;
+
+// Products are grouped by strain because a drop bundles lots and one lot is one
+// strain. A product whose strain reference is missing is shown in its own group
+// rather than dropped, so a content problem is visible instead of silent.
+interface StrainGroup {
+  key: string;
+  heading: string;
+  products: ProductSummary[];
+}
+
+const groupsByKey = new Map<string, StrainGroup>();
+for( const product of drop.products ) {
+  const key = product.strain?._id ?? "unassigned";
+  const heading = product.strain?.name ?? "More in this drop";
+  const existing = groupsByKey.get( key );
+  if( existing ) {
+    existing.products.push( product );
+  } else {
+    groupsByKey.set( key, { key, heading, products: [ product ] });
+  }
+}
+// "unassigned" (a product whose strain reference is missing) sorts last so
+// the fallback group cannot land between two real strain groups; the sort is
+// stable, so every other group keeps its original order.
+const strainGroups = [ ...groupsByKey.values() ].sort( ( left, right ) => {
+  if( left.key === "unassigned" ) return 1;
+  if( right.key === "unassigned" ) return -1;
+  return 0;
+});
+
+const ogImage = drop.heroImage?.asset
+  ? urlFor( drop.heroImage ).width( 1200 ).height( 630 ).format( "jpg" ).url()
+  : undefined;
+
+// buildBreadcrumbList takes one argument. The crumb shape, the Home entry and
+// the trailing slashes all match the strain page's call deliberately: these are
+// the same breadcrumb trail rendered on a sibling route.
+const baseUrl = normalizeSiteUrl( requireSiteUrl( Astro.site ) );
+const structuredData: StructuredData[] = [
+  buildBreadcrumbList( [
+    { name: "Home", url: `${baseUrl}/` },
+    { name: "Drops", url: `${baseUrl}${DROP_BASE_PATH}/` },
+    { name: drop.name, url: `${baseUrl}${DROP_BASE_PATH}/${drop.slug.current}/` },
+  ] ),
+];
+---
+
+<Layout title={drop.name} description={drop.description} ogImage={ogImage} structuredData={structuredData}>
+  <Hero title={drop.name} subtitle={drop.description} />
+
+  {drop.heroImage?.asset && (
+    <img
+      src={urlFor( drop.heroImage ).width( 1200 ).height( 900 ).format( "webp" ).url()}
+      alt={drop.heroImage.alt ?? drop.name}
+      width="1200"
+      height="900"
+      style="border-radius:8px;width:100%;margin-bottom:1.5rem;"
+    />
+  )}
+
+  <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+    <ProductBadge type={drop.status} />
+    <span class="product-badge">{DATE_LABELS[drop.status]} <time datetime={drop.dropDate}>{formatPostDate( drop.dropDate )}</time></span>
+  </div>
+
+  {( lotLabel || drop.harvestedAt ) && (
+    <dl class="drop-meta">
+      {lotLabel && (
+        <>
+          <dt>Lot</dt>
+          <dd>{lotLabel}</dd>
+        </>
+      )}
+      {drop.harvestedAt && (
+        <>
+          <dt>Harvested</dt>
+          <dd><time datetime={drop.harvestedAt}>{formatPostDate( drop.harvestedAt )}</time></dd>
+        </>
+      )}
+    </dl>
+  )}
+
+  {drop.body && <PortableText value={drop.body} />}
+
+  {strainGroups.map( group => (
+    <section class="fade-in">
+      <SectionHeading title={group.heading} />
+      <div class="card-grid">
+        {group.products.map( product => (
+          <ProductCard {...product} />
+        ) )}
+      </div>
+    </section>
+  ) )}
+
+  {drop.retailers && drop.retailers.length > 0 && (
+    <section class="fade-in">
+      <SectionHeading title="Where to find it" />
+      <div class="card-grid">
+        {drop.retailers.map( retailer => (
+          <RetailerCard {...retailer} />
+        ) )}
+      </div>
+    </section>
+  )}
+</Layout>

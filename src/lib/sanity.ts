@@ -38,6 +38,28 @@ const PORTABLE_TEXT_PROJECTION = `{
   _type == "image" => { asset->, alt, caption }
 }`;
 
+// Shared for the same reason PORTABLE_TEXT_PROJECTION is: getProducts() and the
+// drop detail page ask for the identical product shape off different array
+// sources, so the braced body is the mechanic and the source expression is the
+// orchestration. Copies of exactly this string are what shipped center-cropped
+// jar labels in #75, where one of three spellings had lost `crop, hotspot`.
+const PRODUCT_SUMMARY_PROJECTION = `{
+  _id, name, slug, category, weight, available,
+  image { asset->, alt, crop, hotspot },
+  "strain": strain->{ _id, name, slug, strainType, heroImage { asset->, alt, crop, hotspot } }
+}`;
+
+// logo omits `crop, hotspot` on purpose: a retailer logo renders unconstrained,
+// so there is no crop for a hotspot to reframe. Every other image projection in
+// this file constrains both dimensions and therefore needs them.
+const RETAILER_PROJECTION = `{
+  _id, name, slug, address, city, state, zip,
+  lat, lng, website, phone, email,
+  logo { asset->, alt },
+  featured,
+  productsAvailable[]->{ _id, name, slug, category }
+}`;
+
 // --- Shared types ---
 
 export interface SanitySlug {
@@ -200,11 +222,7 @@ export interface ProductWithDescription {
 
 export async function getProducts() {
   return sanityClient.fetch<ProductSummary[]>(
-    `*[_type == "product"] | order(sortOrder asc, name asc) {
-      _id, name, slug, category, weight, available,
-      image { asset->, alt, crop, hotspot },
-      "strain": strain->{ _id, name, slug, strainType, heroImage { asset->, alt, crop, hotspot } }
-    }`,
+    `*[_type == "product"] | order(sortOrder asc, name asc) ${PRODUCT_SUMMARY_PROJECTION}`,
   );
 }
 
@@ -217,6 +235,100 @@ export async function getProductsByStrain( strainId: string ) {
     }`,
     { strainId },
   );
+}
+
+// --- Drops ---
+
+export type DropStatus = "upcoming" | "available" | "soldOut";
+export type DropPortal = "bamboo" | "cultivera";
+
+export interface DropSummary {
+  _id: string;
+  name: string;
+  slug: SanitySlug;
+  description: string;
+  status: DropStatus;
+  dropDate: string;
+  heroImage?: SanityImage;
+  // Carried on the summary so one fetch serves both the index cards and the
+  // lookup maps in drops.ts. Two separate queries could disagree; one cannot.
+  // productIds keeps every raw _ref, including one whose target no longer
+  // resolves, because getDrops() uses its length to fail loudly on an empty
+  // drop. liveProductCount is the number a visitor can actually see, and is
+  // what any rendered count must use: unpublishing one SKU leaves the _ref
+  // intact, so the two legitimately disagree.
+  productIds: string[];
+  liveProductCount: number;
+  // A product written through the API can have no strain at all, and
+  // strain._ref then projects to null in place. Typed to admit that rather
+  // than making the guard in buildDropLookup() look like dead code.
+  strainIds: ( string | null )[];
+}
+
+export interface Drop extends DropSummary {
+  lotIdentifier?: string;
+  lotPortal?: DropPortal;
+  harvestedAt?: string;
+  body?: PortableText;
+  products: ProductSummary[];
+  retailers?: Retailer[];
+}
+
+const DROP_SUMMARY_PROJECTION = `{
+  _id, name, slug, description, status, dropDate,
+  heroImage { asset->, alt, crop, hotspot },
+  "productIds": coalesce(products[]._ref, []),
+  "liveProductCount": count(products[defined(@->)]),
+  "strainIds": coalesce(products[defined(@->)]->strain._ref, [])
+}`;
+
+// A drop with no products is a batch with nothing in it. Studio's
+// rule.required() stops a human clicking Publish and does nothing about API
+// writes, which is how blogPost.author nearly shipped without a byline in #34.
+// Failing the deploy is the intended outcome: the alternative is a page that
+// renders an empty batch and looks fine.
+function assertDropHasProducts( name: string, id: string, count: number ) {
+  if( count > 0 ) return;
+  throw new Error(
+    `Drop "${name}" (${id}) has no products. Add at least one product to it in Sanity, or unpublish the drop.`,
+  );
+}
+
+export async function getDrops() {
+  const drops = await sanityClient.fetch<DropSummary[]>(
+    `*[_type == "drop"] | order(dropDate desc) ${DROP_SUMMARY_PROJECTION}`,
+  );
+  for( const drop of drops ) {
+    assertDropHasProducts( drop.name, drop._id, drop.productIds.length );
+  }
+  return drops;
+}
+
+export async function getDrop( slug: string ) {
+  const drop = await sanityClient.fetch<Drop | null>(
+    `*[_type == "drop" && slug.current == $slug][0] {
+      _id, name, slug, description, status, dropDate,
+      heroImage { asset->, alt, crop, hotspot },
+      lotIdentifier, lotPortal, harvestedAt,
+      "productIds": coalesce(products[]._ref, []),
+      "liveProductCount": count(products[defined(@->)]),
+      "strainIds": coalesce(products[defined(@->)]->strain._ref, []),
+      body[] ${PORTABLE_TEXT_PROJECTION},
+      "products": products[defined(@->)]-> ${PRODUCT_SUMMARY_PROJECTION},
+      "retailers": retailers[defined(@->)]-> ${RETAILER_PROJECTION}
+    }`,
+    { slug },
+  );
+
+  if( !drop ) return null;
+
+  // The projection filters dangling references out with [defined(@->)]
+  // before dereferencing, so drop.products holds live products only, never a
+  // null entry for a deleted target. This count is therefore narrower than
+  // getDrops(), which counts raw refs and so also catches a drop whose every
+  // product was deleted after publish.
+  assertDropHasProducts( drop.name, drop._id, drop.products.length );
+  return drop;
 }
 
 // --- Authors ---
@@ -418,13 +530,7 @@ export interface Retailer {
 
 export async function getRetailers() {
   return sanityClient.fetch<Retailer[]>(
-    `*[_type == "retailer"] | order(city asc, name asc) {
-      _id, name, slug, address, city, state, zip,
-      lat, lng, website, phone, email,
-      logo { asset->, alt },
-      featured,
-      productsAvailable[]->{ _id, name, slug, category }
-    }`,
+    `*[_type == "retailer"] | order(city asc, name asc) ${RETAILER_PROJECTION}`,
   );
 }
 
