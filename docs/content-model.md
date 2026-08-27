@@ -8,6 +8,7 @@ All content types are defined in `studio/schemaTypes/`. Sanity is the single sou
 |---|---|
 | `strain` | Cannabis strains — effects, terpenes, THC/CBD ranges, hero + gallery images |
 | `product` | SKUs (flower, preroll, concentrate, edible) referencing a parent strain |
+| `drop` | Limited release batches: a dated release bundling products from one or more harvests, with an editor-set status |
 | `blogPost` | Blog posts with rich text body, tags, hero image, and a required `author` reference |
 | `author` | Post authors — role, bio, photo, and `sameAs` profile links |
 | `retailer` | Dispensary partners with address, contact info, products carried |
