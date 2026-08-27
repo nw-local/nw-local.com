@@ -29,7 +29,20 @@ export const blockContentType = defineType({
             title: 'URL',
             name: 'link',
             type: 'object',
-            fields: [{ title: 'URL', name: 'href', type: 'url' }],
+            fields: [
+              {
+                title: 'URL',
+                name: 'href',
+                type: 'url',
+                // Cross-links between posts are stored as site-relative paths
+                // ("/blog/why-cannabis-turns-purple/"), which the built-in url
+                // rule rejects as "Not a valid URL" because it requires a
+                // scheme. Leaving that default on makes every post carrying an
+                // internal link unpublishable from the Studio. Omitting the
+                // scheme option keeps the http/https default for absolute URLs.
+                validation: (rule) => rule.uri({ allowRelative: true }),
+              },
+            ],
           },
           {
             title: 'Glossary term',
