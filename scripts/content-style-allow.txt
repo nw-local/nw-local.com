@@ -1,0 +1,25 @@
+# Phrases check-content-style.py ignores, one per line. `#` starts a comment.
+#
+# This exists because the check now blocks deploys, and a small number of
+# British spellings are correct and must not be changed. A cited paper title is
+# the main one: Americanizing a word inside someone else's title misquotes
+# them. Exempting the phrase is the right fix rather than deleting the word
+# from SPELLINGS, which would also stop the check catching that same word in
+# our own prose, where it would be wrong.
+#
+# Rules for adding an entry:
+#
+#   - Quote enough of the phrase to be unambiguous. "colour" alone would
+#     exempt every use on the site, which defeats the check. A full title, or
+#     a distinctive clause from one, is the right length.
+#   - Say why in a comment above it. An entry with no reason is indistinguishable
+#     from a mistake six months later.
+#   - Matching is case-insensitive, and whitespace is collapsed before
+#     comparison, so line wrapping in the rendered page does not matter.
+#   - An entry matching nothing is reported by the checker as unused. Delete it
+#     rather than leaving it: a stale entry silently widens what is exempt.
+#
+# Entries exempt both rules, the spelling list and the paired-units rule, since
+# a quoted source can carry a lone Celsius figure for the same reason.
+
+# (No entries yet. Every British spelling currently on the site is a defect.)

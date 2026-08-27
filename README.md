@@ -93,7 +93,7 @@ The `studio` job in CI runs the three studio checks on every PR.
 
 ## Automated testing
 
-Three GitHub Actions workflows guard the site: [`ci.yml`](.github/workflows/ci.yml) (type check + audit on every PR and push to `main`, plus a nightly-freshness check on pushes only), the reusable [`audit.yml`](.github/workflows/audit.yml) (build, sitemap and robots.txt validation, analytics-snippet check, content-style check, Lychee link check, Lighthouse), and [`nightly.yml`](.github/workflows/nightly.yml) (the same audit on a daily cron, catching content drift between PRs).
+Four GitHub Actions workflows guard the site: [`ci.yml`](.github/workflows/ci.yml) (type check + audit on every PR and push to `main`, plus a nightly-freshness check on pushes only), the reusable [`audit.yml`](.github/workflows/audit.yml) (build, sitemap and robots.txt validation, analytics-snippet check, content-style check, Lychee link check, Lighthouse), [`nightly.yml`](.github/workflows/nightly.yml) (the same audit on a daily cron, catching content drift between PRs), and [`deploy.yml`](.github/workflows/deploy.yml), which re-runs the content-style check as a blocking step. That last one is not redundant: publishing in Sanity dispatches `deploy.yml` directly, so content reaches production without ever touching the other three.
 
 Four of those steps guard *silent* failures — a stalled nightly cron, a Google Analytics snippet that loads and initialises while recording nothing, British spelling or a lone Celsius figure in published prose, and a `robots.txt` that was never created in the first place — where every positive signal stays green and only an absence reveals the problem. Print styles are a fifth case that no workflow can cover at all, since `@media print` never executes during a build or an audit. Why each exists, what it asserts, and how to verify print output by hand: [docs/testing.md](docs/testing.md).
 
@@ -135,6 +135,8 @@ Every page emits **JSON-LD structured data** (`Organization` everywhere; `Produc
 ## Deployment
 
 The site auto-deploys to GitHub Pages on every push to `main`, via [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml). Publishing content in Sanity also triggers a rebuild through a webhook (~1-2 min end-to-end), because the build fetches all content at build time.
+
+Deploys are not unconditional: the build runs `make check-content-style` against the freshly built `dist/`, and a failure skips the deploy job and leaves the previous site live. **If published content does not appear, check that run first** — a British spelling or an unpaired temperature will hold it back, and nothing else announces it.
 
 The Studio itself is hosted separately at <https://nw-local.sanity.studio/> and deploys with `make deploy-studio` — **not** with the site. A schema or sidebar change needs that command before editors see it.
 

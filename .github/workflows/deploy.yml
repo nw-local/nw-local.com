@@ -43,6 +43,30 @@ jobs:
           SANITY_DATASET: ${{ secrets.SANITY_DATASET }}
           SANITY_API_TOKEN: ${{ secrets.SANITY_API_TOKEN }}
 
+      # The only content check on this workflow, and the reason it is here
+      # rather than only in audit.yml: audit.yml runs on pull_request and on
+      # the nightly cron, but content reaches production through a third path
+      # that touches neither — Sanity's webhook fires workflow_dispatch here on
+      # every publish. So every dist-validating check guarded code changes and
+      # skipped the content it was written for. A British spelling or a lone
+      # Celsius figure could go live and stay live until the next nightly run
+      # happened to fail, on a workflow nobody watches.
+      #
+      # This runs against the dist/ the action above just built: withastro's
+      # build runs in the checked-out workspace and upload-pages-artifact
+      # copies rather than moves, so the directory is still on disk. Failing
+      # this step fails the build job, which skips the deploy job below, which
+      # leaves the previously deployed site live. Fail-closed is deliberate:
+      # the visible symptom is that published content does not appear, which
+      # beats bad copy going out silently.
+      #
+      # Deliberately not the other audit checks. robots and the analytics
+      # snippet can only be broken by a code change, which always goes through
+      # a pull request and is already covered there. This is the one a content
+      # publish can break on its own.
+      - name: Check US spelling and paired temperature units
+        run: ./scripts/check-content-style.py dist
+
   deploy:
     needs: build
     runs-on: ubuntu-latest
