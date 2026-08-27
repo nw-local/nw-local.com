@@ -224,9 +224,16 @@ there is no cache to go stale in the dev server.
   the deploy. That is intended under the no silent failures rule, and it does
   mean a bad publish turns the Actions run red rather than degrading quietly.
 - A product referenced by a drop and then deleted in Sanity leaves a dangling
-  `_ref` that GROQ dereferences to `null`. The products array is filtered for
-  nulls before grouping, and a drop left with zero products hits the throw
-  above.
+  `_ref`. GROQ dereferences it to `null` **in place**, keeping the array
+  length, which was measured against this dataset rather than assumed:
+  `count([{"_ref":"missing"}][]->)` returns 1 and the value is `[null]`. So the
+  projection filters with `[defined(@->)]` before the arrow, and the dangling
+  entry never reaches the page. Filtering after the arrow, `[]->[defined(@)]`,
+  looks equivalent and does nothing: it still returns 1. That is the same
+  fail-open shape as the GROQ `match` and Portable Text `children` traps.
+  `productIds` deliberately keeps the raw references including dangling ones,
+  which is what makes the two guards different signals: a drop whose every
+  product was deleted still fails loudly in `getDrops()`.
 - `status` is editor set, so a sold out batch reads "Available Now" until
   someone changes it. This is the accepted tradeoff, chosen over date derived
   status because there is no scheduled rebuild: `nightly.yml` audits and does
