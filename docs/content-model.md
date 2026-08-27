@@ -29,6 +29,14 @@ All content types are defined in `studio/schemaTypes/`. Sanity is the single sou
 | `tableBlock` | Reference table: optional `caption`, a `headers` array, and `rows` of `cells`. One row may set `highlight` |
 | `glossaryRef` | A mark, not a member. Annotates a span with a reference to a `glossaryTerm` or `terpene` |
 
+### Headings are linkable, and their ids come from their text
+
+`h2` and `h3` inside a body render through `PortableTextHeading.astro`, which slugifies the heading's own text into an `id`. So "Daily schedule" is reachable at `/blog/<slug>/#daily-schedule`, and a cross-post link should point at the section rather than the top of the page.
+
+Two consequences worth holding onto. **Rewording a heading changes its anchor**, and any link pointing at the old one silently degrades to landing at the top of the page rather than erroring, so grep the built `dist/` for the old fragment before renaming a heading other posts link to. And **two headings on one page must not slugify alike**: the browser jumps to whichever came first, which looks like the link worked. `make check-anchors` fails the build on that, since nothing else would notice.
+
+The id is deliberately derived from the text rather than from the block's `_key`. `_key` is stabler, but `#h52` tells a reader nothing and survives nothing anyone would notice either.
+
 ### Tables carry plain strings, not rich text
 
 `tableBlock` cells are plain strings on purpose: the content is setpoints and short labels, and nesting Portable Text inside cells would mean a second renderer and a much heavier editing surface for no gain. The practical consequence is that **a glossary link cannot live inside a table cell** — link the term in the prose around the table instead.
