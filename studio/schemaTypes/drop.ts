@@ -64,11 +64,20 @@ export const dropType = defineType({
         }),
       ],
     }),
+    // A lot carries a Bamboo id and a Cultivera id, so an identifier with no
+    // portal cannot be rendered unambiguously on the drop page. The two fields
+    // are co-required: both set or both empty, never just one.
     defineField({
       name: 'lotIdentifier',
       title: 'Lot Identifier',
       type: 'string',
       description: 'The identifier printed on the label, for example "24-0812".',
+      validation: (rule) =>
+        rule.custom((value, context) => {
+          const portal = context.document?.lotPortal
+          if (Boolean(value) === Boolean(portal)) return true
+          return 'Set the lot identifier and the portal together, or leave both empty.'
+        }),
     }),
     defineField({
       name: 'lotPortal',
@@ -83,6 +92,12 @@ export const dropType = defineType({
         ],
         layout: 'radio',
       },
+      validation: (rule) =>
+        rule.custom((value, context) => {
+          const identifier = context.document?.lotIdentifier
+          if (Boolean(value) === Boolean(identifier)) return true
+          return 'Set the lot identifier and the portal together, or leave both empty.'
+        }),
     }),
     defineField({
       name: 'harvestedAt',

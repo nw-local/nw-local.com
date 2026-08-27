@@ -290,7 +290,7 @@ export async function getDrop( slug: string ) {
         image { asset->, alt, crop, hotspot },
         "strain": strain->{ _id, name, slug, strainType, heroImage { asset->, alt, crop, hotspot } }
       },
-      "retailers": retailers[]-> {
+      "retailers": retailers[defined(@->)]-> {
         _id, name, slug, address, city, state, zip,
         lat, lng, website, phone, email,
         logo { asset->, alt },
