@@ -20,8 +20,12 @@ pnpm-debug.log*
 # rendered figures
 # The SVG under figures/ is the source and is tracked; the PNG beside it is a
 # build artifact of `make render-figures`, and the copy that matters lives in
-# Sanity once it is uploaded.
+# Sanity once it is uploaded. Photographs a figure composes are source, not
+# output, so figures/**/src/ is tracked: losing them would make the figure
+# unrebuildable, which is the whole point of tracking sources.
 figures/**/*.png
+!figures/**/src/*.png
+figures/**/.render-*.html
 
 # macOS-specific files
 .DS_Store

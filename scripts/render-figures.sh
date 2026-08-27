@@ -61,8 +61,14 @@ while IFS= read -r svg; do
     exit 1
   fi
 
-  out="$(dirname "$svg")/${name}.png"
-  shim="${WORK_DIR}/${name}.html"
+  svg_dir="$(dirname "$svg")"
+  out="${svg_dir}/${name}.png"
+
+  # The shim lives beside the SVG rather than in the temp dir, so a figure that
+  # references a photograph relatively (src/foo.png) resolves it the same way an
+  # editor previewing the SVG would. Embedding those as data URIs instead would
+  # work, but it puts a megabyte of base64 into a file meant to be diffable.
+  shim="${svg_dir}/.render-${name}.html"
 
   # Chrome renders a bare .svg document inside a page that has a default body
   # margin, which would offset the figure and crop its right edge. Wrapping it
@@ -104,6 +110,7 @@ while IFS= read -r svg; do
 
   kill "$chrome_pid" 2>/dev/null || true
   wait "$chrome_pid" 2>/dev/null || true
+  rm -f "$shim"
 
   if [[ ! -s "$out" ]]; then
     echo "Error: Chrome produced no output for $svg" >&2

@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1880" height="1180" viewBox="0 0 1880 1180">
+  <!--
+    Fig. 3 for /blog/co2-enrichment-in-commercial-cannabis/, in the "Calcium
+    delivery falls" section (blocks h48 through p51).
+
+    Real photographs, not a drawing. An earlier attempt here was an authored
+    diagram of the mechanism, which explained why delivery fails but did nothing
+    for the thing a grower actually needs: recognizing the symptom while
+    inspecting a plant.
+
+    Photographs are the calcium column of Figure 2 in Cockson et al. 2019,
+    reused under CC BY 4.0. Full provenance, the exact license wording, and the
+    list of changes made are in src/PROVENANCE.md. The credit in the footer is a
+    license condition, not decoration: do not remove it.
+
+    The panels reference src/ relatively rather than being embedded as data
+    URIs, which is why render-figures.sh writes its shim beside the SVG.
+  -->
+  <style>
+    .fig    { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
+    .title  { font-size: 52px; font-weight: 700; fill: #1A1A1A; letter-spacing: -0.6px; }
+    .deck   { font-size: 30px; fill: #545454; }
+    .label  { font-size: 22px; font-weight: 700; letter-spacing: 1.7px; }
+    .stage  { font-size: 29px; font-weight: 700; fill: #1A1A1A; }
+    .note   { font-size: 23px; fill: #545454; }
+    .foot   { font-size: 21px; fill: #8E8E8E; }
+    .brand  { font-size: 23px; font-weight: 700; fill: #6B2D8B; }
+    .teal   { fill: #147868; }
+    .rule   { stroke: #D5D5D6; stroke-width: 1.5; }
+    .frame  { fill: none; stroke: #D5D5D6; stroke-width: 1.5; }
+  </style>
+
+  <rect width="1880" height="1180" fill="#F7F7F8"/>
+
+  <g class="fig">
+    <text class="title" x="80" y="118">What calcium deficiency looks like on the plant</text>
+    <text class="deck" x="80" y="176">The shortfall lands on the newest growth while the older fan leaves below stay green. That inverted pattern, not</text>
+    <text class="deck" x="80" y="218">the state of any single leaf, is what separates calcium from a nutrient the plant can move.</text>
+    <line class="rule" x1="80" y1="272" x2="1800" y2="272"/>
+
+    <text class="label teal" x="80" y="330">AS THE DEFICIENCY PROGRESSES</text>
+
+    <text class="stage" x="80" y="382">Initial</text>
+    <image href="src/calcium-initial.png" x="80" y="404" width="560" height="376" preserveAspectRatio="xMidYMid slice"/>
+    <rect class="frame" x="80" y="404" width="560" height="376"/>
+    <text class="note" x="80" y="822">New growth at the tip pales while the</text>
+    <text class="note" x="80" y="850">older fan leaves below stay dark green.</text>
+
+    <text class="stage" x="660" y="382">Intermediate</text>
+    <image href="src/calcium-intermediate.png" x="660" y="404" width="560" height="376" preserveAspectRatio="xMidYMid slice"/>
+    <rect class="frame" x="660" y="404" width="560" height="376"/>
+    <text class="note" x="660" y="822">The growing points distort and twist,</text>
+    <text class="note" x="660" y="850">with pale tissue on the newest leaves.</text>
+
+    <text class="stage" x="1240" y="382">Advanced</text>
+    <image href="src/calcium-advanced.png" x="1240" y="404" width="560" height="376" preserveAspectRatio="xMidYMid slice"/>
+    <rect class="frame" x="1240" y="404" width="560" height="376"/>
+    <text class="note" x="1240" y="822">Necrosis at the growing points. The big</text>
+    <text class="note" x="1240" y="850">lower leaves are still largely green.</text>
+
+    <line class="rule" x1="80" y1="906" x2="1800" y2="906"/>
+
+    <text class="note" x="80" y="952">Under enrichment this can arrive without the feed changing at all. Calcium moves only with water, so less</text>
+    <text class="note" x="80" y="984">transpiration means less delivered, and the plant cannot recover what it has already placed in older tissue.</text>
+
+    <line class="rule" x1="80" y1="1040" x2="1800" y2="1040"/>
+    <text class="foot" x="80" y="1078">Photographs: Cockson, P.; Landis, H.; Smith, T.; Hicks, K.; Whipker, B.E. (2019), Characterization of Nutrient Disorders of Cannabis sativa,</text>
+    <text class="foot" x="80" y="1106">Applied Sciences 9(20), 4432. Used under CC BY 4.0. Cropped from Figure 2, calcium column only, and relabeled. Symptoms were induced</text>
+    <text class="foot" x="80" y="1134">in sand culture with calcium withheld, so they present more cleanly here than in a production room.</text>
+    <text class="brand" x="1800" y="1078" text-anchor="end">Northwest Local Cannabis</text>
+  </g>
+</svg>
