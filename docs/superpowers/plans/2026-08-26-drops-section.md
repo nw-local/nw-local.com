@@ -650,8 +650,10 @@ Add a `.drop-card-date` rule using `--text-secondary`. Do not leave it unstyled 
 Run: `make format && yarn lint && yarn astro check`
 Expected: lint clean, 0 type errors.
 
-Run: `tail -40 src/styles/global.css | grep -c "@media print"`
-Expected: 1. If 0, the print block is no longer at the end of the file.
+Run: `awk 'NR>1402 && /^[^[:space:]}]/ {print NR": "$0}' src/styles/global.css`
+Expected: no output. Any line printed is a top-level rule that escaped below the print block, which silently disables the print styles.
+
+Do not use `tail -40 … | grep -c "@media print"` for this. The print block opens at line 1402 and runs 316 lines to the end of the file, so a 40-line tail can never see its opening line and the check returns 0 whether the file is correct or broken. It is unable to pass, which makes a real failure and a healthy file indistinguishable.
 
 - [ ] **Step 5: Commit**
 
