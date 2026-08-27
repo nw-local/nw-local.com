@@ -251,7 +251,7 @@ const DROP_SUMMARY_PROJECTION = `{
   _id, name, slug, description, status, dropDate,
   heroImage { asset->, alt, crop, hotspot },
   "productIds": coalesce(products[]._ref, []),
-  "strainIds": coalesce(products[]->strain._ref, [])
+  "strainIds": coalesce(products[defined(@->)]->strain._ref, [])
 }`;
 
 // A drop with no products is a batch with nothing in it. Studio's
@@ -283,9 +283,9 @@ export async function getDrop( slug: string ) {
       heroImage { asset->, alt, crop, hotspot },
       lotIdentifier, lotPortal, harvestedAt,
       "productIds": coalesce(products[]._ref, []),
-      "strainIds": coalesce(products[]->strain._ref, []),
+      "strainIds": coalesce(products[defined(@->)]->strain._ref, []),
       body[] ${PORTABLE_TEXT_PROJECTION},
-      "products": products[]-> {
+      "products": products[defined(@->)]-> {
         _id, name, slug, category, weight, available,
         image { asset->, alt, crop, hotspot },
         "strain": strain->{ _id, name, slug, strainType, heroImage { asset->, alt, crop, hotspot } }
@@ -303,9 +303,11 @@ export async function getDrop( slug: string ) {
 
   if( !drop ) return null;
 
-  // getDrops() checks the raw refs; this checks what survived dereferencing.
-  // The two differ: products[]._ref still lists a reference whose target has
-  // been deleted, and that entry arrives here as null.
+  // The projection filters dangling references out with [defined(@->)]
+  // before dereferencing, so drop.products holds live products only, never a
+  // null entry for a deleted target. This count is therefore narrower than
+  // getDrops(), which counts raw refs and so also catches a drop whose every
+  // product was deleted after publish.
   assertDropHasProducts( drop.name, drop._id, drop.products.length );
   return drop;
 }
