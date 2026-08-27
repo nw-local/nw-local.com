@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Upload an image to Sanity and return the asset document as JSON.
-# Expects SANITY_PROJECT_ID, SANITY_DATASET, and SANITY_API_TOKEN in env
+# Expects SANITY_PROJECT_ID, SANITY_DATASET, and SANITY_WRITE_TOKEN in env
 # (provided automatically when invoked via `make upload-image`).
 #
 # Usage:

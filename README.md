@@ -79,6 +79,7 @@ Run `make` (no args) to print the full target list with descriptions.
 | Upgrade deps (major)| `make upgrade-latest`| ignores semver — review `yarn outdated` before/after |
 | Prep images         | `make prep-images`   | see [Image workflow](#image-workflow)                |
 | Upload image        | `make upload-image`  | see [Image workflow](#image-workflow)                |
+| Render figures      | `make render-figures`| rasterizes `figures/**/*.svg` to PNG for upload      |
 | Check nightly cron  | `make check-nightly` | fails if the nightly audit's schedule has stalled    |
 | Check analytics     | `make check-analytics` | asserts `./dist/` ships a GA snippet that records hits |
 | Check robots.txt    | `make check-robots`  | asserts `robots.txt` points crawlers at this build's sitemap |
@@ -108,6 +109,7 @@ There are deliberately no unit tests — the failure modes of a content-driven s
 ├── astro.config.mjs   # site URL, integrations, slug redirects
 ├── Makefile           # all run/build/image commands
 ├── docs/              # deployment, content model, SEO, testing, images, marketing
+├── figures/           # article figure sources: SVG, plus src/ photographs
 ├── public/            # static assets served as-is
 ├── scripts/           # image prep/upload, CI health checks
 ├── src/               # Astro site: pages, components, layouts, lib
@@ -158,13 +160,13 @@ Local: put them in `.env` at the repo root. CI: stored as GitHub Actions secrets
 
 The GA4 measurement ID is **not** among them. It is a public identifier that ships in the HTML of every page, so it lives in [`src/lib/analytics.ts`](src/lib/analytics.ts) under version control rather than in `.env` and CI secrets, where it bought no secrecy and quietly broke fresh checkouts.
 
-A separate `SANITY_WRITE_TOKEN` is used **only** by the image-upload helper script (`make upload-image`) when adding new image assets. It is not needed to build or run the site.
+A separate `SANITY_WRITE_TOKEN` is used **only** by the image-upload helper script (`make upload-image`) when adding new image assets. It is not needed to build or run the site, and it is listed in `.env.example` so that following the setup instructions no longer produces an environment that cannot upload. Create it as an Editor token at [sanity.io/manage](https://sanity.io/manage).
 
 ---
 
 ## Image workflow
 
-Two scripts orchestrated by `make` — `prep-images` converts and dedups against Sanity, `upload-image` uploads with alt text:
+Three scripts orchestrated by `make` — `prep-images` converts and dedups photography against Sanity, `render-figures` rasterizes authored article diagrams, and `upload-image` uploads either with alt text:
 
 ```sh
 make prep-images DIR="path/to/images" STRAIN="Strain Name"
@@ -175,7 +177,9 @@ make upload-image FILE="path/to/_processed/strain-name-bud-closeup.jpg" \
 
 **Keep the generated `_processed/` directory** — it is the local manifest the dedup logic reads on later runs.
 
-Renames, the hashing contract, orientation handling, and hotspot cropping: [docs/images.md](docs/images.md).
+Article figures are composed as SVG under `figures/<post-slug>/`, rendered with `make render-figures`, and uploaded as PNG like any other asset. **Upload PNG, never SVG.** Explain a mechanism with a diagram, but show a symptom with a real photograph, never a synthesized one. Openly licensed source photographs live in `figures/<post-slug>/src/` with a `PROVENANCE.md`; the reasoning, the attribution rules, and the figure house style are in the docs below.
+
+Renames, the hashing contract, orientation handling, hotspot cropping, and the figure house style: [docs/images.md](docs/images.md).
 
 ---
 
