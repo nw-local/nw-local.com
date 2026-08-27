@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1880" height="1270" viewBox="0 0 1880 1270">
+  <!-- Fig. 1 for /blog/dew-point-is-the-setpoint-vpd-by-stage/, in the
+    "VPD is a derived number" section. Curves computed, not drawn:
+    every point comes from scripts/psychrometrics.py, so the figure
+    cannot drift from the table beside it. -->
+  <style>
+    .fig    { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
+    .title  { font-size: 52px; font-weight: 700; fill: #1A1A1A; letter-spacing: -0.6px; }
+    .deck   { font-size: 30px; fill: #545454; }
+    .label  { font-size: 22px; font-weight: 700; letter-spacing: 1.7px; }
+    .axis   { font-size: 24px; fill: #545454; }
+    .axist  { font-size: 25px; font-weight: 700; fill: #1A1A1A; letter-spacing: 1.2px; }
+    .note   { font-size: 26px; fill: #545454; }
+    .noteb  { font-size: 26px; font-weight: 700; fill: #1A1A1A; }
+    .foot   { font-size: 21px; fill: #8E8E8E; }
+    .brand  { font-size: 23px; font-weight: 700; fill: #6B2D8B; }
+    .rule   { stroke: #D5D5D6; stroke-width: 1.5; }
+    .grid   { stroke: #E2E2E3; stroke-width: 1.2; }
+    .axline { stroke: #9A9A9B; stroke-width: 2; }
+    .curve  { fill: none; stroke-width: 5; stroke-linecap: round; }
+  </style>
+  <rect width="1880" height="1270" fill="#F7F7F8"/>
+  <g class="fig">
+    <text class="title" x="80" y="118">The same VPD target is a different humidity at every temperature</text>
+    <text class="deck" x="80" y="176">Relative humidity required to hold each VPD target, plotted against canopy temperature. The lines curve because</text>
+    <text class="deck" x="80" y="218">saturation vapor pressure grows exponentially with heat, so a room that warms up while holding its old humidity</text>
+    <text class="deck" x="80" y="260">setpoint has moved to a much drier VPD without anyone touching the target.</text>
+    <line class="rule" x1="80" y1="272" x2="1800" y2="272"/>
+    <line class="grid" x1="230" y1="975.0" x2="1760" y2="975.0"/>
+    <text class="axis" x="208" y="984.0" text-anchor="end">30%</text>
+    <line class="grid" x1="230" y1="875.8" x2="1760" y2="875.8"/>
+    <text class="axis" x="208" y="884.8" text-anchor="end">40%</text>
+    <line class="grid" x1="230" y1="776.7" x2="1760" y2="776.7"/>
+    <text class="axis" x="208" y="785.7" text-anchor="end">50%</text>
+    <line class="grid" x1="230" y1="677.5" x2="1760" y2="677.5"/>
+    <text class="axis" x="208" y="686.5" text-anchor="end">60%</text>
+    <line class="grid" x1="230" y1="578.3" x2="1760" y2="578.3"/>
+    <text class="axis" x="208" y="587.3" text-anchor="end">70%</text>
+    <line class="grid" x1="230" y1="479.2" x2="1760" y2="479.2"/>
+    <text class="axis" x="208" y="488.2" text-anchor="end">80%</text>
+    <line class="grid" x1="230" y1="380.0" x2="1760" y2="380.0"/>
+    <text class="axis" x="208" y="389.0" text-anchor="end">90%</text>
+    <line class="grid" x1="230.0" y1="380" x2="230.0" y2="975"/>
+    <text class="axis" x="230.0" y="1017" text-anchor="middle">65 °F</text>
+    <line class="grid" x1="536.0" y1="380" x2="536.0" y2="975"/>
+    <text class="axis" x="536.0" y="1017" text-anchor="middle">70 °F</text>
+    <line class="grid" x1="842.0" y1="380" x2="842.0" y2="975"/>
+    <text class="axis" x="842.0" y="1017" text-anchor="middle">75 °F</text>
+    <line class="grid" x1="1148.0" y1="380" x2="1148.0" y2="975"/>
+    <text class="axis" x="1148.0" y="1017" text-anchor="middle">80 °F</text>
+    <line class="grid" x1="1454.0" y1="380" x2="1454.0" y2="975"/>
+    <text class="axis" x="1454.0" y="1017" text-anchor="middle">85 °F</text>
+    <line class="grid" x1="1760.0" y1="380" x2="1760.0" y2="975"/>
+    <text class="axis" x="1760.0" y="1017" text-anchor="middle">90 °F</text>
+    <line class="axline" x1="230" y1="975" x2="1760" y2="975"/>
+    <line class="axline" x1="230" y1="380" x2="230" y2="975"/>
+    <text class="axist" x="995" y="1059" text-anchor="middle">CANOPY TEMPERATURE</text>
+    <text class="axist" x="100" y="678" text-anchor="middle" transform="rotate(-90 100 678)">RELATIVE HUMIDITY</text>
+    <polyline class="curve" stroke="#147868" points="230.0,658.0 260.6,651.5 291.2,645.1 321.8,638.9 352.4,632.7 383.0,626.7 413.6,620.8 444.2,615.0 474.8,609.3 505.4,603.8 536.0,598.3 566.6,592.9 597.2,587.7 627.8,582.5 658.4,577.5 689.0,572.5 719.6,567.6 750.2,562.8 780.8,558.1 811.4,553.5 842.0,549.0 872.6,544.6 903.2,540.2 933.8,535.9 964.4,531.8 995.0,527.6 1025.6,523.6 1056.2,519.6 1086.8,515.7 1117.4,511.9 1148.0,508.2 1178.6,504.5 1209.2,500.9 1239.8,497.3 1270.4,493.8 1301.0,490.4 1331.6,487.0 1362.2,483.7 1392.8,480.5 1423.4,477.3 1454.0,474.2 1484.6,471.1 1515.2,468.1 1545.8,465.1 1576.4,462.2 1607.0,459.4 1637.6,456.6 1668.2,453.8 1698.8,451.1 1729.4,448.4 1760.0,445.8"/>
+    <text class="noteb" fill="#147868" x="1774" y="454.8">0.8 kPa</text>
+    <polyline class="curve" stroke="#2D6FA8" points="230.0,752.3 260.6,744.2 291.2,736.2 321.8,728.4 352.4,720.7 383.0,713.2 413.6,705.8 444.2,698.6 474.8,691.5 505.4,684.5 536.0,677.7 566.6,671.0 597.2,664.4 627.8,657.9 658.4,651.6 689.0,645.4 719.6,639.3 750.2,633.3 780.8,627.5 811.4,621.7 842.0,616.1 872.6,610.5 903.2,605.1 933.8,599.7 964.4,594.5 995.0,589.3 1025.6,584.3 1056.2,579.3 1086.8,574.5 1117.4,569.7 1148.0,565.0 1178.6,560.4 1209.2,555.9 1239.8,551.4 1270.4,547.1 1301.0,542.8 1331.6,538.6 1362.2,534.5 1392.8,530.4 1423.4,526.4 1454.0,522.5 1484.6,518.7 1515.2,514.9 1545.8,511.2 1576.4,507.6 1607.0,504.0 1637.6,500.5 1668.2,497.0 1698.8,493.6 1729.4,490.3 1760.0,487.1"/>
+    <text class="noteb" fill="#2D6FA8" x="1774" y="496.1">1.0 kPa</text>
+    <polyline class="curve" stroke="#6B2D8B" points="230.0,846.6 260.6,836.9 291.2,827.3 321.8,817.9 352.4,808.7 383.0,799.7 413.6,790.8 444.2,782.1 474.8,773.6 505.4,765.2 536.0,757.0 566.6,749.0 597.2,741.1 627.8,733.4 658.4,725.8 689.0,718.3 719.6,711.0 750.2,703.8 780.8,696.8 811.4,689.9 842.0,683.1 872.6,676.4 903.2,669.9 933.8,663.5 964.4,657.2 995.0,651.0 1025.6,645.0 1056.2,639.0 1086.8,633.2 1117.4,627.4 1148.0,621.8 1178.6,616.3 1209.2,610.9 1239.8,605.5 1270.4,600.3 1301.0,595.2 1331.6,590.1 1362.2,585.2 1392.8,580.3 1423.4,575.5 1454.0,570.8 1484.6,566.2 1515.2,561.7 1545.8,557.3 1576.4,552.9 1607.0,548.6 1637.6,544.4 1668.2,540.3 1698.8,536.2 1729.4,532.2 1760.0,528.3"/>
+    <text class="noteb" fill="#6B2D8B" x="1774" y="537.3">1.2 kPa</text>
+    <polyline class="curve" stroke="#C0392B" points="230.0,940.9 260.6,929.5 291.2,918.4 321.8,907.4 352.4,896.7 383.0,886.1 413.6,875.8 444.2,865.7 474.8,855.7 505.4,846.0 536.0,836.4 566.6,827.0 597.2,817.8 627.8,808.8 658.4,799.9 689.0,791.2 719.6,782.7 750.2,774.3 780.8,766.1 811.4,758.1 842.0,750.1 872.6,742.4 903.2,734.8 933.8,727.3 964.4,719.9 995.0,712.7 1025.6,705.7 1056.2,698.7 1086.8,691.9 1117.4,685.2 1148.0,678.6 1178.6,672.2 1209.2,665.9 1239.8,659.7 1270.4,653.6 1301.0,647.6 1331.6,641.7 1362.2,635.9 1392.8,630.2 1423.4,624.7 1454.0,619.2 1484.6,613.8 1515.2,608.5 1545.8,603.3 1576.4,598.3 1607.0,593.3 1637.6,588.3 1668.2,583.5 1698.8,578.8 1729.4,574.1 1760.0,569.5"/>
+    <text class="noteb" fill="#C0392B" x="1774" y="578.5">1.4 kPa</text>
+    <circle cx="964.4" cy="719.9" r="11" fill="#F7F7F8" stroke="#C0392B" stroke-width="5"/>
+    <circle cx="1392.8" cy="630.2" r="11" fill="#F7F7F8" stroke="#C0392B" stroke-width="5"/>
+    <text class="note" x="964.4" y="771.9" text-anchor="middle">77 °F needs 56%</text>
+    <text class="note" x="1392.8" y="682.2" text-anchor="middle">84 °F needs 65%</text>
+    <line class="rule" x1="80" y1="1128" x2="1800" y2="1128"/>
+    <text class="foot" x="80" y="1166">Computed from the Magnus equation, SVP = 0.61094 x exp(17.625 x T / (T + 243.04)), with T in °C, then RH = 1 - (VPD / SVP).</text>
+    <text class="foot" x="80" y="1194">Marked points are the two canopy temperatures compared in the CO2 enrichment post: holding 1.4 kPa needs 9 more points of humidity at 84 °F than at 77 °F.</text>
+    <text class="brand" x="1800" y="1240" text-anchor="end">Northwest Local Cannabis</text>
+  </g>
+</svg>
