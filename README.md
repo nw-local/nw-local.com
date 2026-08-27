@@ -109,7 +109,7 @@ There are deliberately no unit tests — the failure modes of a content-driven s
 ├── astro.config.mjs   # site URL, integrations, slug redirects
 ├── Makefile           # all run/build/image commands
 ├── docs/              # deployment, content model, SEO, testing, images, marketing
-├── figures/           # SVG sources for article diagrams (PNG output untracked)
+├── figures/           # article figure sources: SVG, plus src/ photographs
 ├── public/            # static assets served as-is
 ├── scripts/           # image prep/upload, CI health checks
 ├── src/               # Astro site: pages, components, layouts, lib
@@ -175,7 +175,7 @@ make upload-image FILE="path/to/_processed/strain-name-bud-closeup.jpg" \
 
 **Keep the generated `_processed/` directory** — it is the local manifest the dedup logic reads on later runs.
 
-Article diagrams are authored as SVG under `figures/<post-slug>/`, rendered with `make render-figures`, and uploaded as PNG like any other asset. **Upload PNG, never SVG** — the reason, and the figure house style, are in the docs below.
+Article figures are composed as SVG under `figures/<post-slug>/`, rendered with `make render-figures`, and uploaded as PNG like any other asset. **Upload PNG, never SVG.** Explain a mechanism with a diagram, but show a symptom with a real photograph, never a synthesized one. Openly licensed source photographs live in `figures/<post-slug>/src/` with a `PROVENANCE.md`; the reasoning, the attribution rules, and the figure house style are in the docs below.
 
 Renames, the hashing contract, orientation handling, hotspot cropping, and the figure house style: [docs/images.md](docs/images.md).
 
