@@ -89,6 +89,18 @@ make upload-image FILE="figures/co2-enrichment/calcium-symptoms.png" \
 
 A figure that composes photographs references them relatively (`src/foo.png`) rather than embedding data URIs, which would put a megabyte of base64 into a file meant to be diffable. `render-figures.sh` writes its Chrome shim beside the SVG so those relative paths resolve, and removes it afterward.
 
+### Sizing a photograph inside a figure
+
+**Work out the displayed resolution before choosing a layout.** A figure renders at `width: 100%` inside the 720px content column, and Sanity serves it at `min( width, 1400 )`. A panel occupying fraction `F` of the canvas therefore displays at `720F` CSS px, or `1440F` device px on a 2x screen. Compare that against the photograph's real pixel width:
+
+- `1440F` well below the source width means detail is being thrown away, and the photo reads as soft and small.
+- `1440F` well above it means upscaling, which adds no detail and softens.
+- The sweet spot is `1440F ≈ source width`.
+
+The calcium figure got this wrong first time round. Three 794px photographs placed three-across an 1880px canvas gave `F = 0.30`, so each displayed at about 428 device px: under-sized and visibly mushy. Stacking them at 1060 of 1880 gives `F = 0.56` and about 812 device px, essentially native, at nearly twice the apparent size. Nothing in the build can catch this, and it looks fine in the raw PNG at full size, which is exactly why it slipped through: judge a figure at 720px wide, not at 1880.
+
+**Check whether a higher-resolution original exists before redesigning around a low one.** For a journal figure, the article PDF sometimes embeds images at higher resolution than the web PNG; `pdfimages -list file.pdf` lists them without extracting. Here it did not, both being 2718x1818, which is what made layout the only available fix.
+
 **Upload PNG, never SVG.** `PortableTextImage.astro` calls `.format( "webp" )` and sizes the layout box from the asset's dimension metadata. Sanity's CDN ignores format conversion on SVG, so an SVG upload serves untransformed while `resolveImageDimensions` governs the box: two halves of the pipeline quietly disagreeing.
 
 **The render is byte-deterministic**, including for a figure that composes photographs. Re-rendering an unchanged source reproduces the same PNG, verified by SHA-1 against the uploaded asset. That matters twice: it is what makes "the SVG is the source" true rather than aspirational, and because Sanity keys assets on `sha1hash`, re-uploading an unchanged figure returns the existing asset instead of creating a duplicate. Only an actual edit produces a new asset.
