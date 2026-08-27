@@ -180,8 +180,15 @@ judged the better line and the divergence is accepted knowingly.
   small definition list of lot identifier (labeled by portal, so "Bamboo lot
   24-0812") and harvest date, `PortableText` body, products grouped by strain
   as `ProductCard` grids under `SectionHeading`s, then stocking retailers as
-  `RetailerCard`s. Structured data reuses `buildProduct` per product plus
-  `buildBreadcrumbList`.
+  `RetailerCard`s. Structured data is `buildBreadcrumbList` only.
+
+  An earlier draft of this spec also called for `buildProduct` per product.
+  That is unimplementable as written: `buildProduct` in `src/lib/jsonld.ts`
+  takes a `Strain`, not a product, so there is nothing to call it with here.
+  The drop page therefore carries breadcrumb structured data and no per
+  product `Product` schema. Recorded rather than quietly dropped, so the
+  absence is not later mistaken for a regression. Emitting `Product` schema
+  per SKU would need a product shaped builder, which is its own change.
 - **`src/components/DropCard.astro`** takes its `Props` from `sanity.ts` per
   the central data types convention. It wraps in `<a class="card">` like
   `StrainCard`, so the card anchor invariant binds: the status badge is a
