@@ -1,0 +1,86 @@
+---
+import { blockText, headingId } from "../lib/headingId";
+
+// Contents list for a long post.
+//
+// The ids come from headingId, the same function PortableTextHeading stamps
+// onto the rendered h2 and h3, so the two ends cannot drift: change the slug
+// rule and both move together. Re-deriving the slug here would be the one way
+// to produce a list of dead anchors that still looks entirely correct in the
+// markup, and nothing would catch it. The link checker resolves the page, not
+// the fragment.
+
+interface HeadingBlock {
+  _type?: string;
+  style?: string;
+  children?: readonly unknown[];
+}
+
+interface Props {
+  body: readonly HeadingBlock[] | undefined;
+  // Below this many entries the list is longer than the navigation it saves, so
+  // a short post gets nothing rather than a two-item stub. Every post published
+  // so far clears it comfortably; the gate is for the first one that does not.
+  minimumEntries?: number;
+}
+
+interface Entry {
+  id: string;
+  text: string;
+  children: Entry[];
+}
+
+const { body, minimumEntries = 4 } = Astro.props;
+
+const entries: Entry[] = [];
+
+for( const block of body ?? [] ) {
+  if( block._type !== "block" ) continue;
+  if( block.style !== "h2" && block.style !== "h3" ) continue;
+
+  const text = blockText( block ).trim();
+
+  // headingId throws on a heading that slugifies to nothing, which is a content
+  // problem the heading component should be the one to raise. A heading with no
+  // text has nothing to list either, so skip it rather than fail twice.
+  if( !text ) continue;
+
+  const entry: Entry = { id: headingId( text ), text, children: [] };
+
+  // An h3 appearing before any h2 has nothing to nest under. Promote it rather
+  // than drop it: a flat entry is a smaller fault than a section missing from
+  // the contents entirely.
+  const parent = entries.at( -1 );
+  if( block.style === "h3" && parent ) {
+    parent.children.push( entry );
+  } else {
+    entries.push( entry );
+  }
+}
+
+const total = entries.reduce(
+  ( count, entry ) => count + 1 + entry.children.length,
+  0,
+);
+---
+{total >= minimumEntries && (
+  <details class="post-toc" open>
+    <summary>Contents</summary>
+    <nav aria-label="Table of contents">
+      <ol>
+        {entries.map( entry => (
+          <li>
+            <a href={`#${ entry.id }`}>{entry.text}</a>
+            {entry.children.length > 0 && (
+              <ol>
+                {entry.children.map( child => (
+                  <li><a href={`#${ child.id }`}>{child.text}</a></li>
+                ) )}
+              </ol>
+            )}
+          </li>
+        ) )}
+      </ol>
+    </nav>
+  </details>
+)}

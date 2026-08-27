@@ -2,6 +2,7 @@
 import Layout from "../../layouts/Layout.astro";
 import PortableText from "../../components/PortableText.astro";
 import AuthorByline from "../../components/AuthorByline.astro";
+import TableOfContents from "../../components/TableOfContents.astro";
 import { getBlogPosts, getBlogPost, getSiteSettings } from "../../lib/sanity";
 import { urlFor } from "../../lib/image";
 import { formatPostDate } from "../../lib/date";
@@ -81,6 +82,8 @@ const printSourceUrl = postUrl.replace( /^https?:\/\//, "" ).replace( /\/$/, "" 
         height="600"
       />
     )}
+
+    <TableOfContents body={post.body} />
 
     {post.body && <PortableText value={post.body} />}
 
