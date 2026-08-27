@@ -4,6 +4,7 @@ import PortableTextImage from "./PortableTextImage.astro";
 import PortableTextTable from "./PortableTextTable.astro";
 import GlossaryTerm from "./GlossaryTerm.astro";
 import PortableTextLink from "./PortableTextLink.astro";
+import PortableTextHeading from "./PortableTextHeading.astro";
 
 const { value } = Astro.props;
 
@@ -16,7 +17,15 @@ const { value } = Astro.props;
 // gap. The built-in emits a bare `<a href>` with no guard against a missing
 // href; the override adds that guard and flags links whose text already is
 // their href, which the print stylesheet needs to avoid printing a URL twice.
+// `block` takes a per-style record, so h2 and h3 get anchor ids while every
+// other style keeps the library's own renderer. Section headings are linked
+// across posts, and without an id such a link can only land at the top of the
+// page and leave the reader to hunt.
 const components = {
+  block: {
+    h2: PortableTextHeading,
+    h3: PortableTextHeading,
+  },
   type: {
     image: PortableTextImage,
     tableBlock: PortableTextTable,

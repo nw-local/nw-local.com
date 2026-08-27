@@ -1,0 +1,31 @@
+---
+import type { Block, Props as PortableTextProps } from "astro-portabletext/types";
+import { blockText, headingId } from "../lib/headingId";
+
+// The library types a block component as Props<Block>, which carries `index`
+// and `isInline` alongside `node` plus arbitrary passthrough attrs. Declaring a
+// narrower shape here type-errors at the `components` mapping rather than in
+// this file, which is a confusing place to read the failure.
+export type Props = PortableTextProps<Block>;
+
+const { node } = Astro.props;
+
+// Only h2 and h3 are mapped in PortableText.astro, so anything else arriving
+// here is a wiring mistake rather than content. Reject it instead of emitting a
+// heading at the wrong level, which would be invisible in the page and wrong
+// for a screen reader walking the outline.
+const style = node.style;
+if( style !== "h2" && style !== "h3" ) {
+  throw new Error(
+    `PortableTextHeading received style ${ JSON.stringify( style ) }; expected h2 or h3.`,
+  );
+}
+
+const id = headingId( blockText( node ) );
+---
+
+{
+  style === "h2"
+    ? <h2 id={id}><slot /></h2>
+    : <h3 id={id}><slot /></h3>
+}

@@ -84,6 +84,7 @@ Run `make` (no args) to print the full target list with descriptions.
 | Check analytics     | `make check-analytics` | asserts `./dist/` ships a GA snippet that records hits |
 | Check robots.txt    | `make check-robots`  | asserts `robots.txt` points crawlers at this build's sitemap |
 | Check content style | `make check-content-style` | asserts US spelling and that every temperature carries °F and °C |
+| Check heading anchors | `make check-anchors` | asserts section anchor ids are unique per page          |
 | Studio lint         | `cd studio && yarn lint` | separate project; the root's ESLint ignores it   |
 | Studio type check   | `cd studio && yarn typecheck` |                                             |
 | Studio format       | `cd studio && yarn format` | Prettier; `format:check` verifies instead      |

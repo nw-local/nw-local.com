@@ -112,6 +112,12 @@ jobs:
       # without any diff at all.
       - name: Check US spelling and paired temperature units
         run: ./scripts/check-content-style.py dist
+      # Section headings are linked across posts by anchor. Two headings that
+      # slugify alike send that link to the wrong section while still resolving,
+      # so the page renders, the build passes, and the link checker sees a valid
+      # same-page fragment. Only an absence of the right destination reveals it.
+      - name: Check heading anchors are unique
+        run: ./scripts/check-heading-anchors.py dist
 
   validate-links:
     name: Check links
