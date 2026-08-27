@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1880" height="1180" viewBox="0 0 1880 1180">
+<svg xmlns="http://www.w3.org/2000/svg" width="1880" height="2860" viewBox="0 0 1880 2860">
   <!--
-    Fig. 3 for /blog/co2-enrichment-in-commercial-cannabis/, in the "Calcium
+    Fig. 2 for /blog/co2-enrichment-in-commercial-cannabis/, in the "Calcium
     delivery falls" section (blocks h48 through p51).
 
     Real photographs, not a drawing. An earlier attempt here was an authored
@@ -13,24 +13,36 @@
     list of changes made are in src/PROVENANCE.md. The credit in the footer is a
     license condition, not decoration: do not remove it.
 
-    The panels reference src/ relatively rather than being embedded as data
-    URIs, which is why render-figures.sh writes its shim beside the SVG.
+    LAYOUT IS DRIVEN BY THE DISPLAY MATH, NOT BY TASTE. The source panels are
+    794 px wide and that is the ceiling: the figure is 2718 px in both the web
+    PNG and the article PDF, so no higher-resolution original exists. A figure
+    renders at width:100% inside the 720 px content column, and Sanity serves it
+    at min(width, 1400). A panel occupying a fraction F of this canvas therefore
+    displays at 720F CSS px, or 1440F device px on a 2x screen.
+
+    An earlier three-across layout put F at 0.30, so each photo landed at 214
+    CSS px and roughly 428 device px against a 794 px source: small, and
+    throwing away most of the pixels that exist. Stacking at 1060 of 1880 puts F
+    at 0.56, so each photo displays near 812 device px, which is native. Going
+    wider than about 1100 here only upscales and softens. If the panel width
+    changes, redo that arithmetic rather than eyeballing it.
   -->
   <style>
     .fig    { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
     .title  { font-size: 52px; font-weight: 700; fill: #1A1A1A; letter-spacing: -0.6px; }
     .deck   { font-size: 30px; fill: #545454; }
     .label  { font-size: 22px; font-weight: 700; letter-spacing: 1.7px; }
-    .stage  { font-size: 29px; font-weight: 700; fill: #1A1A1A; }
-    .note   { font-size: 23px; fill: #545454; }
+    .stage  { font-size: 38px; font-weight: 700; fill: #1A1A1A; }
+    .desc   { font-size: 27px; fill: #545454; }
+    .note   { font-size: 26px; fill: #545454; }
     .foot   { font-size: 21px; fill: #8E8E8E; }
     .brand  { font-size: 23px; font-weight: 700; fill: #6B2D8B; }
     .teal   { fill: #147868; }
     .rule   { stroke: #D5D5D6; stroke-width: 1.5; }
-    .frame  { fill: none; stroke: #D5D5D6; stroke-width: 1.5; }
+    .frame  { fill: none; stroke: #C8C8C9; stroke-width: 2; }
   </style>
 
-  <rect width="1880" height="1180" fill="#F7F7F8"/>
+  <rect width="1880" height="2860" fill="#F7F7F8"/>
 
   <g class="fig">
     <text class="title" x="80" y="118">What calcium deficiency looks like on the plant</text>
@@ -40,33 +52,38 @@
 
     <text class="label teal" x="80" y="330">AS THE DEFICIENCY PROGRESSES</text>
 
-    <text class="stage" x="80" y="382">Initial</text>
-    <image href="src/calcium-initial.png" x="80" y="404" width="560" height="376" preserveAspectRatio="xMidYMid slice"/>
-    <rect class="frame" x="80" y="404" width="560" height="376"/>
-    <text class="note" x="80" y="822">New growth at the tip pales while the</text>
-    <text class="note" x="80" y="850">older fan leaves below stay dark green.</text>
+    <!-- Initial -->
+    <image href="src/calcium-initial.png" x="80" y="366" width="1060" height="690" preserveAspectRatio="xMidYMid slice"/>
+    <rect class="frame" x="80" y="366" width="1060" height="690"/>
+    <text class="stage" x="1190" y="669">Initial</text>
+    <text class="desc" x="1190" y="723">New growth at the tip pales</text>
+    <text class="desc" x="1190" y="757">while the older fan leaves</text>
+    <text class="desc" x="1190" y="791">below stay dark green.</text>
 
-    <text class="stage" x="660" y="382">Intermediate</text>
-    <image href="src/calcium-intermediate.png" x="660" y="404" width="560" height="376" preserveAspectRatio="xMidYMid slice"/>
-    <rect class="frame" x="660" y="404" width="560" height="376"/>
-    <text class="note" x="660" y="822">The growing points distort and twist,</text>
-    <text class="note" x="660" y="850">with pale tissue on the newest leaves.</text>
+    <!-- Intermediate -->
+    <image href="src/calcium-intermediate.png" x="80" y="1102" width="1060" height="690" preserveAspectRatio="xMidYMid slice"/>
+    <rect class="frame" x="80" y="1102" width="1060" height="690"/>
+    <text class="stage" x="1190" y="1405">Intermediate</text>
+    <text class="desc" x="1190" y="1459">The growing points distort</text>
+    <text class="desc" x="1190" y="1493">and twist, with pale tissue</text>
+    <text class="desc" x="1190" y="1527">on the newest leaves.</text>
 
-    <text class="stage" x="1240" y="382">Advanced</text>
-    <image href="src/calcium-advanced.png" x="1240" y="404" width="560" height="376" preserveAspectRatio="xMidYMid slice"/>
-    <rect class="frame" x="1240" y="404" width="560" height="376"/>
-    <text class="note" x="1240" y="822">Necrosis at the growing points. The big</text>
-    <text class="note" x="1240" y="850">lower leaves are still largely green.</text>
+    <!-- Advanced -->
+    <image href="src/calcium-advanced.png" x="80" y="1838" width="1060" height="690" preserveAspectRatio="xMidYMid slice"/>
+    <rect class="frame" x="80" y="1838" width="1060" height="690"/>
+    <text class="stage" x="1190" y="2141">Advanced</text>
+    <text class="desc" x="1190" y="2195">Necrosis at the growing</text>
+    <text class="desc" x="1190" y="2229">points. The big lower leaves</text>
+    <text class="desc" x="1190" y="2263">are still largely green.</text>
 
-    <line class="rule" x1="80" y1="906" x2="1800" y2="906"/>
+    <line class="rule" x1="80" y1="2588" x2="1800" y2="2588"/>
+    <text class="note" x="80" y="2636">Under enrichment this can arrive without the feed changing at all. Calcium moves only with water, so less transpiration</text>
+    <text class="note" x="80" y="2672">means less delivered, and the plant cannot recover what it has already placed in older tissue.</text>
 
-    <text class="note" x="80" y="952">Under enrichment this can arrive without the feed changing at all. Calcium moves only with water, so less</text>
-    <text class="note" x="80" y="984">transpiration means less delivered, and the plant cannot recover what it has already placed in older tissue.</text>
-
-    <line class="rule" x1="80" y1="1040" x2="1800" y2="1040"/>
-    <text class="foot" x="80" y="1078">Photographs: Cockson, P.; Landis, H.; Smith, T.; Hicks, K.; Whipker, B.E. (2019), Characterization of Nutrient Disorders of Cannabis sativa,</text>
-    <text class="foot" x="80" y="1106">Applied Sciences 9(20), 4432. Used under CC BY 4.0. Cropped from Figure 2, calcium column only, and relabeled. Symptoms were induced</text>
-    <text class="foot" x="80" y="1134">in sand culture with calcium withheld, so they present more cleanly here than in a production room.</text>
-    <text class="brand" x="1800" y="1078" text-anchor="end">Northwest Local Cannabis</text>
+    <line class="rule" x1="80" y1="2726" x2="1800" y2="2726"/>
+    <text class="foot" x="80" y="2764">Photographs: Cockson, P.; Landis, H.; Smith, T.; Hicks, K.; Whipker, B.E. (2019), Characterization of Nutrient Disorders of Cannabis sativa,</text>
+    <text class="foot" x="80" y="2792">Applied Sciences 9(20), 4432. Used under CC BY 4.0. Cropped from Figure 2, calcium column only, and relabeled. Symptoms were induced</text>
+    <text class="foot" x="80" y="2820">in sand culture with calcium withheld, so they present more cleanly here than in a production room.</text>
+    <text class="brand" x="1800" y="2764" text-anchor="end">Northwest Local Cannabis</text>
   </g>
 </svg>
