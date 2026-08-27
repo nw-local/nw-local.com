@@ -119,6 +119,34 @@ jobs:
       - name: Check heading anchors are unique
         run: ./scripts/check-heading-anchors.py dist
 
+  validate-threshold-tables:
+    name: Validate threshold tables
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v7
+        with:
+          name: dist
+          path: dist/
+      # Its own job rather than a third step on validate-content-style, because
+      # the failure it reports is a different kind of thing. Every other check
+      # here verifies FORM: is the spelling US, does the temperature carry both
+      # units, is the anchor unique. This one verifies ARITHMETIC, and a wrong
+      # number that is correctly formatted passes all of them. A separate red
+      # light says "a published figure is wrong", not "a word is misspelled".
+      #
+      # The unit tests run first and need no artifact. They pin the Magnus
+      # constants against figures already published in the CO2 post, so a change
+      # to the equation cannot silently contradict prose that is live.
+      - name: Test the psychrometric helpers
+        run: ./scripts/test-threshold-tables.py
+      # Runs on pull requests as well as the nightly. A threshold table is
+      # content, so the path that actually breaks it is a Sanity publish, which
+      # is covered by the duplicate step in deploy.yml rather than here.
+      - name: Check published tables hold their captions
+        run: ./scripts/check-threshold-tables.py dist
+
   validate-links:
     name: Check links
     runs-on: ubuntu-latest
