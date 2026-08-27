@@ -16,6 +16,12 @@
      slightly dark of centre. Stay below --text-primary; bold that approaches
      white competes with headings instead of sitting a step under them. */
   --text-emphasis: #c4c4c4;
+  /* Inline code sits one rung above --bg-surface. The fill alone cannot carry
+     the chip at these luminances (see .portable-text code), so this is only
+     half the separation; the border is the other half. Its own token rather
+     than --bg-surface because cards and table headers use that one, and code
+     needs to move without dragging them along. */
+  --code-bg: #202020;
   --border: #333333;
   --max-width: 1200px;
   --content-width: 720px;
@@ -1082,11 +1088,56 @@ footer {
   .portable-text tbody td { padding: 0.6rem 0.75rem; }
 }
 
+/* The `code` mark in these articles almost never marks code. It marks
+   setpoints — `84 °F (29 °C)`, `1.2 kPa`, `62 percent` — which are the values a
+   grower scans the page for, so they need to be the most legible thing in the
+   paragraph rather than the least. The CO2 post alone carries 33 of them.
+
+   The border is what makes that work, and a heavier fill is not a substitute.
+   --bg-surface against --bg computes to 1.09:1, and reaching the 3:1 WCAG asks
+   of a non-text boundary would take a fill around #606060 — a mid-gray box
+   that would dominate a paragraph holding six of them. A hairline reads at a
+   fraction of that visual weight. It also matches what the print rules below
+   already did, so the two now differ only in border width.
+
+   box-decoration-break is load-bearing, not a flourish. These values are long
+   enough to wrap mid-chip (`SVP = 0.61094 × exp(17.625 × T / (T + 243.04))`
+   certainly does on a phone), and the default `slice` draws the border only on
+   the outer edges of the run, so a wrapped chip prints two open-ended boxes.
+   `clone` repeats the full border and padding on each fragment. Deliberately
+   not solved with `white-space: nowrap`: that formula measures 462px unwrapped,
+   against an article column of roughly 326px on a phone, so nowrap trades a
+   split chip for horizontal overflow of the whole page. The split is the
+   cheaper defect, and it is not a new one either way.
+
+   The explicit font stack is not cosmetic either: browsers apply their own
+   default size to monospace, so without a stack the rendered size varies
+   between them even though font-size is set right here. */
 .portable-text code {
-  background: var(--bg-surface);
-  padding: 0.15em 0.4em;
-  border-radius: 3px;
+  background: var(--code-bg);
+  /* The actual cause of the illegibility this rule was written to fix, and the
+     one that is easy to miss by reading the CSS: body copy in an article is
+     --text-secondary, not white, so a `code` element setting no colour
+     inherited #888 and rendered at *exactly* the brightness of the prose around
+     it. Measured on the live page before this change, code against its
+     surrounding text was 1.00:1 — the monospace face was the only thing
+     separating a setpoint from a sentence. --text-emphasis is the rung the
+     palette already defines for emphasis inside body copy, and the one span on
+     the site marked both strong and code was rendering there already. */
+  color: var(--text-emphasis);
+  border: 1px solid var(--border);
+  /* Trimmed from 0.15em/0.4em to buy back the width the border costs. These
+     values wrap mid-chip when they get long, and holding the box the size it
+     already was keeps that no more frequent than before: measured across the
+     CO2 post, 8 chips wrapped both before and after. Raising font-size to
+     0.925em, which reads better in isolation, took that to 10 and was dropped
+     for it. */
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   font-size: 0.9em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
 }
 
 /* --- Glossary terms --- */
@@ -1347,6 +1398,7 @@ footer {
     --accent: #000000;
     --accent-hover: #000000;
     --border: #999999;
+    --code-bg: #ffffff;
   }
 
   @page {
@@ -1617,11 +1669,11 @@ footer {
     border-left: 3pt solid #000000;
   }
 
-  /* A tinted fill is how inline code separates itself from prose on screen; on
-     paper that fill is dropped and the code becomes indistinguishable. */
+  /* The chip is a border plus a fill on screen; on paper --code-bg is already
+     flipped to white by the root block above, so only the hairline is left to
+     thin. 1px prints heavier than it renders. */
   .portable-text code {
-    background: none;
-    border: 0.5pt solid var(--border);
+    border-width: 0.5pt;
   }
 
   /* Provenance line, hidden on screen. */
