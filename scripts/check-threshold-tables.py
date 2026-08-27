@@ -82,8 +82,17 @@ THRESHOLD_CAPTION_PATTERNS = (
 )
 
 # "Ceiling to stay under 70 percent RH" -> a ceiling column limited to 70.
-CEILING_HEADER = re.compile(r"under\s+(\d+(?:\.\d+)?)\s*percent", re.IGNORECASE)
-MINIMUM_HEADER = re.compile(r"(?:above|over)\s+(\d+(?:\.\d+)?)\s*percent", re.IGNORECASE)
+# Both spellings of the unit. A table header is a width-constrained place, so
+# "under 65% RH" is the natural thing to write there even though running prose
+# spells the word out. Accepting only "percent" made a reasonable formatting
+# choice silently switch the check off: the caption still promised a bound, no
+# header parsed one, and the unverifiable guard failed the deploy. The header is
+# where the limit is declared, so it has to accept how a header is actually
+# written.
+PERCENT = r"(?:percent|%)"
+CEILING_HEADER = re.compile(rf"under\s+(\d+(?:\.\d+)?)\s*{PERCENT}", re.IGNORECASE)
+MINIMUM_HEADER = re.compile(
+    rf"(?:above|over)\s+(\d+(?:\.\d+)?)\s*{PERCENT}", re.IGNORECASE)
 
 # The leading Fahrenheit figure in a cell like "74 °F (23 °C)".
 FAHRENHEIT = re.compile(r"(-?\d+(?:\.\d+)?)\s*°\s*F")
