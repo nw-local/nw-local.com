@@ -177,6 +177,18 @@ END_TO_END_CASES = (
     ("unverifiable", 1, CEILING_CAPTION,
      ["Night temperature", "Dew point"],
      [["74 °F<br>(23 °C)", "63 °F<br>(17 °C)"]]),
+    # The same breach, with the header written "65%" instead of "65 percent".
+    # A table header is width-constrained, so the symbol is the natural spelling
+    # there. Accepting only the word made this table unverifiable and failed the
+    # deploy on a formatting change that altered no number.
+    ("breach_percent_sign", 1, CEILING_CAPTION,
+     ["Night temperature", "Ceiling to stay under 70% RH"],
+     [["74 °F<br>(23 °C)", "64 °F<br>(18 °C)"]]),
+    # And the clean version, so the symbol spelling is not merely tolerated but
+    # actually parsed into the same bound.
+    ("clean_percent_sign", 0, CEILING_CAPTION,
+     ["Night temperature", "Ceiling to stay under 70% RH"],
+     [["74 °F<br>(23 °C)", "63 °F<br>(17 °C)"]]),
     # CO2 block 51: no bound promised, cells correctly rounded to nearest and
     # sitting up to 0.42 points off. Must pass untouched.
     ("no_promise", 0, "Humidity that holds the dry end of the VPD band",
