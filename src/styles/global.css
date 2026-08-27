@@ -1388,6 +1388,25 @@ footer {
   }
 }
 
+/* --- Drop detail --- */
+
+.drop-meta {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.25rem 0.75rem;
+  margin: 1.5rem 0;
+}
+
+.drop-meta dt {
+  color: var(--text-emphasis);
+  font-weight: 600;
+}
+
+.drop-meta dd {
+  color: var(--text-secondary);
+  margin: 0;
+}
+
 /* --- Print ---
  *
  * Last in the file deliberately. A media query contributes nothing to
