@@ -38,6 +38,28 @@ const PORTABLE_TEXT_PROJECTION = `{
   _type == "image" => { asset->, alt, caption }
 }`;
 
+// Shared for the same reason PORTABLE_TEXT_PROJECTION is: getProducts() and the
+// drop detail page ask for the identical product shape off different array
+// sources, so the braced body is the mechanic and the source expression is the
+// orchestration. Copies of exactly this string are what shipped center-cropped
+// jar labels in #75, where one of three spellings had lost `crop, hotspot`.
+const PRODUCT_SUMMARY_PROJECTION = `{
+  _id, name, slug, category, weight, available,
+  image { asset->, alt, crop, hotspot },
+  "strain": strain->{ _id, name, slug, strainType, heroImage { asset->, alt, crop, hotspot } }
+}`;
+
+// logo omits `crop, hotspot` on purpose: a retailer logo renders unconstrained,
+// so there is no crop for a hotspot to reframe. Every other image projection in
+// this file constrains both dimensions and therefore needs them.
+const RETAILER_PROJECTION = `{
+  _id, name, slug, address, city, state, zip,
+  lat, lng, website, phone, email,
+  logo { asset->, alt },
+  featured,
+  productsAvailable[]->{ _id, name, slug, category }
+}`;
+
 // --- Shared types ---
 
 export interface SanitySlug {
@@ -200,11 +222,7 @@ export interface ProductWithDescription {
 
 export async function getProducts() {
   return sanityClient.fetch<ProductSummary[]>(
-    `*[_type == "product"] | order(sortOrder asc, name asc) {
-      _id, name, slug, category, weight, available,
-      image { asset->, alt, crop, hotspot },
-      "strain": strain->{ _id, name, slug, strainType, heroImage { asset->, alt, crop, hotspot } }
-    }`,
+    `*[_type == "product"] | order(sortOrder asc, name asc) ${PRODUCT_SUMMARY_PROJECTION}`,
   );
 }
 
@@ -234,8 +252,17 @@ export interface DropSummary {
   heroImage?: SanityImage;
   // Carried on the summary so one fetch serves both the index cards and the
   // lookup maps in drops.ts. Two separate queries could disagree; one cannot.
+  // productIds keeps every raw _ref, including one whose target no longer
+  // resolves, because getDrops() uses its length to fail loudly on an empty
+  // drop. liveProductCount is the number a visitor can actually see, and is
+  // what any rendered count must use: unpublishing one SKU leaves the _ref
+  // intact, so the two legitimately disagree.
   productIds: string[];
-  strainIds: string[];
+  liveProductCount: number;
+  // A product written through the API can have no strain at all, and
+  // strain._ref then projects to null in place. Typed to admit that rather
+  // than making the guard in buildDropLookup() look like dead code.
+  strainIds: ( string | null )[];
 }
 
 export interface Drop extends DropSummary {
@@ -251,6 +278,7 @@ const DROP_SUMMARY_PROJECTION = `{
   _id, name, slug, description, status, dropDate,
   heroImage { asset->, alt, crop, hotspot },
   "productIds": coalesce(products[]._ref, []),
+  "liveProductCount": count(products[defined(@->)]),
   "strainIds": coalesce(products[defined(@->)]->strain._ref, [])
 }`;
 
@@ -283,20 +311,11 @@ export async function getDrop( slug: string ) {
       heroImage { asset->, alt, crop, hotspot },
       lotIdentifier, lotPortal, harvestedAt,
       "productIds": coalesce(products[]._ref, []),
+      "liveProductCount": count(products[defined(@->)]),
       "strainIds": coalesce(products[defined(@->)]->strain._ref, []),
       body[] ${PORTABLE_TEXT_PROJECTION},
-      "products": products[defined(@->)]-> {
-        _id, name, slug, category, weight, available,
-        image { asset->, alt, crop, hotspot },
-        "strain": strain->{ _id, name, slug, strainType, heroImage { asset->, alt, crop, hotspot } }
-      },
-      "retailers": retailers[defined(@->)]-> {
-        _id, name, slug, address, city, state, zip,
-        lat, lng, website, phone, email,
-        logo { asset->, alt },
-        featured,
-        productsAvailable[]->{ _id, name, slug, category }
-      }
+      "products": products[defined(@->)]-> ${PRODUCT_SUMMARY_PROJECTION},
+      "retailers": retailers[defined(@->)]-> ${RETAILER_PROJECTION}
     }`,
     { slug },
   );
@@ -511,13 +530,7 @@ export interface Retailer {
 
 export async function getRetailers() {
   return sanityClient.fetch<Retailer[]>(
-    `*[_type == "retailer"] | order(city asc, name asc) {
-      _id, name, slug, address, city, state, zip,
-      lat, lng, website, phone, email,
-      logo { asset->, alt },
-      featured,
-      productsAvailable[]->{ _id, name, slug, category }
-    }`,
+    `*[_type == "retailer"] | order(city asc, name asc) ${RETAILER_PROJECTION}`,
   );
 }
 

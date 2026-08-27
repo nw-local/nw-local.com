@@ -14,6 +14,19 @@ export interface DropLookup {
   byStrainId: Map<string, DropRef>;
 }
 
+// The single source for the visitor-facing wording of a drop status.
+// ProductBadge.astro folds this into its own label map and the drops index
+// builds its filter buttons from it, so a badge reading "Available Now" and a
+// filter reading "Available" cannot drift apart again.
+//
+// Declaration order is also the order the index page renders its filters in:
+// strongest status first, matching compareDropStrength below.
+export const DROP_STATUS_LABELS: Record<DropStatus, string> = {
+  available: "Available Now",
+  upcoming: "Upcoming",
+  soldOut: "Sold Out",
+};
+
 // Higher wins. A drop a visitor can buy from outranks one they cannot, which is
 // why this is a rank rather than the declaration order of DropStatus.
 const STATUS_RANK: Record<DropStatus, number> = {
@@ -48,9 +61,13 @@ export function buildDropLookup( drops: DropSummary[] ): DropLookup {
   const strongestByProductId = new Map<string, DropSummary>();
   const strongestByStrainId = new Map<string, DropSummary>();
 
-  function claim( index: Map<string, DropSummary>, key: string, candidate: DropSummary ) {
-    // Falsy keys come from a dangling reference whose target was deleted in
-    // Sanity. Indexing them would collide every such product under one entry.
+  function claim( index: Map<string, DropSummary>, key: string | null, candidate: DropSummary ) {
+    // A null key comes from a product that has no strain reference at all.
+    // Studio's rule.required() does not reach API writes, so such a product is
+    // writable, and strain._ref then projects to null in place. Indexing that
+    // would collide every strain-less product under one entry. Dangling
+    // references are already filtered out in GROQ with [defined(@->)] and are
+    // not a source here.
     if( !key ) return;
     const incumbent = index.get( key );
     if( !incumbent || compareDropStrength( candidate, incumbent ) < 0 ) index.set( key, candidate );

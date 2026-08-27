@@ -34,6 +34,7 @@ function makeDrop(
     status,
     dropDate,
     productIds: [ "product-1" ],
+    liveProductCount: 1,
     strainIds: [ "strain-1" ],
   };
 }
@@ -60,12 +61,16 @@ for( const [ label, drops ] of [
 
 const olderUpcoming = makeDrop( "older-upcoming", "upcoming", "2026-02-01" );
 const newerUpcoming = makeDrop( "newer-upcoming", "upcoming", "2026-09-01" );
-const sameStatusLookup = buildDropLookup( [ newerUpcoming, olderUpcoming ] );
-expectWinner(
-  "same status ties break on the later dropDate",
-  sameStatusLookup.byProductId.get( "product-1" ),
-  "newer-upcoming",
-);
+
+for( const [ label, drops ] of [
+  [ "newer listed first", [ newerUpcoming, olderUpcoming ] ],
+  [ "older listed first", [ olderUpcoming, newerUpcoming ] ],
+] satisfies [ string, DropSummary[] ][] ) {
+  const lookup = buildDropLookup( drops );
+  const context = `same status ties break on the later dropDate, ${label}`;
+  expectWinner( `${context}, byProductId`, lookup.byProductId.get( "product-1" ), "newer-upcoming" );
+  expectWinner( `${context}, byStrainId`, lookup.byStrainId.get( "strain-1" ), "newer-upcoming" );
+}
 
 const emptyLookup = buildDropLookup( [] );
 if( emptyLookup.byProductId.size !== 0 || emptyLookup.byStrainId.size !== 0 ) {
