@@ -716,6 +716,15 @@ footer {
   line-height: 1.5;
 }
 
+/* Set explicitly rather than left to inherit: .card-body p sets no color of
+   its own, so an unstyled child would land at whatever brightness the
+   ancestor chain resolves to, not at the value the stylesheet reads as. That
+   silent-inheritance trap is how 34 inline code chips shipped at 1.00:1
+   contrast against their own paragraph. */
+.drop-card-date {
+  color: var(--text-secondary);
+}
+
 /* --- Product Badge --- */
 
 .product-badge {
@@ -733,6 +742,15 @@ footer {
 .product-badge[data-type="indica"] { background: #2a1f4e; color: #b89aff; }
 .product-badge[data-type="sativa"] { background: #1f3a1f; color: #88ff88; }
 .product-badge[data-type="hybrid"] { background: #3a2f1f; color: #ffcc66; }
+
+/* Of the three drop statuses, only "available" is a call to action, so only
+   it gets --accent. "upcoming" and "soldOut" reuse the muted neutral
+   treatment the base .product-badge rule already defines, rather than
+   inventing a second dull color: three glowing badges in one grid would
+   spend the accent on nothing. */
+.product-badge[data-type="upcoming"] { background: var(--border); color: var(--text-secondary); }
+.product-badge[data-type="available"] { background: rgba(0, 255, 136, 0.15); color: var(--accent); }
+.product-badge[data-type="soldOut"] { background: var(--border); color: var(--text-secondary); }
 
 .detail-label {
   font-size: 0.75rem;

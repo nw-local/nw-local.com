@@ -1,0 +1,36 @@
+---
+import { urlFor } from "../lib/image";
+import ProductBadge from "./ProductBadge.astro";
+import { dropHref } from "../lib/drops";
+import { formatPostDate } from "../lib/date";
+import type { DropSummary } from "../lib/sanity";
+
+type Props = DropSummary;
+
+const { name, slug, description, status, dropDate, heroImage, productIds } = Astro.props;
+
+const productCount = productIds.length;
+---
+
+<a href={dropHref( slug )} class="card">
+  <div class="card-image">
+    {heroImage?.asset && (
+      <img
+        src={urlFor( heroImage ).width( 600 ).height( 375 ).format( "webp" ).url()}
+        alt={heroImage.alt ?? name}
+        width="600"
+        height="375"
+        loading="lazy"
+      />
+    )}
+  </div>
+  <div class="card-body">
+    <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
+      <ProductBadge type={status} />
+      <span class="product-badge">{productCount === 1 ? "1 product" : `${productCount} products`}</span>
+    </div>
+    <h3 class="card-title">{name}</h3>
+    <p>{description}</p>
+    <p class="drop-card-date"><time datetime={dropDate}>{formatPostDate( dropDate )}</time></p>
+  </div>
+</a>
