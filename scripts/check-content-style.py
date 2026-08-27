@@ -29,6 +29,17 @@
 # boundaries for grep to work with. Expressing that in shell would be less
 # readable, not more consistent.
 #
+# Where it runs, and why that list is longer than it looks: on pull requests
+# via audit.yml, on the nightly run against main, and as a blocking step in
+# deploy.yml. That third one exists because content reaches production through
+# Sanity's webhook, which fires workflow_dispatch on deploy.yml and touches
+# neither of the first two paths. Until it was added, every dist-validating
+# check guarded code changes and skipped the content it was written for.
+#
+# Because it now blocks deploys, content-style-allow.txt exempts phrases that
+# must keep a British spelling — a cited paper title being the case that
+# matters here. See that file for the rules on adding an entry.
+#
 # Usage:
 #   ./scripts/check-content-style.py [dist-dir]   # defaults to ./dist
 
@@ -39,6 +50,7 @@ import sys
 from collections import defaultdict
 
 DIST = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else "dist")
+ALLOWLIST = pathlib.Path(__file__).resolve().parent / "content-style-allow.txt"
 
 # british -> american, matched case-insensitively on word boundaries.
 SPELLINGS = {
@@ -116,6 +128,41 @@ def visible_text(markup: str) -> str:
     return " ".join(text.split())
 
 
+def load_allowlist() -> list[str]:
+    """Phrases both rules skip, read from content-style-allow.txt.
+
+    A cited paper title is what this is for. Americanizing a word inside
+    someone else's title misquotes them, so the phrase is exempted rather than
+    the word being dropped from SPELLINGS — dropping it would also stop the
+    check catching that same word in our own prose, where it is a defect.
+    """
+    if not ALLOWLIST.is_file():
+        return []
+    phrases = []
+    for raw in ALLOWLIST.read_text(encoding="utf-8").splitlines():
+        line = raw.split("#", 1)[0].strip()
+        if line:
+            phrases.append(" ".join(line.split()))
+    return phrases
+
+
+def exempt_spans(text: str, phrases: list[str]) -> list[tuple[int, int]]:
+    """Character ranges of every allowlisted phrase found on this page.
+
+    Spans rather than a page-wide flag: an exempted citation must not also
+    excuse a genuine misspelling elsewhere on the same page.
+    """
+    spans = []
+    for phrase in phrases:
+        for found in re.finditer(re.escape(phrase), text, re.I):
+            spans.append((found.start(), found.end()))
+    return spans
+
+
+def is_exempt(spans: list[tuple[int, int]], start: int, end: int) -> bool:
+    return any(begin <= start and end <= finish for begin, finish in spans)
+
+
 def main() -> int:
     if not DIST.is_dir():
         print(f"check-content-style: no such directory: {DIST}", file=sys.stderr)
@@ -127,18 +174,31 @@ def main() -> int:
         print(f"check-content-style: no HTML in {DIST}", file=sys.stderr)
         return 2
 
+    allowlist = load_allowlist()
+    used = set()
+
     spelling_hits = defaultdict(set)
     temperature_hits = defaultdict(set)
 
     for page in pages:
         where = str(page.relative_to(DIST))
         text = visible_text(page.read_text(encoding="utf-8", errors="replace"))
+        spans = exempt_spans(text, allowlist)
+        used.update(phrase for phrase in allowlist
+                    if re.search(re.escape(phrase), text, re.I))
 
         for british, american in SPELLINGS.items():
-            if re.search(rf"\b{british}\b", text, re.I):
+            # finditer rather than search: a hit has to be located before it can
+            # be tested against the allowlist spans.
+            for found in re.finditer(rf"\b{british}\b", text, re.I):
+                if is_exempt(spans, found.start(), found.end()):
+                    continue
                 spelling_hits[(british, american)].add(where)
+                break
 
         for match in TEMPERATURE.finditer(text):
+            if is_exempt(spans, match.start(), match.end()):
+                continue
             spelled = match.group("word")
             unit = (match.group("sym") or spelled[0]).upper()
             start = max(0, match.start() - PAIR_WINDOW)
@@ -160,6 +220,8 @@ def main() -> int:
             for place in sorted(places):
                 print(f"      {place}")
         print("  Alt text and image asset `description` fields are the usual culprits.")
+        print("  If a hit is a quoted source that must keep its spelling, add the")
+        print(f"  surrounding phrase to {ALLOWLIST.name} rather than editing the quote.")
         print()
 
     if temperature_hits:
@@ -174,11 +236,23 @@ def main() -> int:
                 print(f"      {place}")
         print()
 
+    # A stale allowlist entry is not a build failure, but it is reported every
+    # run: it exempts nothing today and silently widens what is exempt the
+    # moment a page happens to contain it.
+    unused = [phrase for phrase in allowlist if phrase not in used]
+    if unused:
+        print(f"NOTE: {len(unused)} allowlist entr(y/ies) matched nothing. "
+              f"Delete them from {ALLOWLIST.name}:")
+        for phrase in unused:
+            print(f"  {phrase}")
+        print()
+
     if failures:
         return 1
 
+    exempted = f", {len(used)} allowlisted phrase(s) skipped" if used else ""
     print(f"check-content-style: {len(pages)} pages clean "
-          "(US spelling, temperatures paired).")
+          f"(US spelling, temperatures paired{exempted}).")
     return 0
 
 
