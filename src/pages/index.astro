@@ -6,7 +6,9 @@ import SectionHeading from "../components/SectionHeading.astro";
 import StrainCard from "../components/StrainCard.astro";
 import FeaturedPost from "../components/FeaturedPost.astro";
 import BlogPostCard from "../components/BlogPostCard.astro";
-import { getSiteSettings, getStrains, getPage, getBlogPosts } from "../lib/sanity";
+import DropCard from "../components/DropCard.astro";
+import { getSiteSettings, getStrains, getPage, getBlogPosts, getDrops } from "../lib/sanity";
+import { compareDropStrength } from "../lib/drops";
 
 // The homepage blog section runs the newest posts as full-width FeaturedPost
 // lockups, then the next few as ordinary cards. Both counts are ceilings, not
@@ -34,6 +36,13 @@ const cardPosts = recentPosts.slice(
 const heroImages = page?.heroImages?.length
   ? page.heroImages
   : ( page?.heroImage ? [ page.heroImage ] : [] );
+
+// The newest available drop, falling back to the newest upcoming one.
+// compareDropStrength already ranks available above upcoming above sold out, so
+// the first entry after sorting is the answer, and a sold out first entry means
+// there is nothing live to feature.
+const sortedDrops = ( await getDrops() ?? [] ).sort( compareDropStrength );
+const featuredDrop = sortedDrops[0]?.status === "soldOut" ? undefined : sortedDrops[0];
 ---
 
 <Layout
@@ -52,6 +61,15 @@ const heroImages = page?.heroImages?.length
       </div>
     </Hero>
   </HeroBackdrop>
+
+  {featuredDrop && (
+    <section class="fade-in" style="margin-top:3rem;">
+      <SectionHeading title="Current Drop" />
+      <div class="card-grid">
+        <DropCard {...featuredDrop} />
+      </div>
+    </section>
+  )}
 
   {featuredStrains.length > 0 && (
     <section class="fade-in" style="margin-top:3rem;">

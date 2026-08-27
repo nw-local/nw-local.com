@@ -6,7 +6,8 @@ import ProductBadge from "../../components/ProductBadge.astro";
 import ProductCard from "../../components/ProductCard.astro";
 import SectionHeading from "../../components/SectionHeading.astro";
 import ImageLightbox from "../../components/ImageLightbox.astro";
-import { getStrains, getStrain, getProductsByStrain } from "../../lib/sanity";
+import { getStrains, getStrain, getProductsByStrain, getDrops } from "../../lib/sanity";
+import { buildDropLookup, dropHref } from "../../lib/drops";
 import { urlFor } from "../../lib/image";
 import { formatMonthYear } from "../../lib/date";
 import {
@@ -19,12 +20,15 @@ import {
 
 export async function getStaticPaths() {
   const strains = await getStrains() ?? [];
-  return strains.map( ( strain: { slug: { current: string } }) => ({
+  const dropLookup = buildDropLookup( await getDrops() ?? [] );
+  return strains.map( ( strain: { _id: string; slug: { current: string } }) => ({
     params: { slug: strain.slug.current },
+    props: { drop: dropLookup.byStrainId.get( strain._id ) },
   }) );
 }
 
 const { slug } = Astro.params;
+const { drop } = Astro.props;
 const strain = await getStrain( slug! );
 if( !strain ) return Astro.redirect( "/strains" );
 
@@ -125,12 +129,16 @@ const structuredData: StructuredData[] = [
 
   <ImageLightbox images={lightboxImages} />
 
+  {drop && (
+    <p>In this drop: <a href={dropHref( drop.slug )}>{drop.name}</a></p>
+  )}
+
   {products.length > 0 && (
     <section class="fade-in">
       <SectionHeading title="Products" />
       <div class="card-grid">
         {products.map( product => (
-          <ProductCard {...product} />
+          <ProductCard {...product} drop={drop} />
         ) )}
       </div>
     </section>
