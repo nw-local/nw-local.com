@@ -208,13 +208,15 @@ git commit -m "feat(studio): add the drop document type"
 
 This is the only task with a real test cycle, because it is the only code that is pure. Write the check first, watch it fail, then implement.
 
+**Execution order:** this task runs AFTER Task 3, which defines the `DropStatus`, `DropSummary` and `SanitySlug` types it imports. The plan numbers it 2 because the pure module is the conceptual heart of the change; the dependency runs the other way.
+
 **Files:**
 - Create: `src/lib/drops.ts`
 - Create: `scripts/check-drop-lookup.ts`
 - Modify: `.github/workflows/ci.yml`
 
 **Interfaces:**
-- Consumes: `DropStatus`, `DropSummary`, `SanitySlug` types from `src/lib/sanity.ts` (Task 3 defines them; declare them there first if implementing out of order, or implement Task 3's type block before this task).
+- Consumes: `DropStatus`, `DropSummary`, `SanitySlug` types from `src/lib/sanity.ts`, all defined by Task 3, which runs first.
 - Produces:
   - `DROP_BASE_PATH: string`
   - `dropHref( slug: SanitySlug ): string`
@@ -403,8 +405,6 @@ Run: `node scripts/check-drop-lookup.ts`
 Expected: `buildDropLookup collision rule holds`, exit code 0.
 
 If it fails with `Missing SANITY_PROJECT_ID env var`, the import on line 1 of `drops.ts` is a value import rather than `import type`. Fix it there; do not load `.env` in the script.
-
-This step depends on Task 3's type block existing. If `DropSummary` is not yet defined in `src/lib/sanity.ts`, implement Task 3 Step 1 first, then return here.
 
 - [ ] **Step 5: Wire the check into CI**
 
@@ -827,17 +827,20 @@ const ogImage = drop.heroImage?.asset
   ? urlFor( drop.heroImage ).width( 1200 ).height( 630 ).format( "jpg" ).url()
   : undefined;
 
-const siteUrl = requireSiteUrl( Astro.site );
-const baseUrl = normalizeSiteUrl( siteUrl );
+// buildBreadcrumbList takes one argument. The crumb shape, the Home entry and
+// the trailing slashes all match the strain page's call deliberately: these are
+// the same breadcrumb trail rendered on a sibling route.
+const baseUrl = normalizeSiteUrl( requireSiteUrl( Astro.site ) );
 const structuredData: StructuredData[] = [
   buildBreadcrumbList( [
-    { name: "Drops", url: `${baseUrl}${DROP_BASE_PATH}` },
-    { name: drop.name, url: `${baseUrl}${DROP_BASE_PATH}/${drop.slug.current}` },
-  ], siteUrl ),
+    { name: "Home", url: `${baseUrl}/` },
+    { name: "Drops", url: `${baseUrl}${DROP_BASE_PATH}/` },
+    { name: drop.name, url: `${baseUrl}${DROP_BASE_PATH}/${drop.slug.current}/` },
+  ] ),
 ];
 ---
 
-<Layout title={drop.name} description={drop.description} image={ogImage} structuredData={structuredData}>
+<Layout title={drop.name} description={drop.description} ogImage={ogImage} structuredData={structuredData}>
   <Hero title={drop.name} subtitle={drop.description} />
 
   <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
@@ -888,11 +891,9 @@ const structuredData: StructuredData[] = [
 </Layout>
 ```
 
-Before running anything, verify three call signatures against the real files, since this page was written from the strain page's shape and the details must match exactly:
+Two signatures above were verified against the real files during the plan's preflight scan and are correct as written: `Layout.astro` takes `ogImage` (not `image`), and `buildBreadcrumbList` takes exactly one argument. Do not "fix" either back.
 
-1. `Layout.astro`: confirm it accepts `image` and `structuredData` props with those names. If it does not, match whatever `strains/[...slug].astro` passes.
-2. `buildBreadcrumbList`: confirm the argument order and item shape in `src/lib/jsonld.ts`.
-3. `RetailerCard.astro`: confirm it takes a spread `Retailer` as its props.
+One signature is still yours to verify before running anything: `RetailerCard.astro` — confirm it takes a spread `Retailer` as its props, and adjust the retailer block to match if it does not.
 
 - [ ] **Step 3: Add the meta list styling**
 
