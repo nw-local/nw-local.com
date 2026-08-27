@@ -219,6 +219,97 @@ export async function getProductsByStrain( strainId: string ) {
   );
 }
 
+// --- Drops ---
+
+export type DropStatus = "upcoming" | "available" | "soldOut";
+export type DropPortal = "bamboo" | "cultivera";
+
+export interface DropSummary {
+  _id: string;
+  name: string;
+  slug: SanitySlug;
+  description: string;
+  status: DropStatus;
+  dropDate: string;
+  heroImage?: SanityImage;
+  // Carried on the summary so one fetch serves both the index cards and the
+  // lookup maps in drops.ts. Two separate queries could disagree; one cannot.
+  productIds: string[];
+  strainIds: string[];
+}
+
+export interface Drop extends DropSummary {
+  lotIdentifier?: string;
+  lotPortal?: DropPortal;
+  harvestedAt?: string;
+  body?: PortableText;
+  products: ProductSummary[];
+  retailers?: Retailer[];
+}
+
+const DROP_SUMMARY_PROJECTION = `{
+  _id, name, slug, description, status, dropDate,
+  heroImage { asset->, alt, crop, hotspot },
+  "productIds": coalesce(products[]._ref, []),
+  "strainIds": coalesce(products[]->strain._ref, [])
+}`;
+
+// A drop with no products is a batch with nothing in it. Studio's
+// rule.required() stops a human clicking Publish and does nothing about API
+// writes, which is how blogPost.author nearly shipped without a byline in #34.
+// Failing the deploy is the intended outcome: the alternative is a page that
+// renders an empty batch and looks fine.
+function assertDropHasProducts( name: string, id: string, count: number ) {
+  if( count > 0 ) return;
+  throw new Error(
+    `Drop "${name}" (${id}) has no products. Add at least one product to it in Sanity, or unpublish the drop.`,
+  );
+}
+
+export async function getDrops() {
+  const drops = await sanityClient.fetch<DropSummary[]>(
+    `*[_type == "drop"] | order(dropDate desc) ${DROP_SUMMARY_PROJECTION}`,
+  );
+  for( const drop of drops ) {
+    assertDropHasProducts( drop.name, drop._id, drop.productIds.length );
+  }
+  return drops;
+}
+
+export async function getDrop( slug: string ) {
+  const drop = await sanityClient.fetch<Drop | null>(
+    `*[_type == "drop" && slug.current == $slug][0] {
+      _id, name, slug, description, status, dropDate,
+      heroImage { asset->, alt, crop, hotspot },
+      lotIdentifier, lotPortal, harvestedAt,
+      "productIds": coalesce(products[]._ref, []),
+      "strainIds": coalesce(products[]->strain._ref, []),
+      body[] ${PORTABLE_TEXT_PROJECTION},
+      "products": products[]-> {
+        _id, name, slug, category, weight, available,
+        image { asset->, alt, crop, hotspot },
+        "strain": strain->{ _id, name, slug, strainType, heroImage { asset->, alt, crop, hotspot } }
+      },
+      "retailers": retailers[]-> {
+        _id, name, slug, address, city, state, zip,
+        lat, lng, website, phone, email,
+        logo { asset->, alt },
+        featured,
+        productsAvailable[]->{ _id, name, slug, category }
+      }
+    }`,
+    { slug },
+  );
+
+  if( !drop ) return null;
+
+  // getDrops() checks the raw refs; this checks what survived dereferencing.
+  // The two differ: products[]._ref still lists a reference whose target has
+  // been deleted, and that entry arrives here as null.
+  assertDropHasProducts( drop.name, drop._id, drop.products.length );
+  return drop;
+}
+
 // --- Authors ---
 
 export interface AuthorSummary {
