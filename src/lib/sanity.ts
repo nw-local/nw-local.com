@@ -202,7 +202,7 @@ export async function getProducts() {
   return sanityClient.fetch<ProductSummary[]>(
     `*[_type == "product"] | order(sortOrder asc, name asc) {
       _id, name, slug, category, weight, available,
-      image { asset->, alt },
+      image { asset->, alt, crop, hotspot },
       "strain": strain->{ _id, name, slug, strainType, heroImage { asset->, alt, crop, hotspot } }
     }`,
   );
@@ -212,7 +212,7 @@ export async function getProductsByStrain( strainId: string ) {
   return sanityClient.fetch<ProductWithDescription[]>(
     `*[_type == "product" && strain._ref == $strainId] | order(sortOrder asc) {
       _id, name, slug, category, weight, available,
-      image { asset->, alt },
+      image { asset->, alt, crop, hotspot },
       description[] ${PORTABLE_TEXT_PROJECTION}
     }`,
     { strainId },
