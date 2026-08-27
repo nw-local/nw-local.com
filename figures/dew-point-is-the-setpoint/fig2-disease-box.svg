@@ -75,7 +75,7 @@
     <text class="note" x="1475.9" y="618.0" text-anchor="middle">past the bud rot window</text>
     <line x1="1104.3" y1="380" x2="1104.3" y2="975" stroke="#C0392B" stroke-width="3" stroke-dasharray="10 8"/>
     <line class="rule" x1="80" y1="1128" x2="1800" y2="1128"/>
-    <text class="foot" x="80" y="1166">Bud rot bounds: Mahmoud, M. et al. (2023), Understanding bud rot development caused by Botrytis cinerea on cannabis plants, Botany.</text>
+    <text class="foot" x="80" y="1166">Bud rot bounds: Mahmoud, M. et al. (2023), Understanding bud rot development caused by Botrytis cinerea on greenhouse cannabis, Botany 101(7), 200-231.</text>
     <text class="foot" x="80" y="1194">Powdery mildew is described qualitatively in that literature, so no temperature bound is drawn. The band's lower edge is our operating ceiling, not a threshold.</text>
     <text class="brand" x="1800" y="1240" text-anchor="end">Northwest Local Cannabis</text>
   </g>
