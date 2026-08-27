@@ -87,6 +87,10 @@ make upload-image FILE="figures/co2-enrichment/calcium-symptoms.png" \
 
 **CC BY attribution is a license condition, not a courtesy.** The credit lives in the rendered figure's footer so it travels with the image wherever the PNG ends up, and the Sanity caption repeats it. CC BY also requires indicating changes, which is why the footer says the figure was cropped and relabeled. Note that "NonCommercial" licensed images are unusable here: this is a commercial site.
 
+**Check what a photograph actually documents, not just what it is labeled.** A source photograph carries the finding of the study it came from, and that finding may contradict the article it is being dropped into. The calcium figure caught this: Llewellyn et al. observed symptoms starting on *lower* fan leaves and explicitly called it "a departure from typical calcium deficiency… where foliar symptoms normally start in younger tissues", while Cockson et al. found the textbook new-growth pattern. The post asserted the textbook version as settled fact, so the first figure would have illustrated the opposite of its own caption. The prose was corrected and both papers added to the references; the figure now names which study it depicts. Reading the source's own words about its photographs is part of using them.
+
+**A stock-library keyword is not a diagnosis.** Contributor tags are unreviewed. A Shutterstock photo tagged "calcium deficiency" was rejected here because its presentation — rust-brown spots with yellow halos on a mature fan leaf — is the classic look-alike for leaf septoria, a fungal disease, and nothing in the listing established which it was. On a page telling growers to change a feed, an unverified real photo misleads exactly as effectively as a synthesized one. Peer-reviewed figures carry a diagnosis; stock does not.
+
 A figure that composes photographs references them relatively (`src/foo.png`) rather than embedding data URIs, which would put a megabyte of base64 into a file meant to be diffable. `render-figures.sh` writes its Chrome shim beside the SVG so those relative paths resolve, and removes it afterward.
 
 ### Sizing a photograph inside a figure
@@ -99,7 +103,9 @@ A figure that composes photographs references them relatively (`src/foo.png`) ra
 
 The calcium figure got this wrong first time round. Three 794px photographs placed three-across an 1880px canvas gave `F = 0.30`, so each displayed at about 428 device px: under-sized and visibly mushy. Stacking them at 1060 of 1880 gives `F = 0.56` and about 812 device px, essentially native, at nearly twice the apparent size. Nothing in the build can catch this, and it looks fine in the raw PNG at full size, which is exactly why it slipped through: judge a figure at 720px wide, not at 1880.
 
-**Check whether a higher-resolution original exists before redesigning around a low one.** For a journal figure, the article PDF sometimes embeds images at higher resolution than the web PNG; `pdfimages -list file.pdf` lists them without extracting. Here it did not, both being 2718x1818, which is what made layout the only available fix.
+**Check whether a higher-resolution original exists before redesigning around a low one.** For a journal figure, the article PDF sometimes embeds images at higher resolution than the web PNG; `pdfimages -list file.pdf` lists them without extracting. For Cockson et al. it did not, both being 2718x1818.
+
+**A multi-panel plate is a bad source, and no layout rescues one.** The real ceiling is the *sub-panel*, not the plate. Cockson et al. Figure 2 is a three by three grid, so a 2718px plate yields 794px per photograph, and at that size a published figure reads as soft no matter how it is arranged. Enlarging it only makes the softness legible. Prefer a paper with a figure dedicated to the one disorder you need: Llewellyn et al. gave 2108x3577 for calcium alone, and its individual leaves are larger than Cockson's entire sub-panels.
 
 **Upload PNG, never SVG.** `PortableTextImage.astro` calls `.format( "webp" )` and sizes the layout box from the asset's dimension metadata. Sanity's CDN ignores format conversion on SVG, so an SVG upload serves untransformed while `resolveImageDimensions` governs the box: two halves of the pipeline quietly disagreeing.
 

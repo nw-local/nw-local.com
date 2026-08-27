@@ -1,40 +1,41 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1880" height="2860" viewBox="0 0 1880 2860">
+<svg xmlns="http://www.w3.org/2000/svg" width="1880" height="2090" viewBox="0 0 1880 2090">
   <!--
     Fig. 2 for /blog/co2-enrichment-in-commercial-cannabis/, in the "Calcium
     delivery falls" section (blocks h48 through p51).
 
-    Real photographs, not a drawing. An earlier attempt here was an authored
-    diagram of the mechanism, which explained why delivery fails but did nothing
-    for the thing a grower actually needs: recognizing the symptom while
-    inspecting a plant.
+    Real photographs, not a drawing. An earlier attempt was an authored diagram
+    of the mechanism, which explained why delivery fails but did nothing for the
+    thing a grower actually needs: recognizing the symptom on a plant.
 
-    Photographs are the calcium column of Figure 2 in Cockson et al. 2019,
-    reused under CC BY 4.0. Full provenance, the exact license wording, and the
-    list of changes made are in src/PROVENANCE.md. The credit in the footer is a
-    license condition, not decoration: do not remove it.
+    Photographs are panel (b) of Figure 5 in Llewellyn et al. 2023, reused under
+    CC BY 4.0. Provenance, the exact license wording, the list of changes, and
+    the reason the caption is worded the way it is are in src/PROVENANCE.md. The
+    credit in the footer is a license condition, not decoration.
 
-    LAYOUT IS DRIVEN BY THE DISPLAY MATH, NOT BY TASTE. The source panels are
-    794 px wide and that is the ceiling: the figure is 2718 px in both the web
-    PNG and the article PDF, so no higher-resolution original exists. A figure
-    renders at width:100% inside the 720 px content column, and Sanity serves it
-    at min(width, 1400). A panel occupying a fraction F of this canvas therefore
-    displays at 720F CSS px, or 1440F device px on a 2x screen.
+    THE CAVEAT BAND IS LOAD-BEARING. These are lower fan leaves, and Llewellyn
+    et al. explicitly flag that as a departure from how an immobile nutrient
+    normally behaves; Cockson et al. found the textbook new-growth pattern
+    instead. Do not retitle this figure as calcium showing up in new growth, and
+    do not drop the band to save vertical space.
 
-    An earlier three-across layout put F at 0.30, so each photo landed at 214
-    CSS px and roughly 428 device px against a 794 px source: small, and
-    throwing away most of the pixels that exist. Stacking at 1060 of 1880 puts F
-    at 0.56, so each photo displays near 812 device px, which is native. Going
-    wider than about 1100 here only upscales and softens. If the panel width
-    changes, redo that arithmetic rather than eyeballing it.
+    LAYOUT IS DRIVEN BY THE DISPLAY MATH. Source leaves are 842 px wide. A
+    figure renders at width:100% in the 720 px content column and Sanity serves
+    it at min(width, 1400), so a cell of fraction F displays at 1440F device px
+    on a 2x screen. Cells here are 840 of 1880, F = 0.447, about 643 device px:
+    a slight downscale from source, never an upscale. A previous version tiled
+    photographs three-across at F = 0.30 and displayed them at roughly 428
+    device px, which read as pixelated. Redo this arithmetic before changing the
+    grid rather than eyeballing it.
   -->
   <style>
     .fig    { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
     .title  { font-size: 52px; font-weight: 700; fill: #1A1A1A; letter-spacing: -0.6px; }
     .deck   { font-size: 30px; fill: #545454; }
     .label  { font-size: 22px; font-weight: 700; letter-spacing: 1.7px; }
-    .stage  { font-size: 38px; font-weight: 700; fill: #1A1A1A; }
-    .desc   { font-size: 27px; fill: #545454; }
-    .note   { font-size: 26px; fill: #545454; }
+    .cap    { font-size: 26px; font-weight: 400; fill: #545454; }
+    .capnum { font-size: 26px; font-weight: 700; fill: #1A1A1A; }
+    .warn   { font-size: 26px; fill: #545454; }
+    .warnh  { font-size: 27px; font-weight: 700; fill: #C0392B; }
     .foot   { font-size: 21px; fill: #8E8E8E; }
     .brand  { font-size: 23px; font-weight: 700; fill: #6B2D8B; }
     .teal   { fill: #147868; }
@@ -42,48 +43,42 @@
     .frame  { fill: none; stroke: #C8C8C9; stroke-width: 2; }
   </style>
 
-  <rect width="1880" height="2860" fill="#F7F7F8"/>
+  <rect width="1880" height="2090" fill="#F7F7F8"/>
 
   <g class="fig">
-    <text class="title" x="80" y="118">What calcium deficiency looks like on the plant</text>
-    <text class="deck" x="80" y="176">The shortfall lands on the newest growth while the older fan leaves below stay green. That inverted pattern, not</text>
-    <text class="deck" x="80" y="218">the state of any single leaf, is what separates calcium from a nutrient the plant can move.</text>
+    <text class="title" x="80" y="118">What calcium deficiency looks like on a fan leaf</text>
+    <text class="deck" x="80" y="176">Four leaves from the same calcium-deficient plants, least affected to most. The damage concentrates at the leaf</text>
+    <text class="deck" x="80" y="218">margins and along the leaflet edges rather than scattering evenly across the blade.</text>
     <line class="rule" x1="80" y1="272" x2="1800" y2="272"/>
 
-    <text class="label teal" x="80" y="330">AS THE DEFICIENCY PROGRESSES</text>
+    <text class="label teal" x="80" y="330">INCREASING SEVERITY</text>
 
-    <!-- Initial -->
-    <image href="src/calcium-initial.png" x="80" y="366" width="1060" height="690" preserveAspectRatio="xMidYMid slice"/>
-    <rect class="frame" x="80" y="366" width="1060" height="690"/>
-    <text class="stage" x="1190" y="669">Initial</text>
-    <text class="desc" x="1190" y="723">New growth at the tip pales</text>
-    <text class="desc" x="1190" y="757">while the older fan leaves</text>
-    <text class="desc" x="1190" y="791">below stay dark green.</text>
+    <image href="src/calcium-series-1.png" x="80" y="380" width="840" height="574" preserveAspectRatio="xMidYMid slice"/>
+    <rect class="frame" x="80" y="380" width="840" height="574"/>
+    <text class="capnum" x="80" y="996">1<tspan class="cap">   Little to no damage. The blade is even and the margins are clean.</tspan></text>
 
-    <!-- Intermediate -->
-    <image href="src/calcium-intermediate.png" x="80" y="1102" width="1060" height="690" preserveAspectRatio="xMidYMid slice"/>
-    <rect class="frame" x="80" y="1102" width="1060" height="690"/>
-    <text class="stage" x="1190" y="1405">Intermediate</text>
-    <text class="desc" x="1190" y="1459">The growing points distort</text>
-    <text class="desc" x="1190" y="1493">and twist, with pale tissue</text>
-    <text class="desc" x="1190" y="1527">on the newest leaves.</text>
+    <image href="src/calcium-series-2.png" x="960" y="380" width="840" height="574" preserveAspectRatio="xMidYMid slice"/>
+    <rect class="frame" x="960" y="380" width="840" height="574"/>
+    <text class="capnum" x="960" y="996">2<tspan class="cap">   Fine spotting appears, concentrated toward the leaflet edges.</tspan></text>
 
-    <!-- Advanced -->
-    <image href="src/calcium-advanced.png" x="80" y="1838" width="1060" height="690" preserveAspectRatio="xMidYMid slice"/>
-    <rect class="frame" x="80" y="1838" width="1060" height="690"/>
-    <text class="stage" x="1190" y="2141">Advanced</text>
-    <text class="desc" x="1190" y="2195">Necrosis at the growing</text>
-    <text class="desc" x="1190" y="2229">points. The big lower leaves</text>
-    <text class="desc" x="1190" y="2263">are still largely green.</text>
+    <image href="src/calcium-series-3.png" x="80" y="1036" width="840" height="574" preserveAspectRatio="xMidYMid slice"/>
+    <rect class="frame" x="80" y="1036" width="840" height="574"/>
+    <text class="capnum" x="80" y="1652">3<tspan class="cap">   Margin damage densifies and works inward along the leaflets.</tspan></text>
 
-    <line class="rule" x1="80" y1="2588" x2="1800" y2="2588"/>
-    <text class="note" x="80" y="2636">Under enrichment this can arrive without the feed changing at all. Calcium moves only with water, so less transpiration</text>
-    <text class="note" x="80" y="2672">means less delivered, and the plant cannot recover what it has already placed in older tissue.</text>
+    <image href="src/calcium-series-4.png" x="960" y="1036" width="840" height="574" preserveAspectRatio="xMidYMid slice"/>
+    <rect class="frame" x="960" y="1036" width="840" height="574"/>
+    <text class="capnum" x="960" y="1652">4<tspan class="cap">   Extensive marginal necrosis across most of the leaflet area.</tspan></text>
 
-    <line class="rule" x1="80" y1="2726" x2="1800" y2="2726"/>
-    <text class="foot" x="80" y="2764">Photographs: Cockson, P.; Landis, H.; Smith, T.; Hicks, K.; Whipker, B.E. (2019), Characterization of Nutrient Disorders of Cannabis sativa,</text>
-    <text class="foot" x="80" y="2792">Applied Sciences 9(20), 4432. Used under CC BY 4.0. Cropped from Figure 2, calcium column only, and relabeled. Symptoms were induced</text>
-    <text class="foot" x="80" y="2820">in sand culture with calcium withheld, so they present more cleanly here than in a production room.</text>
-    <text class="brand" x="1800" y="2764" text-anchor="end">Northwest Local Cannabis</text>
+    <rect x="80" y="1704" width="1720" height="196" rx="14" fill="#FDF0EE" stroke="#D5ADAE" stroke-width="1.5"/>
+    <text class="warnh" x="118" y="1754">These are lower fan leaves, and that is the contested part</text>
+    <text class="warn" x="118" y="1798">Llewellyn et al. found calcium symptoms starting on lower fan leaves, the reverse of the textbook pattern for a</text>
+    <text class="warn" x="118" y="1832">nutrient the plant cannot move, and flag it as a departure. Cockson et al. found the expected pattern instead, in the</text>
+    <text class="warn" x="118" y="1866">growing tips of vegetative plants. Location alone will not diagnose this: check both ends of the canopy.</text>
+
+    <line class="rule" x1="80" y1="1956" x2="1800" y2="1956"/>
+    <text class="foot" x="80" y="1994">Photographs: Llewellyn, D.; Golem, S.; Jones, A.M.P.; Zheng, Y. (2023), Foliar Symptomology, Nutrient Content, Yield, and Secondary Metabolite</text>
+    <text class="foot" x="80" y="2022">Variability of Cannabis Grown Hydroponically with Different Single-Element Nutrient Deficiencies, Plants 12(3), 422. Used under CC BY 4.0.</text>
+    <text class="foot" x="80" y="2050">Cropped from Figure 5, panel (b) only, with the four leaves separated for layout. Grown hydroponically with calcium withheld.</text>
+    <text class="brand" x="1800" y="1994" text-anchor="end">Northwest Local Cannabis</text>
   </g>
 </svg>
