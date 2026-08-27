@@ -13,6 +13,8 @@ export interface PortableTextTableNode {
   rows?: PortableTextTableRow[];
 }
 
+import TableCellText from "./TableCellText.astro";
+
 interface Props {
   node: PortableTextTableNode;
 }
@@ -58,15 +60,15 @@ if( ragged.length > 0 ) {
   <div class="pt-table-scroll" tabindex="0" role="region" aria-label={node.caption ?? "Table"}>
     <table>
       <thead>
-        <tr>{headers.map( header => <th scope="col">{header}</th> )}</tr>
+        <tr>{headers.map( header => <th scope="col"><TableCellText value={header} /></th> )}</tr>
       </thead>
       <tbody>
         {rows.map( row => (
           <tr class={row.highlight ? "is-highlighted" : undefined}>
             {row.cells?.map( ( cell, index ) => (
               index === 0
-                ? <th scope="row">{cell}</th>
-                : <td>{cell}</td>
+                ? <th scope="row"><TableCellText value={cell} /></th>
+                : <td><TableCellText value={cell} /></td>
             ) )}
           </tr>
         ) )}
