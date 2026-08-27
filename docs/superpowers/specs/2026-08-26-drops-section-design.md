@@ -140,13 +140,21 @@ Pure functions, no client, no network.
 ```ts
 export const DROP_BASE_PATH = "/drops";
 export function dropHref( slug: SanitySlug ): string;
-export const DROP_STATUS_LABELS: Record<DropStatus, string>;
 export interface DropRef { _id: string; name: string; slug: SanitySlug; status: DropStatus }
+export function compareDropStrength( left: DropSummary, right: DropSummary ): number;
 export function buildDropLookup( drops: DropSummary[] ): {
   byProductId: Map<string, DropRef>;
   byStrainId: Map<string, DropRef>;
 };
 ```
+
+Status labels live in `ProductBadge.astro`'s existing `LABELS` dictionary
+alongside the strain type and category labels, not in a separate constant here.
+One dictionary, one place to change a label.
+
+`compareDropStrength` is exported because the collision rule and the index
+ordering are the same question asked twice: strongest status first, then the
+later `dropDate`.
 
 **Collision rule.** When one product or strain belongs to several drops, the
 map keeps the drop with the strongest status (`available`, then `upcoming`,
