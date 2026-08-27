@@ -41,7 +41,10 @@ const displayImage = image ?? strain?.heroImage;
       </p>
     )}
     {drop && (
-      <p><a href={dropHref( drop.slug )}>{drop.name}</a></p>
+      <p style="display:flex;align-items:center;gap:0.5rem;">
+        <ProductBadge type={drop.status} />
+        <a href={dropHref( drop.slug )}>{drop.name}</a>
+      </p>
     )}
   </div>
 </div>

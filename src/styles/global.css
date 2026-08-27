@@ -725,6 +725,16 @@ footer {
   color: var(--text-secondary);
 }
 
+/* Same reasoning as .drop-card-date above, and the same reason it is not left
+   bare: this line sits between the gallery and the products grid with no
+   ancestor setting a colour for it, so "inherits" resolves to whatever the
+   nearest ancestor happens to be rather than to the value the stylesheet reads
+   as. --text-emphasis is the rung that sits above body copy without competing
+   with a heading, which is the weight a one line pointer to the drop wants. */
+.strain-drop-line {
+  color: var(--text-emphasis);
+}
+
 /* --- Product Badge --- */
 
 .product-badge {

@@ -106,8 +106,9 @@ export interface DropSummary {
   status: DropStatus;
   dropDate: string;
   heroImage?: SanityImage;
-  productIds: string[];   // products[]._ref
-  strainIds: string[];    // products[]->strain._ref
+  productIds: string[];         // products[]._ref, dangling ones included
+  liveProductCount: number;     // count(products[defined(@->)])
+  strainIds: ( string | null )[];  // products[]->strain._ref, null when unset
 }
 
 export interface Drop extends DropSummary {
@@ -128,10 +129,28 @@ both the index cards and the lookup maps. Two separate queries could disagree
 with each other, one cannot. Card components simply do not destructure the id
 arrays.
 
+`productIds` and `liveProductCount` are both needed and legitimately disagree.
+`productIds` keeps every raw reference, including one whose target no longer
+resolves, because that is what lets `getDrops()` fail loudly on a drop whose
+products were all deleted after publish. `liveProductCount` counts only what
+still dereferences, which is what the detail page renders. Unpublishing one SKU
+is a routine editor action and moves the two apart, so **any rendered count uses
+`liveProductCount`**: `DropCard` counting refs would have claimed 6 products
+against a page showing 5.
+
+`strainIds` admits `null` because a product written through the API can have no
+`strain` at all, and `strain._ref` then projects to null in place. The guard in
+`buildDropLookup()` exists for that, and the type says so.
+
 `Drop.products` is projected with the identical
 `image { asset->, alt, crop, hotspot }` spelling as `getProducts()`. This is
 deliberate: the two `product.image` projections that omitted `crop, hotspot`
-were the ones that center cropped strain names off the jar labels.
+were the ones that center cropped strain names off the jar labels. Identical is
+now enforced structurally rather than by discipline: the braced projection body
+lives in one module-level const, `PRODUCT_SUMMARY_PROJECTION`, that both call
+sites interpolate, with `RETAILER_PROJECTION` doing the same for retailers.
+Only the array source expression differs, which is the part that must
+(`*[_type == "product"]` versus `products[defined(@->)]->`).
 
 ### `src/lib/drops.ts` (derive)
 
@@ -169,11 +188,16 @@ judged the better line and the divergence is accepted knowingly.
 ## Pages and components
 
 - **`src/pages/drops/index.astro`** mirrors `strains/index.astro`: `Hero`,
-  then `FilterBar` with `filterAttribute="data-status"` and Available /
-  Upcoming / Sold Out buttons, then a `.card-grid` of `DropCard`s wrapped in
+  then `FilterBar` with `filterAttribute="data-status"` and one button per
+  drop status, then a `.card-grid` of `DropCard`s wrapped in
   `data-filter-item data-status={drop.status}`. Ordering is status group
   (available, upcoming, sold out) then `dropDate` descending, so the page
   opens on what is actually buyable. Empty state matches `products.astro`.
+  The button labels are not written out here: `DROP_STATUS_LABELS` in
+  `drops.ts` is the one dictionary for the visitor-facing wording of a status,
+  and both this filter and `ProductBadge` read from it. Written twice, they
+  drifted immediately, the filter reading "Available" under cards badged
+  "Available Now". Its declaration order is the button order.
 - **`src/pages/drops/[...slug].astro`** takes `getStaticPaths()` from
   `getDrops()` and the detail from `getDrop( slug )`, redirecting to `/drops`
   when missing, as the strain route does. Body: hero image, status badge, a
@@ -215,14 +239,25 @@ there is no cache to go stale in the dev server.
   `/drops/<slug>`. Nav layout work is explicitly out of scope.
 - **Homepage.** A featured drop section showing the newest `available` drop,
   falling back to the newest `upcoming`, rendering nothing at all when
-  neither exists. No empty shell.
+  neither exists. No empty shell. The section heading follows the status, so
+  an upcoming drop is not announced as "Current Drop" above a card badged
+  "Upcoming".
 - **Strain pages.** When `byStrainId` has an entry, an "In this drop" link
   above the products section, with the `DropRef` arriving through
   `getStaticPaths()` props.
 - **Product cards.** `ProductCard` gains an optional `drop?: DropRef` prop
   rendering a badge linking to the drop. `products.astro` and the strain page
-  pass it. The drop detail page deliberately does not, since every card there
-  belongs to the drop already on screen. `ProductCard` is a plain `<div>` and
+  pass it, but they resolve it differently and must. `products.astro` reads
+  `byProductId`, which is a per-SKU answer. The strain page's `byStrainId`
+  entry only means "at least one product of this strain is in drop X", so it
+  is right for the strain-level line and wrong for the cards: a drop holding
+  the eighth and not the pre-roll would badge the pre-roll. The strain route
+  therefore carries the winning drop's `productIds` through `getStaticPaths()`
+  alongside the `DropRef` and tests membership per card. `getDrops()` stays in
+  `getStaticPaths()`, which Astro runs once per route file, rather than in the
+  frontmatter, which runs once per generated page. The drop detail page
+  deliberately passes nothing, since every card there belongs to the drop
+  already on screen. `ProductCard` is a plain `<div>` and
   already contains an anchor to the strain, so a second link is safe.
 
 ## Failure modes

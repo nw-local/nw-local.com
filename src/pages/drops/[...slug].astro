@@ -7,7 +7,7 @@ import ProductCard from "../../components/ProductCard.astro";
 import RetailerCard from "../../components/RetailerCard.astro";
 import SectionHeading from "../../components/SectionHeading.astro";
 import { getDrops, getDrop } from "../../lib/sanity";
-import type { DropStatus, ProductSummary } from "../../lib/sanity";
+import type { DropPortal, DropStatus, ProductSummary } from "../../lib/sanity";
 import { DROP_BASE_PATH } from "../../lib/drops";
 import { urlFor } from "../../lib/image";
 import { formatPostDate } from "../../lib/date";
@@ -29,7 +29,10 @@ const { slug } = Astro.params;
 const drop = await getDrop( slug! );
 if( !drop ) return Astro.redirect( DROP_BASE_PATH );
 
-const PORTAL_LABELS: Record<string, string> = {
+// Keyed by DropPortal rather than string, so the map is exhaustive by
+// construction and a lotPortal value always has a label. That is what makes the
+// unqualified fallback below unnecessary rather than merely unused.
+const PORTAL_LABELS: Record<DropPortal, string> = {
   bamboo: "Bamboo",
   cultivera: "Cultivera",
 };
@@ -47,7 +50,7 @@ const DATE_LABELS: Record<DropStatus, string> = {
 // A lot carries a Bamboo id and a Cultivera id, so an unqualified number is
 // ambiguous. Render the identifier only when we can say which portal it is from.
 const lotLabel = drop.lotIdentifier && drop.lotPortal
-  ? `${PORTAL_LABELS[drop.lotPortal] ?? drop.lotPortal} lot ${drop.lotIdentifier}`
+  ? `${PORTAL_LABELS[drop.lotPortal]} lot ${drop.lotIdentifier}`
   : null;
 
 // Products are grouped by strain because a drop bundles lots and one lot is one
@@ -105,7 +108,7 @@ const structuredData: StructuredData[] = [
       alt={drop.heroImage.alt ?? drop.name}
       width="1200"
       height="900"
-      style="border-radius:8px;width:100%;object-fit:cover;margin-bottom:1.5rem;"
+      style="border-radius:8px;width:100%;margin-bottom:1.5rem;"
     />
   )}
 

@@ -9,6 +9,7 @@ import BlogPostCard from "../components/BlogPostCard.astro";
 import DropCard from "../components/DropCard.astro";
 import { getSiteSettings, getStrains, getPage, getBlogPosts, getDrops } from "../lib/sanity";
 import { compareDropStrength } from "../lib/drops";
+import type { DropStatus } from "../lib/sanity";
 
 // The homepage blog section runs the newest posts as full-width FeaturedPost
 // lockups, then the next few as ordinary cards. Both counts are ceilings, not
@@ -43,6 +44,17 @@ const heroImages = page?.heroImages?.length
 // there is nothing live to feature.
 const sortedDrops = ( await getDrops() ?? [] ).sort( compareDropStrength );
 const featuredDrop = sortedDrops[0]?.status === "soldOut" ? undefined : sortedDrops[0];
+
+// The section used to be headed "Current Drop" whatever it held, so an upcoming
+// drop was announced as current and then badged "Upcoming" on the card directly
+// under the heading. Exhaustive over DropStatus rather than covering the two
+// statuses that reach it, so widening the filter above cannot silently produce
+// an undefined heading.
+const DROP_SECTION_HEADINGS: Record<DropStatus, string> = {
+  available: "Current Drop",
+  upcoming: "Next Drop",
+  soldOut: "Latest Drop",
+};
 ---
 
 <Layout
@@ -64,7 +76,7 @@ const featuredDrop = sortedDrops[0]?.status === "soldOut" ? undefined : sortedDr
 
   {featuredDrop && (
     <section class="fade-in" style="margin-top:3rem;">
-      <SectionHeading title="Current Drop" />
+      <SectionHeading title={DROP_SECTION_HEADINGS[featuredDrop.status]} />
       <div class="card-grid">
         <DropCard {...featuredDrop} />
       </div>

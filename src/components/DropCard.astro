@@ -7,9 +7,11 @@ import type { DropSummary } from "../lib/sanity";
 
 type Props = DropSummary;
 
-const { name, slug, description, status, dropDate, heroImage, productIds } = Astro.props;
-
-const productCount = productIds.length;
+// liveProductCount, not productIds.length: an unpublished SKU keeps its _ref
+// in productIds, which is what makes the empty-drop guard in getDrops() work,
+// but the detail page renders only the products that still resolve. Counting
+// refs here would make this card claim 6 products against a page showing 5.
+const { name, slug, description, status, dropDate, heroImage, liveProductCount } = Astro.props;
 ---
 
 <a href={dropHref( slug )} class="card">
@@ -27,7 +29,7 @@ const productCount = productIds.length;
   <div class="card-body">
     <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
       <ProductBadge type={status} />
-      <span class="product-badge">{productCount === 1 ? "1 product" : `${productCount} products`}</span>
+      <span class="product-badge">{liveProductCount === 1 ? "1 product" : `${liveProductCount} products`}</span>
     </div>
     <h3 class="card-title">{name}</h3>
     <p>{description}</p>
