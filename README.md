@@ -83,7 +83,7 @@ Run `make` (no args) to print the full target list with descriptions.
 | Check nightly cron  | `make check-nightly` | fails if the nightly audit's schedule has stalled    |
 | Check analytics     | `make check-analytics` | asserts `./dist/` ships a GA snippet that records hits |
 | Check robots.txt    | `make check-robots`  | asserts `robots.txt` points crawlers at this build's sitemap |
-| Check content style | `make check-content-style` | asserts US spelling and that every temperature carries °F and °C |
+| Check content style | `make check-content-style` | asserts US spelling and that every temperature carries °F and °C, in that order |
 | Check heading anchors | `make check-anchors` | asserts section anchor ids are unique per page          |
 | Check drop lookup   | `make check-drop-lookup` | asserts the drop collision rule holds whatever order Sanity returns rows in |
 | Studio lint         | `cd studio && yarn lint` | separate project; the root's ESLint ignores it   |
@@ -141,7 +141,7 @@ Every page emits **JSON-LD structured data** (`Organization` everywhere; `Produc
 
 The site auto-deploys to GitHub Pages on every push to `main`, via [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml). Publishing content in Sanity also triggers a rebuild through a webhook (~1-2 min end-to-end), because the build fetches all content at build time.
 
-Deploys are not unconditional: the build runs `make check-content-style` against the freshly built `dist/`, and a failure skips the deploy job and leaves the previous site live. **If published content does not appear, check that run first** — a British spelling or an unpaired temperature will hold it back, and nothing else announces it.
+Deploys are not unconditional: the build runs `make check-content-style` against the freshly built `dist/`, and a failure skips the deploy job and leaves the previous site live. **If published content does not appear, check that run first** — a British spelling, an unpaired temperature, or a Celsius-first pair will hold it back, and nothing else announces it.
 
 The Studio itself is hosted separately at <https://nw-local.sanity.studio/> and deploys with `make deploy-studio` — **not** with the site. A schema or sidebar change needs that command before editors see it.
 

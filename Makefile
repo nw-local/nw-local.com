@@ -45,7 +45,7 @@ check-analytics: ## Verify ./dist/ ships a working Google Analytics snippet
 check-robots: ## Verify ./dist/robots.txt points crawlers at this build's sitemap
 	@./scripts/check-robots.sh
 
-check-content-style: ## Verify ./dist/ uses US spelling and pairs every temperature
+check-content-style: ## Verify ./dist/ uses US spelling and pairs every temperature °F first
 	@./scripts/check-content-style.py
 
 check-anchors: ## Verify ./dist/ heading anchor ids are unique per page
