@@ -958,22 +958,24 @@ footer {
   margin-top: 1rem;
 }
 
-/* Contents list for a long post. A <details> rather than a plain list so the
-   reader can fold 14 entries away, open by default because a collapsed list
-   hides the navigation it exists to provide.
+/* Contents list for a long post.
 
-   The marker is styled rather than hidden: a summary with no affordance reads
-   as a heading, and nobody clicks a heading. */
+   No box and no background: the bordered surface treatment belongs to tables,
+   and reusing it here made the contents read as data rather than as navigation.
+   A hairline under the list is enough to separate it from the opening
+   paragraph, and the uppercase label matches the one table captions use.
+
+   No numbering either. The entries are places to jump to, not an ordered
+   procedure, and decimal markers put a column of digits down the left edge
+   that competes with the text for attention. */
 .post-toc {
-  margin: 0 0 2rem;
-  padding: 1rem 1.25rem;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--bg-surface);
+  margin: 0 0 2.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
 }
 
-.post-toc > summary {
-  cursor: pointer;
+.post-toc-label {
+  margin: 0 0 0.75rem;
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -981,31 +983,25 @@ footer {
   color: var(--text-secondary);
 }
 
-.post-toc > summary:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
-}
-
 .post-toc ol {
-  margin: 0.85rem 0 0;
-  padding-left: 1.25rem;
-  list-style: decimal;
-  color: var(--text-secondary);
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-/* Nested h3 entries continue the numbering of their own level rather than the
-   parent's, so they read as sub-steps instead of a second flat list. */
+/* Nested h3 entries are indented rather than marked, so the hierarchy reads
+   without adding a second kind of bullet. */
 .post-toc ol ol {
-  margin: 0.35rem 0 0.35rem;
-  list-style: lower-alpha;
+  margin: 0.3rem 0 0.3rem 1.1rem;
 }
 
 .post-toc li {
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.3rem;
   line-height: 1.5;
 }
 
 .post-toc a {
+  font-size: 0.9rem;
   color: var(--text-secondary);
   text-decoration: none;
 }
@@ -1013,7 +1009,6 @@ footer {
 .post-toc a:hover,
 .post-toc a:focus-visible {
   color: var(--accent);
-  text-decoration: underline;
 }
 
 /* Provenance for a printed or PDF'd article. Hidden on screen, where the

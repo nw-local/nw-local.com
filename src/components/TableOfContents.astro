@@ -64,23 +64,21 @@ const total = entries.reduce(
 );
 ---
 {total >= minimumEntries && (
-  <details class="post-toc" open>
-    <summary>Contents</summary>
-    <nav aria-label="Table of contents">
-      <ol>
-        {entries.map( entry => (
-          <li>
-            <a href={`#${ entry.id }`}>{entry.text}</a>
-            {entry.children.length > 0 && (
-              <ol>
-                {entry.children.map( child => (
-                  <li><a href={`#${ child.id }`}>{child.text}</a></li>
-                ) )}
-              </ol>
-            )}
-          </li>
-        ) )}
-      </ol>
-    </nav>
-  </details>
+  <nav class="post-toc" aria-labelledby="post-toc-label">
+    <p class="post-toc-label" id="post-toc-label">Contents</p>
+    <ol>
+      {entries.map( entry => (
+        <li>
+          <a href={`#${ entry.id }`}>{entry.text}</a>
+          {entry.children.length > 0 && (
+            <ol>
+              {entry.children.map( child => (
+                <li><a href={`#${ child.id }`}>{child.text}</a></li>
+              ) )}
+            </ol>
+          )}
+        </li>
+      ) )}
+    </ol>
+  </nav>
 )}
