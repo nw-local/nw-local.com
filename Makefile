@@ -51,11 +51,8 @@ check-content-style: ## Verify ./dist/ uses US spelling and pairs every temperat
 check-anchors: ## Verify ./dist/ heading anchor ids are unique per page
 	@./scripts/check-heading-anchors.py
 
-check-threshold-tables: ## Verify ./dist/ tables that promise a limit actually hold it
-	@./scripts/check-threshold-tables.py
-
-test-threshold-tables: ## Run the psychrometrics unit tests (no build required)
-	@./scripts/test-threshold-tables.py
+test-psychrometrics: ## Run the psychrometrics unit tests (no build required)
+	@./scripts/test-psychrometrics.py
 
 check-drop-lookup: ## Verify the drop collision rule: strongest status wins, whatever the row order
 	@node scripts/check-drop-lookup.ts
