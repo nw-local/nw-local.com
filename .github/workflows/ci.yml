@@ -40,6 +40,12 @@ jobs:
       - name: Check the buildDropLookup collision rule
         run: node scripts/check-drop-lookup.ts
 
+      # psychrometrics.py computes figures that end up in published prose, so
+      # its constants are pinned against values already in the CO2 post. Pure
+      # arithmetic, no artifact, no build.
+      - name: Test the psychrometric helpers
+        run: ./scripts/test-psychrometrics.py
+
   # studio/ is a separate project with its own package manager, its own ESLint
   # config, and its own Prettier config, and the root's tooling explicitly
   # ignores it. Nothing verified it until this job existed, which is how the

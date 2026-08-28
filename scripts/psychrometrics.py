@@ -3,11 +3,12 @@
 # Psychrometric helpers: saturation vapor pressure, VPD, relative humidity and
 # dew point, plus the directional rounding that threshold cells require.
 #
-# Shared rather than inlined into check-threshold-tables.py because the same
-# math is needed in two places with different orchestration around it. The
-# checker verifies published cells; drafting a new table computes them. Those
-# are different jobs, so they stay separate, but the equation underneath is one
-# thing and lives here.
+# The figures in the cultivation posts are computed here rather than by hand.
+# A Magnus result worked out on paper looks exactly like one worked out wrong,
+# and the published cell is the only place the difference shows up.
+#
+# test-psychrometrics.py pins these constants against values already in the
+# posts, so changing the equation cannot silently contradict live prose.
 #
 # The Magnus equation is an empirical curve fit, not a derivation. The three
 # constants come from fitting measured vapor pressure against temperature:
@@ -62,7 +63,7 @@ def dew_point_celsius(temperature_celsius, relative_humidity):
 def relative_humidity_at_dew_point(dew_point_fahrenheit, room_fahrenheit):
     """Fraction of RH that a given dew point produces in a room at room temp.
 
-    This is the inverse a threshold check needs: given a dew point we published
+    The inverse of the usual direction: given a dew point we published
     as a ceiling, what humidity does it actually imply in that room?
     """
     return saturation_vapor_pressure_kpa(

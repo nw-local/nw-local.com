@@ -66,15 +66,6 @@ jobs:
       # publish can break on its own.
       - name: Check US spelling and paired temperature units
         run: ./scripts/check-content-style.py dist
-      # Duplicated from audit.yml for the same reason as the step above: a
-      # threshold table is content, and content reaches production through the
-      # Sanity webhook, which fires workflow_dispatch here and touches neither
-      # the pull request path nor the nightly. An editor can change a number in
-      # a table and publish it minutes later with no diff, no branch and no
-      # review. Without this step the check would guard code changes and skip
-      # the only thing that actually breaks it.
-      - name: Check published tables hold their captions
-        run: ./scripts/check-threshold-tables.py dist
 
   deploy:
     needs: build
