@@ -958,6 +958,64 @@ footer {
   margin-top: 1rem;
 }
 
+/* Contents list for a long post. A <details> rather than a plain list so the
+   reader can fold 14 entries away, open by default because a collapsed list
+   hides the navigation it exists to provide.
+
+   The marker is styled rather than hidden: a summary with no affordance reads
+   as a heading, and nobody clicks a heading. */
+.post-toc {
+  margin: 0 0 2rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-surface);
+}
+
+.post-toc > summary {
+  cursor: pointer;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.post-toc > summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.post-toc ol {
+  margin: 0.85rem 0 0;
+  padding-left: 1.25rem;
+  list-style: decimal;
+  color: var(--text-secondary);
+}
+
+/* Nested h3 entries continue the numbering of their own level rather than the
+   parent's, so they read as sub-steps instead of a second flat list. */
+.post-toc ol ol {
+  margin: 0.35rem 0 0.35rem;
+  list-style: lower-alpha;
+}
+
+.post-toc li {
+  margin-bottom: 0.35rem;
+  line-height: 1.5;
+}
+
+.post-toc a {
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+.post-toc a:hover,
+.post-toc a:focus-visible {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
 /* Provenance for a printed or PDF'd article. Hidden on screen, where the
    address bar already answers the question. */
 .print-source {
@@ -1607,6 +1665,12 @@ footer {
   .post-hero,
   .author-byline-avatar,
   .post-tags {
+    display: none;
+  }
+
+  /* Every entry is a fragment link to a page the reader is already holding, so
+     the list navigates nothing on paper and costs most of the first sheet. */
+  .post-toc {
     display: none;
   }
 
