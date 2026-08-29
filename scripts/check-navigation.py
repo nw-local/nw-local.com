@@ -42,9 +42,9 @@ footer_source = FOOTER_COMPONENT.read_text()
 expected_top_navigation = [
     ('"/"', "Home"),
     ("DROP_BASE_PATH", "Drops"),
+    ('"/strains"', "Strains"),
     ('"/products"', "Products"),
     ('"/find-us"', "Find Us"),
-    ('"/strains"', "Strains"),
     ('"/blog"', "Blog"),
     ('"/about-us"', "About"),
     ('"/contact"', "Contact"),
@@ -54,9 +54,9 @@ expected_footer_groups = [
         "Explore",
         [
             ("{DROP_BASE_PATH}", "Drops"),
+            ('"/strains"', "Strains"),
             ('"/products"', "Products"),
             ('"/find-us"', "Find Us"),
-            ('"/strains"', "Strains"),
         ],
     ),
     (
