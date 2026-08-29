@@ -1,5 +1,6 @@
 ---
 import type { SiteSettings } from "../lib/sanity";
+import { DROP_BASE_PATH } from "../lib/drops";
 
 interface Props {
   settings: SiteSettings | null;
@@ -10,26 +11,44 @@ const { settings } = Astro.props;
 
 <footer>
   <div class="footer-content">
-    <div class="footer-nav">
-      <a href="/">Home</a>
-      <a href="/about-us">About</a>
-      <a href="/strains">Strains</a>
-      <a href="/products">Products</a>
-      <a href="/find-us">Find Us</a>
-      <a href="/blog">Blog</a>
-      <a href="/terpenes">Terpenes</a>
-      <a href="/glossary">Glossary</a>
-      <a href="/contact">Contact</a>
-      <a href="/retailers">Wholesale</a>
-    </div>
-    <div class="footer-contact">
-      {settings?.contactEmail && <a href={`mailto:${settings.contactEmail}`}>{settings.contactEmail}</a>}
-      {settings?.contactPhone && <a href={`tel:${settings.contactPhone}`}>{settings.contactPhone}</a>}
-    </div>
-    <div class="footer-social">
-      {settings?.socialLinks?.instagram && <a href={settings.socialLinks.instagram} target="_blank" rel="noopener">Instagram</a>}
-      {settings?.socialLinks?.facebook && <a href={settings.socialLinks.facebook} target="_blank" rel="noopener">Facebook</a>}
-      {settings?.socialLinks?.twitter && <a href={settings.socialLinks.twitter} target="_blank" rel="noopener">Twitter</a>}
+    <nav class="footer-nav" aria-labelledby="footer-nav-heading">
+      <h2 id="footer-nav-heading" class="visually-hidden">Site navigation</h2>
+      <div class="footer-nav-group">
+        <h3>Explore</h3>
+        <ul class="footer-nav-links">
+          <li><a href={DROP_BASE_PATH}>Drops</a></li>
+          <li><a href="/products">Products</a></li>
+          <li><a href="/find-us">Find Us</a></li>
+          <li><a href="/strains">Strains</a></li>
+        </ul>
+      </div>
+      <div class="footer-nav-group">
+        <h3>Resources</h3>
+        <ul class="footer-nav-links">
+          <li><a href="/blog">Blog</a></li>
+          <li><a href="/glossary">Glossary</a></li>
+          <li><a href="/terpenes">Terpenes</a></li>
+        </ul>
+      </div>
+      <div class="footer-nav-group">
+        <h3>Company</h3>
+        <ul class="footer-nav-links">
+          <li><a href="/about-us">About</a></li>
+          <li><a href="/contact">Contact</a></li>
+          <li><a href="/retailers">Wholesale</a></li>
+        </ul>
+      </div>
+    </nav>
+    <div class="footer-connect">
+      <div class="footer-contact">
+        {settings?.contactEmail && <a href={`mailto:${settings.contactEmail}`}>{settings.contactEmail}</a>}
+        {settings?.contactPhone && <a href={`tel:${settings.contactPhone}`}>{settings.contactPhone}</a>}
+      </div>
+      <div class="footer-social">
+        {settings?.socialLinks?.instagram && <a href={settings.socialLinks.instagram} target="_blank" rel="noopener">Instagram</a>}
+        {settings?.socialLinks?.facebook && <a href={settings.socialLinks.facebook} target="_blank" rel="noopener">Facebook</a>}
+        {settings?.socialLinks?.twitter && <a href={settings.socialLinks.twitter} target="_blank" rel="noopener">Twitter</a>}
+      </div>
     </div>
     <p class="footer-legal">&copy; {new Date().getFullYear()} Northwest Local Cannabis. All rights reserved.</p>
   </div>

@@ -46,6 +46,9 @@ jobs:
       - name: Test the psychrometric helpers
         run: ./scripts/test-psychrometrics.py
 
+      - name: Check the top and footer navigation structure
+        run: make check-navigation
+
   # studio/ is a separate project with its own package manager, its own ESLint
   # config, and its own Prettier config, and the root's tooling explicitly
   # ignores it. Nothing verified it until this job existed, which is how the
