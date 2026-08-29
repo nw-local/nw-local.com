@@ -86,6 +86,7 @@ Run `make` (no args) to print the full target list with descriptions.
 | Check content style | `make check-content-style` | asserts US spelling and that every temperature carries °F and °C, in that order |
 | Check heading anchors | `make check-anchors` | asserts section anchor ids are unique per page          |
 | Check drop lookup   | `make check-drop-lookup` | asserts the drop collision rule holds whatever order Sanity returns rows in |
+| Check navigation    | `make check-navigation` | asserts the top and footer navigation order and grouping |
 | Test psychrometrics | `make test-psychrometrics` | unit tests for the Magnus helpers; needs no build |
 | Studio lint         | `cd studio && yarn lint` | separate project; the root's ESLint ignores it   |
 | Studio type check   | `cd studio && yarn typecheck` |                                             |
