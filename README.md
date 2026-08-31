@@ -88,6 +88,7 @@ Run `make` (no args) to print the full target list with descriptions.
 | Check drop lookup   | `make check-drop-lookup` | asserts the drop collision rule holds whatever order Sanity returns rows in |
 | Check navigation    | `make check-navigation` | asserts the top and footer navigation order and grouping |
 | Test psychrometrics | `make test-psychrometrics` | unit tests for the Magnus helpers; needs no build |
+| Sanity doc history  | `make sanity-history` | pull a document's revision history (vars: `DOC`, `QUERY`, `MATCH`, `RAW`) |
 | Studio lint         | `cd studio && yarn lint` | separate project; the root's ESLint ignores it   |
 | Studio type check   | `cd studio && yarn typecheck` |                                             |
 | Studio format       | `cd studio && yarn format` | Prettier; `format:check` verifies instead      |
