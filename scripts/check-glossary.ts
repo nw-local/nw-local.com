@@ -11,6 +11,14 @@ import {
   glossaryReadingMinutes,
   validateGlossarySummaries,
 } from "../src/lib/glossary.ts";
+import {
+  filterGlossaryTerms,
+  normalizeGlossarySearchText,
+  parseGlossaryFilters,
+  serializeGlossaryFilters,
+  type GlossaryFilters,
+  type GlossarySearchRecord,
+} from "../src/lib/glossary-search.ts";
 import type { GlossaryTermSummary, PortableText } from "../src/lib/sanity.ts";
 
 type GlossaryTermOverrides = Partial<Omit<GlossaryTermSummary, "category">> & {
@@ -56,6 +64,10 @@ function expectEqual( label: string, actual: unknown, expected: unknown ): void 
   }
 }
 
+function expectIds( label: string, actual: string[], expected: string[] ): void {
+  expectEqual( label, JSON.stringify( actual ), JSON.stringify( expected ) );
+}
+
 function expectThrows( label: string, action: () => void, expectedMessage: string ): void {
   try {
     action();
@@ -90,6 +102,97 @@ expectEqual( "200 words is one minute", glossaryReadingMinutes( bodyWithWords( 2
 expectEqual( "201 words rounds up", glossaryReadingMinutes( bodyWithWords( 201 ) ), 2 );
 expectEqual( "present textless body is one minute", glossaryReadingMinutes( bodyWithWords( 0 ) ), 1 );
 expectEqual( "missing body has no reading time", glossaryReadingMinutes( undefined ), undefined );
+
+const searchTerms: GlossarySearchRecord[] = [
+  {
+    _id: "ec",
+    term: "Electrical conductivity (EC)",
+    shortDefinition: "A measure of how well dissolved fertilizer ions conduct electricity.",
+    aliases: [ "EC", "conductivity", "solution conductivity" ],
+    category: "nutrition",
+  },
+  {
+    _id: "vpd",
+    term: "Vapor pressure deficit (VPD)",
+    shortDefinition: "The difference between saturated and actual vapor pressure in the air.",
+    aliases: [ "vapour pressure deficit" ],
+    category: "environment",
+  },
+  {
+    _id: "xylem",
+    term: "Xylem",
+    shortDefinition: "Plant tissue that transports water and dissolved minerals upward.",
+    category: "plant-biology",
+  },
+];
+
+function filter( overrides: Partial<GlossaryFilters> ): string[] {
+  return filterGlossaryTerms( searchTerms, { query: "", ...overrides });
+}
+
+expectIds( "canonical term", filter({ query: "electrical conductivity" }), [ "ec" ] );
+expectIds( "alias", filter({ query: "EC" }), [ "ec" ] );
+expectIds( "definition", filter({ query: "dissolved fertilizer" }), [ "ec" ] );
+expectIds( "category label", filter({ query: "nutrition" }), [ "ec" ] );
+expectIds( "accent and punctuation normalization", filter({ query: "vapor-pressure" }), [ "vpd" ] );
+expectIds( "combined filters", filter({
+  query: "conductivity",
+  letter: "e",
+  category: "nutrition",
+}), [ "ec" ] );
+expectIds( "zero results", filter({ query: "not-present" }), [] );
+expectIds( "source order is retained", filter({ query: "dissolved" }), [ "ec", "xylem" ] );
+expectEqual(
+  "accent and punctuation normalize to searchable spaces",
+  normalizeGlossarySearchText( "Vápor-pressure" ),
+  "vapor pressure",
+);
+expectIds(
+  "precomputed DOM metadata",
+  filterGlossaryTerms( [ {
+    _id: "dom-ec",
+    term: "Electrical conductivity (EC)",
+    shortDefinition: "",
+    category: "nutrition",
+    initial: "e",
+    searchText: "electrical conductivity ec solution nutrition",
+  } ], { query: "solution", letter: "e", category: "nutrition" }),
+  [ "dom-ec" ],
+);
+
+const parsedFilters = parseGlossaryFilters(
+  new URLSearchParams( "q=conductivity&letter=e&category=nutrition" ),
+);
+expectEqual(
+  "valid URL filters parse",
+  JSON.stringify( parsedFilters ),
+  JSON.stringify({ query: "conductivity", letter: "e", category: "nutrition" }),
+);
+expectEqual(
+  "filters round trip",
+  serializeGlossaryFilters( parsedFilters ).toString(),
+  "q=conductivity&letter=e&category=nutrition",
+);
+expectEqual(
+  "unknown category is rejected",
+  JSON.stringify( parseGlossaryFilters( new URLSearchParams( "category=unknown" ) ) ),
+  JSON.stringify({ query: "" }),
+);
+expectEqual(
+  "multi-character letter is rejected",
+  JSON.stringify( parseGlossaryFilters( new URLSearchParams( "letter=ec" ) ) ),
+  JSON.stringify({ query: "" }),
+);
+expectEqual(
+  "empty values are omitted",
+  serializeGlossaryFilters({ query: "   " }).toString(),
+  "",
+);
+expectEqual(
+  "invalid values are not serialized",
+  serializeGlossaryFilters({ query: "", letter: "ec", category: "unknown" }).toString(),
+  "",
+);
 
 if( failures.length > 0 ) {
   console.error( "Glossary contract violated:" );

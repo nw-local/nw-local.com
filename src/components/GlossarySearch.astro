@@ -1,0 +1,330 @@
+---
+import {
+  GLOSSARY_CATEGORIES,
+  glossaryCategoryLabel,
+} from "../../shared/glossary-categories";
+import {
+  glossarySearchText,
+  normalizeGlossarySearchText,
+} from "../lib/glossary-search";
+import type { GlossaryTermSummary } from "../lib/sanity";
+import GlossaryFeaturedCard from "./GlossaryFeaturedCard.astro";
+
+interface Props {
+  terms: readonly GlossaryTermSummary[]
+}
+
+const { terms } = Astro.props;
+const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split( "" );
+const featuredTerms = terms.filter( term => term.featured );
+const availableLetters = new Set(
+  terms.map( term => normalizeGlossarySearchText( term.term ).charAt( 0 ) ),
+);
+const availableCategories = new Set( terms.map( term => term.category ) );
+---
+
+<section class="glossary-search" data-glossary-search>
+  <div class="glossary-search-controls" aria-label="Glossary filters">
+    <div class="glossary-search-row">
+      <div class="glossary-search-field">
+        <label for="glossary-query">Search terms and definitions</label>
+        <input
+          id="glossary-query"
+          type="search"
+          placeholder="Try EC, dryback, or vapor pressure"
+          autocomplete="off"
+          aria-controls="glossary-directory"
+          data-glossary-query
+        />
+      </div>
+      <p class="glossary-result-count" aria-live="polite" data-glossary-result-count>
+        {terms.length} {terms.length === 1 ? "term" : "terms"}
+      </p>
+      <button type="button" class="glossary-clear" data-glossary-clear hidden>
+        Clear filters
+      </button>
+    </div>
+
+    <fieldset class="glossary-filter-group glossary-letter-filter">
+      <legend>Starts with</legend>
+      <div class="glossary-letter-rail">
+        <button
+          type="button"
+          data-glossary-letter
+          data-filter-value=""
+          aria-pressed="true"
+          aria-controls="glossary-directory"
+        >All</button>
+        {alphabet.map( letter => (
+          <button
+            type="button"
+            data-glossary-letter
+            data-filter-value={letter.toLowerCase()}
+            aria-pressed="false"
+            aria-controls="glossary-directory"
+            disabled={!availableLetters.has( letter.toLowerCase() )}
+          >{letter}</button>
+        ) )}
+      </div>
+    </fieldset>
+
+    <fieldset class="glossary-filter-group glossary-category-filter">
+      <legend>Topic</legend>
+      <div class="glossary-category-rail">
+        <button
+          type="button"
+          data-glossary-category
+          data-filter-value=""
+          aria-pressed="true"
+          aria-controls="glossary-directory"
+        >All topics</button>
+        {GLOSSARY_CATEGORIES.map( category => (
+          <button
+            type="button"
+            data-glossary-category
+            data-filter-value={category.value}
+            aria-pressed="false"
+            aria-controls="glossary-directory"
+            disabled={!availableCategories.has( category.value )}
+          >{category.title}</button>
+        ) )}
+      </div>
+    </fieldset>
+  </div>
+
+  {featuredTerms.length > 0 && (
+    <section class="glossary-featured-guides" data-glossary-featured>
+      <div class="glossary-directory-heading">
+        <p class="glossary-directory-kicker">Selected reference articles</p>
+        <h2>In-depth guides</h2>
+      </div>
+      <div class="glossary-featured-grid">
+        {featuredTerms.map( term => <GlossaryFeaturedCard {...term} /> )}
+      </div>
+    </section>
+  )}
+
+  <section class="glossary-directory-section">
+    <div class="glossary-directory-heading">
+      <p class="glossary-directory-kicker">Quick reference</p>
+      <h2>All terms</h2>
+    </div>
+
+    <div class="glossary-directory-columns" aria-hidden="true">
+      <span>Term</span>
+      <span>Definition</span>
+      <span>Category</span>
+    </div>
+
+    <dl class="glossary-index" id="glossary-directory">
+      {terms.map( term => {
+        const normalizedTerm = normalizeGlossarySearchText( term.term );
+        return (
+          <div
+            class="glossary-index-entry"
+            data-glossary-entry
+            data-glossary-id={term._id}
+            data-glossary-term={term.term}
+            data-glossary-initial={normalizedTerm.charAt( 0 )}
+            data-glossary-category={term.category}
+            data-glossary-search-text={glossarySearchText( term )}
+          >
+            <dt><a href={`/glossary/${term.slug.current}`}>{term.term}</a></dt>
+            <dd class="glossary-index-definition">{term.shortDefinition}</dd>
+            <dd class="glossary-index-category">{glossaryCategoryLabel( term.category )}</dd>
+          </div>
+        );
+      })}
+    </dl>
+
+    <div class="glossary-empty" data-glossary-empty hidden>
+      <p>No terms match those filters. Clear a filter or try another search.</p>
+    </div>
+  </section>
+
+  <p class="glossary-index-aside">
+    Looking for terpenes? They have <a href="/terpenes">their own section</a>.
+  </p>
+</section>
+
+<script>
+  import {
+    filterGlossaryTerms,
+    normalizeGlossarySearchText,
+    parseGlossaryFilters,
+    serializeGlossaryFilters,
+    type GlossaryFilters,
+    type GlossarySearchRecord,
+  } from "../lib/glossary-search";
+
+  interface GlossaryDirectoryEntry {
+    element: HTMLElement
+    record: GlossarySearchRecord
+  }
+
+  const searchRootCandidate = document.querySelector( "[data-glossary-search]" );
+  if( !( searchRootCandidate instanceof HTMLElement ) ) {
+    throw new Error( "Glossary search root is missing." );
+  }
+  const searchRoot = searchRootCandidate;
+
+  const queryInputCandidate = searchRoot.querySelector( "[data-glossary-query]" );
+  if( !( queryInputCandidate instanceof HTMLInputElement ) ) {
+    throw new Error( "Glossary search input is missing." );
+  }
+  const queryInput = queryInputCandidate;
+
+  const resultCountCandidate = searchRoot.querySelector( "[data-glossary-result-count]" );
+  if( !( resultCountCandidate instanceof HTMLElement ) ) {
+    throw new Error( "Glossary result count is missing." );
+  }
+  const resultCount = resultCountCandidate;
+
+  const clearButtonCandidate = searchRoot.querySelector( "[data-glossary-clear]" );
+  if( !( clearButtonCandidate instanceof HTMLButtonElement ) ) {
+    throw new Error( "Glossary clear button is missing." );
+  }
+  const clearButton = clearButtonCandidate;
+
+  const emptyStateCandidate = searchRoot.querySelector( "[data-glossary-empty]" );
+  if( !( emptyStateCandidate instanceof HTMLElement ) ) {
+    throw new Error( "Glossary empty state is missing." );
+  }
+  const emptyState = emptyStateCandidate;
+
+  const featuredGuidesCandidate = searchRoot.querySelector( "[data-glossary-featured]" );
+  if( featuredGuidesCandidate !== null && !( featuredGuidesCandidate instanceof HTMLElement ) ) {
+    throw new Error( "Glossary featured guide container is invalid." );
+  }
+  const featuredGuides = featuredGuidesCandidate instanceof HTMLElement
+    ? featuredGuidesCandidate
+    : undefined;
+
+  function collectButtons( selector: string ): HTMLButtonElement[] {
+    return Array.from( searchRoot.querySelectorAll( selector ) ).map( element => {
+      if( !( element instanceof HTMLButtonElement ) ) {
+        throw new Error( `Glossary filter ${selector} must be a button.` );
+      }
+      return element;
+    });
+  }
+
+  const letterButtons = collectButtons( "[data-glossary-letter]" );
+  const categoryButtons = collectButtons( "[data-glossary-category]" );
+  const directoryEntries: GlossaryDirectoryEntry[] = Array.from(
+    searchRoot.querySelectorAll( "[data-glossary-entry]" ),
+  ).map( element => {
+    if( !( element instanceof HTMLElement ) ) {
+      throw new Error( "Glossary directory entries must be HTML elements." );
+    }
+
+    const id = element.dataset.glossaryId;
+    const term = element.dataset.glossaryTerm;
+    const initial = element.dataset.glossaryInitial;
+    const category = element.dataset.glossaryCategory;
+    const normalizedSearchText = element.dataset.glossarySearchText;
+    if( !id || !term || !initial || !category || !normalizedSearchText ) {
+      throw new Error( "Glossary directory entry is missing search metadata." );
+    }
+
+    return {
+      element,
+      record: {
+        _id: id,
+        term,
+        shortDefinition: "",
+        category,
+        initial,
+        searchText: normalizedSearchText,
+      },
+    };
+  });
+
+  let filters: GlossaryFilters = parseGlossaryFilters(
+    new URLSearchParams( window.location.search ),
+  );
+
+  function hasActiveFilters(): boolean {
+    return Boolean(
+      normalizeGlossarySearchText( filters.query )
+      || filters.letter
+      || filters.category,
+    );
+  }
+
+  function updatePressedState(
+    buttons: readonly HTMLButtonElement[],
+    activeValue: string | undefined,
+  ): void {
+    for( const button of buttons ) {
+      const buttonValue = button.dataset.filterValue ?? "";
+      button.setAttribute( "aria-pressed", String( buttonValue === ( activeValue ?? "" ) ) );
+    }
+  }
+
+  function render(): void {
+    const matchingIds = new Set(
+      filterGlossaryTerms( directoryEntries.map( entry => entry.record ), filters ),
+    );
+
+    for( const entry of directoryEntries ) {
+      entry.element.hidden = !matchingIds.has( entry.record._id );
+    }
+
+    const matchCount = matchingIds.size;
+    const active = hasActiveFilters();
+    queryInput.value = filters.query;
+    resultCount.textContent = `${matchCount} ${matchCount === 1 ? "term" : "terms"}`;
+    clearButton.hidden = !active;
+    emptyState.hidden = matchCount !== 0;
+    if( featuredGuides ) featuredGuides.hidden = active;
+    updatePressedState( letterButtons, filters.letter );
+    updatePressedState( categoryButtons, filters.category );
+  }
+
+  function updateUrl( method: "push" | "replace" ): void {
+    const params = serializeGlossaryFilters( filters );
+    const query = params.toString();
+    const nextUrl = `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`;
+    if( method === "push" ) history.pushState({}, "", nextUrl );
+    else history.replaceState({}, "", nextUrl );
+  }
+
+  queryInput.addEventListener( "input", () => {
+    filters = { ...filters, query: queryInput.value };
+    render();
+    updateUrl( "replace" );
+  });
+
+  for( const button of letterButtons ) {
+    button.addEventListener( "click", () => {
+      const letter = button.dataset.filterValue || undefined;
+      filters = { ...filters, letter };
+      render();
+      updateUrl( "push" );
+    });
+  }
+
+  for( const button of categoryButtons ) {
+    button.addEventListener( "click", () => {
+      const category = button.dataset.filterValue || undefined;
+      filters = { ...filters, category };
+      render();
+      updateUrl( "push" );
+    });
+  }
+
+  clearButton.addEventListener( "click", () => {
+    filters = { query: "" };
+    render();
+    updateUrl( "push" );
+    queryInput.focus();
+  });
+
+  window.addEventListener( "popstate", () => {
+    filters = parseGlossaryFilters( new URLSearchParams( window.location.search ) );
+    render();
+  });
+
+  render();
+</script>

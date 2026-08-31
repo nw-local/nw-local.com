@@ -1,0 +1,42 @@
+---
+import { glossaryCategoryLabel } from "../../shared/glossary-categories";
+import { validateGlossarySummaries } from "../lib/glossary";
+import { urlFor } from "../lib/image";
+import type { GlossaryTermSummary } from "../lib/sanity";
+
+type Props = GlossaryTermSummary;
+
+const term = Astro.props;
+
+if( !term.featured ) {
+  throw new Error( `Glossary term ${term._id} was rendered as a featured guide without featured=true.` );
+}
+
+validateGlossarySummaries( [ term ] );
+
+const image = term.image;
+if( !image?.asset || !image.alt?.trim() ) {
+  throw new Error( `Featured glossary term ${term._id} has no renderable image.` );
+}
+
+const imageUrl = urlFor( image );
+---
+
+<a href={`/glossary/${term.slug.current}`} class="card glossary-featured-card">
+  <div class="card-image glossary-featured-image">
+    <img
+      src={imageUrl.width( 720 ).height( 450 ).format( "webp" ).url()}
+      srcset={`${imageUrl.width( 420 ).height( 263 ).format( "webp" ).url()} 420w, ${imageUrl.width( 720 ).height( 450 ).format( "webp" ).url()} 720w, ${imageUrl.width( 960 ).height( 600 ).format( "webp" ).url()} 960w`}
+      sizes="(min-width: 960px) 33vw, (min-width: 640px) 50vw, 100vw"
+      alt={image.alt}
+      width="720"
+      height="450"
+      loading="lazy"
+    />
+  </div>
+  <div class="card-body glossary-featured-body">
+    <p class="glossary-category-label">{glossaryCategoryLabel( term.category )}</p>
+    <h3>{term.term}</h3>
+    <p>{term.shortDefinition}</p>
+  </div>
+</a>
