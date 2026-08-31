@@ -3,7 +3,7 @@ export
 
 .DEFAULT_GOAL := help
 
-.PHONY: help install dev build preview studio deploy-studio upload-image prep-images render-figures check-nightly check-analytics check-robots check-content-style check-anchors check-drop-lookup check-navigation lint format upgrade upgrade-latest
+.PHONY: help install dev build preview studio deploy-studio upload-image prep-images render-figures check-nightly check-analytics check-robots check-content-style check-anchors check-drop-lookup check-navigation sanity-history lint format upgrade upgrade-latest
 
 help: ## Show this help message with all available targets
 	@grep -hE '^[a-zA-Z_-]+:.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
@@ -59,6 +59,9 @@ check-drop-lookup: ## Verify the drop collision rule: strongest status wins, wha
 
 check-navigation: ## Verify the top and footer navigation structure
 	@python3 scripts/check-navigation.py
+
+sanity-history: ## Pull a document's revision history from Sanity (vars: DOC, QUERY, MATCH, RAW)
+	@node scripts/sanity-history.ts "$(DOC)" "$(QUERY)"
 
 lint: ## Run ESLint
 	yarn lint
