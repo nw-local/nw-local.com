@@ -1712,6 +1712,275 @@ footer {
   }
 }
 
+/* --- Glossary reference entry --- */
+
+.glossary-reference {
+  width: 100%;
+}
+
+.glossary-entry-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(18rem, 0.8fr);
+  gap: clamp(2rem, 5vw, 5rem);
+  align-items: center;
+  margin-bottom: 3.5rem;
+  padding: 1rem 0 2.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.glossary-entry-hero--text-only {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.glossary-entry-hero--text-only .glossary-entry-hero-copy {
+  max-width: 54rem;
+}
+
+.glossary-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.7rem;
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.glossary-breadcrumb a {
+  color: var(--accent);
+}
+
+.glossary-breadcrumb a:focus-visible,
+.glossary-entry-contents a:focus-visible,
+.glossary-related-terms a:focus-visible,
+.glossary-mentions a:focus-visible,
+.glossary-back a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.glossary-entry-hero h1 {
+  --heading-base-size: clamp(2.2rem, 5vw, 4.25rem);
+  overflow-wrap: anywhere;
+}
+
+.glossary-lede {
+  max-width: 46rem;
+  margin: 1rem 0 0;
+  color: var(--text-emphasis);
+  font-size: clamp(1.05rem, 1.6vw, 1.25rem);
+  line-height: 1.55;
+}
+
+.glossary-entry-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 1.25rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.glossary-specimen {
+  margin: 0;
+  overflow: hidden;
+  aspect-ratio: 3 / 2;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 0;
+}
+
+.glossary-specimen img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.glossary-entry-layout {
+  display: grid;
+  grid-template-columns: 13rem minmax(0, var(--content-width));
+  gap: clamp(2.5rem, 6vw, 5rem);
+  align-items: start;
+}
+
+.glossary-entry-layout--without-contents {
+  grid-template-columns: minmax(0, var(--content-width));
+}
+
+.glossary-entry-contents {
+  position: sticky;
+  top: 2rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--border);
+}
+
+.glossary-entry-contents h2,
+.glossary-support-heading {
+  --heading-base-size: 0.7rem;
+  --heading-size-boost: 1;
+  --heading-stretch-x: 1;
+  margin: 0;
+  max-width: none;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transform: none;
+  -webkit-text-stroke: 0;
+}
+
+.glossary-entry-contents ol,
+.glossary-related-terms,
+.glossary-mentions {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.glossary-entry-contents ol {
+  margin-top: 0.75rem;
+}
+
+.glossary-entry-contents li + li {
+  margin-top: 0.55rem;
+}
+
+.glossary-entry-contents-level-3 {
+  padding-left: 0.85rem;
+}
+
+.glossary-entry-contents a {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.glossary-entry-contents a:hover {
+  color: var(--accent);
+}
+
+.glossary-entry-reading {
+  min-width: 0;
+}
+
+.glossary-entry-reading .portable-text h2,
+.glossary-entry-reading .portable-text h3 {
+  scroll-margin-top: 2rem;
+}
+
+.glossary-entry-reading .portable-text h2:target,
+.glossary-entry-reading .portable-text h3:target {
+  color: var(--accent);
+}
+
+.glossary-support-section {
+  margin-top: 3.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+}
+
+.glossary-related-terms {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem 1.5rem;
+  margin-top: 1rem;
+}
+
+.glossary-related-terms a {
+  color: var(--text-emphasis);
+  text-decoration: underline;
+  text-decoration-color: var(--border);
+  text-underline-offset: 0.2em;
+}
+
+.glossary-related-terms a:hover {
+  color: var(--accent);
+  text-decoration-color: currentColor;
+}
+
+.glossary-mentions {
+  margin-top: 0.5rem;
+}
+
+.glossary-mentions li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.glossary-mention-meta {
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.glossary-back {
+  margin-top: 2.5rem;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 900px) {
+  .glossary-entry-hero {
+    grid-template-columns: minmax(0, 1.15fr) minmax(16rem, 0.85fr);
+    gap: 2rem;
+  }
+
+  .glossary-entry-layout {
+    grid-template-columns: 11rem minmax(0, var(--content-width));
+    gap: 2.5rem;
+  }
+
+  .glossary-entry-layout--without-contents {
+    grid-template-columns: minmax(0, var(--content-width));
+  }
+}
+
+@media (max-width: 700px) {
+  .glossary-entry-hero,
+  .glossary-entry-hero--text-only {
+    grid-template-columns: minmax(0, 1fr);
+    margin-bottom: 2.5rem;
+    padding-top: 0.5rem;
+  }
+
+  .glossary-specimen {
+    max-width: 32rem;
+  }
+
+  .glossary-entry-layout,
+  .glossary-entry-layout--without-contents {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2rem;
+  }
+
+  .glossary-entry-contents {
+    position: static;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .glossary-entry-contents ol {
+    columns: 2 9rem;
+    column-gap: 1.5rem;
+  }
+
+  .glossary-entry-contents li {
+    break-inside: avoid;
+  }
+}
+
 /* --- Animations --- */
 
 @keyframes glow-pulse {
@@ -2041,6 +2310,53 @@ footer {
 
   .post-article {
     max-width: none;
+  }
+
+  /* The contents rail is screen navigation. The article itself returns to one
+     printable column, while the compact specimen image remains beside the
+     definition as evidence rather than expanding into a full-page hero. */
+  .glossary-entry-hero,
+  .glossary-entry-hero--text-only {
+    grid-template-columns: minmax(0, 1fr) 2.5in;
+    gap: 0.25in;
+    margin-bottom: 0.25in;
+    padding: 0 0 0.2in;
+  }
+
+  .glossary-entry-hero--text-only {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .glossary-entry-hero h1 {
+    --heading-base-size: 20pt;
+  }
+
+  .glossary-entry-hero .glossary-lede {
+    margin-top: 0.08in;
+    font-size: 11pt;
+  }
+
+  .glossary-entry-meta {
+    margin-top: 0.1in;
+    font-size: 7.5pt;
+  }
+
+  .glossary-specimen {
+    break-inside: avoid;
+  }
+
+  .glossary-entry-layout,
+  .glossary-entry-layout--without-contents {
+    display: block;
+  }
+
+  .glossary-entry-contents,
+  .glossary-back {
+    display: none;
+  }
+
+  .glossary-support-section {
+    break-inside: avoid;
   }
 
   /* Chosen as decoration rather than content: the hero photograph would consume

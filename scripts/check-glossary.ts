@@ -11,6 +11,7 @@ import {
   glossaryReadingMinutes,
   validateGlossarySummaries,
 } from "../src/lib/glossary.ts";
+import { buildDefinedTerm } from "../src/lib/jsonld.ts";
 import {
   filterGlossaryTerms,
   hasActiveGlossaryFilters,
@@ -21,7 +22,11 @@ import {
   type GlossaryFilters,
   type GlossarySearchRecord,
 } from "../src/lib/glossary-search.ts";
-import type { GlossaryTermSummary, PortableText } from "../src/lib/sanity.ts";
+import type {
+  GlossaryTerm,
+  GlossaryTermSummary,
+  PortableText,
+} from "../src/lib/sanity.ts";
 import { readFileSync } from "node:fs";
 
 type GlossaryTermOverrides = Partial<Omit<GlossaryTermSummary, "category">> & {
@@ -62,7 +67,7 @@ function bodyWithWords( wordCount: number ): PortableText {
 const failures: string[] = [];
 
 function expectEqual( label: string, actual: unknown, expected: unknown ): void {
-  if( actual !== expected ) {
+  if( !Object.is( actual, expected ) && JSON.stringify( actual ) !== JSON.stringify( expected ) ) {
     failures.push( `${label}: expected ${JSON.stringify( expected )}, got ${JSON.stringify( actual )}` );
   }
 }
@@ -105,6 +110,51 @@ expectEqual( "200 words is one minute", glossaryReadingMinutes( bodyWithWords( 2
 expectEqual( "201 words rounds up", glossaryReadingMinutes( bodyWithWords( 201 ) ), 2 );
 expectEqual( "present textless body is one minute", glossaryReadingMinutes( bodyWithWords( 0 ) ), 1 );
 expectEqual( "missing body has no reading time", glossaryReadingMinutes( undefined ), undefined );
+
+const ec: GlossaryTerm = {
+  _id: "glossary-ec",
+  term: "Electrical conductivity (EC)",
+  slug: { current: "ec" },
+  shortDefinition: "A measure of how well dissolved fertilizer ions conduct electricity.",
+  aliases: [ "EC", "conductivity" ],
+  category: "nutrition",
+  featured: true,
+  image: {
+    asset: { _id: "image-ec-1600x1000-jpg" },
+    alt: "An electrical conductivity probe immersed in a fertigation reservoir.",
+  },
+  lastReviewedAt: "2026-08-31",
+  hasBody: true,
+  body: [ {
+    _type: "block",
+    style: "normal",
+    children: [ {
+      _type: "span",
+      text: "EC is a process-control signal for nutrient solutions and root zones.",
+    } ],
+  } ],
+  relatedTerms: [ {
+    _id: "glossary-ph",
+    term: "pH",
+    slug: { current: "ph" },
+    shortDefinition: "A logarithmic measure of acidity or alkalinity.",
+    category: "chemistry",
+  } ],
+  mentionedIn: [ {
+    _id: "post-ec",
+    _type: "blogPost",
+    title: "Reading a nutrient solution",
+    slug: { current: "reading-a-nutrient-solution" },
+    publishedAt: "2026-08-31",
+  } ],
+};
+
+const schema = buildDefinedTerm( ec, "https://nw-local.com/" );
+expectEqual( "defined term type", schema[ "@type" ], "DefinedTerm" );
+expectEqual( "canonical name", schema.name, "Electrical conductivity (EC)" );
+expectEqual( "canonical url", schema.url, "https://nw-local.com/glossary/ec/" );
+expectEqual( "description", schema.description, ec.shortDefinition );
+expectEqual( "aliases", schema.alternateName, [ "EC", "conductivity" ] );
 
 const searchTerms: GlossarySearchRecord[] = [
   {

@@ -1,6 +1,9 @@
 import { createClient } from "@sanity/client";
 import type { GlossaryCategory } from "../../shared/glossary-categories";
 import { validateGlossarySummaries, validateGlossaryTerm } from "./glossary";
+import { AUTHOR_BASE_PATH } from "./routes";
+
+export { AUTHOR_BASE_PATH } from "./routes";
 
 const SANITY_PROJECT_ID = import.meta.env.SANITY_PROJECT_ID;
 const SANITY_DATASET = import.meta.env.SANITY_DATASET;
@@ -365,8 +368,6 @@ const AUTHOR_SUMMARY_PROJECTION = `{
 
 // The author route is spelled once. jsonld.ts builds absolute URLs from the same
 // constant, so the HTML href and the JSON-LD url can never drift apart.
-export const AUTHOR_BASE_PATH = "/authors";
-
 export function authorHref( slug: SanitySlug ): string {
   return `${AUTHOR_BASE_PATH}/${slug.current}`;
 }
