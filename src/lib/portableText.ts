@@ -31,3 +31,22 @@ export function childrenToText( children: unknown ): string {
     .map( child => child.text )
     .join( "" );
 }
+
+/**
+ * Concatenates text spans from Portable Text blocks into readable plain text.
+ *
+ * Block-level consumers need the same span walk as inline consumers, but they
+ * also need whitespace between blocks so an ending word and the next block's
+ * opening word remain distinct.
+ */
+export function blocksToText( blocks: readonly unknown[] | undefined ): string {
+  if( !blocks ) return "";
+
+  return blocks
+    .map( block => {
+      if( typeof block !== "object" || block === null || !( "children" in block ) ) return "";
+      return childrenToText( block.children );
+    })
+    .filter( Boolean )
+    .join( " " );
+}

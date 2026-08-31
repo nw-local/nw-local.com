@@ -1,4 +1,6 @@
 import { createClient } from "@sanity/client";
+import type { GlossaryCategory } from "../../shared/glossary-categories";
+import { validateGlossarySummaries, validateGlossaryTerm } from "./glossary";
 
 const SANITY_PROJECT_ID = import.meta.env.SANITY_PROJECT_ID;
 const SANITY_DATASET = import.meta.env.SANITY_DATASET;
@@ -59,6 +61,14 @@ const RETAILER_PROJECTION = `{
   featured,
   productsAvailable[]->{ _id, name, slug, category }
 }`;
+
+// Keep long glossary bodies out of index data. hasBody gives the featured-term
+// contract the one fact it needs without serializing every article at once.
+const GLOSSARY_SUMMARY_PROJECTION = `
+  _id, term, slug, shortDefinition, aliases, category, featured, lastReviewedAt,
+  image { asset->, alt, crop, hotspot },
+  "hasBody": defined(body[0])
+`;
 
 // --- Shared types ---
 
@@ -437,6 +447,20 @@ export interface GlossaryTermSummary {
   term: string;
   slug: SanitySlug;
   shortDefinition: string;
+  aliases?: string[];
+  category: GlossaryCategory;
+  featured?: boolean;
+  image?: SanityImage;
+  lastReviewedAt?: string;
+  hasBody: boolean;
+}
+
+export interface GlossaryRelatedTerm {
+  _id: string;
+  term: string;
+  slug: SanitySlug;
+  shortDefinition: string;
+  category: GlossaryCategory;
 }
 
 // The document types a glossary term can be cited from. Restricted to types
@@ -475,22 +499,27 @@ export interface GlossaryTermMention {
 
 export interface GlossaryTerm extends GlossaryTermSummary {
   body?: PortableText;
+  relatedTerms?: GlossaryRelatedTerm[];
   mentionedIn?: GlossaryTermMention[];
 }
 
 export async function getGlossaryTerms() {
-  return sanityClient.fetch<GlossaryTermSummary[]>(
+  const terms = await sanityClient.fetch<GlossaryTermSummary[]>(
     `*[_type == "glossaryTerm"] | order(lower(term) asc) {
-      _id, term, slug, shortDefinition
+      ${GLOSSARY_SUMMARY_PROJECTION}
     }`,
   );
+
+  validateGlossarySummaries( terms );
+  return terms;
 }
 
 export async function getGlossaryTerm( slug: string ) {
-  return sanityClient.fetch<GlossaryTerm | null>(
+  const term = await sanityClient.fetch<GlossaryTerm | null>(
     `*[_type == "glossaryTerm" && slug.current == $slug][0] {
-      _id, term, slug, shortDefinition,
+      ${GLOSSARY_SUMMARY_PROJECTION},
       body[] ${PORTABLE_TEXT_PROJECTION},
+      relatedTerms[]->{ _id, term, slug, shortDefinition, category },
       "mentionedIn": *[_type in $mentionTypes && references(^._id)]
         | order(coalesce(publishedAt, "") desc, coalesce(title, name) asc) {
         _id, _type, slug, publishedAt,
@@ -499,6 +528,9 @@ export async function getGlossaryTerm( slug: string ) {
     }`,
     { slug, mentionTypes: GLOSSARY_MENTION_TYPES },
   );
+
+  if( term ) validateGlossaryTerm( term );
+  return term;
 }
 
 // --- Retailers ---
