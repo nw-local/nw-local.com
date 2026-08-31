@@ -1739,8 +1739,11 @@ footer {
 .glossary-breadcrumb {
   display: flex;
   flex-wrap: wrap;
+  justify-content: flex-start;
   gap: 0.4rem;
+  max-width: none;
   margin-bottom: 0.7rem;
+  padding: 0;
   color: var(--text-secondary);
   font-size: 0.7rem;
   font-weight: 700;

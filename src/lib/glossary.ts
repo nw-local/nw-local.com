@@ -14,12 +14,17 @@ export function validateGlossarySummaries(
       );
     }
 
+    if( term.image?.asset && !term.image.alt?.trim() ) {
+      throw new Error(
+        `Glossary term ${term._id} has an image asset but image.alt is missing or blank.`,
+      );
+    }
+
     if( !term.featured ) continue;
 
     const missingFields: string[] = [];
     if( !term.hasBody ) missingFields.push( "body" );
     if( !term.image?.asset ) missingFields.push( "image" );
-    if( !term.image?.alt?.trim() ) missingFields.push( "image.alt" );
     if( !term.lastReviewedAt ) missingFields.push( "lastReviewedAt" );
 
     if( missingFields.length > 0 ) {

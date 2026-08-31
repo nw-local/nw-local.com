@@ -95,6 +95,19 @@ expectThrows(
 );
 
 expectThrows(
+  "non-featured images require alt text",
+  () => validateGlossarySummaries( [ makeTerm({
+    _id: "glossary-non-featured-image",
+    featured: false,
+    image: {
+      asset: { _id: "image-without-alt" },
+      alt: "   ",
+    },
+  }) ] ),
+  "Glossary term glossary-non-featured-image has an image asset but image.alt is missing or blank.",
+);
+
+expectThrows(
   "featured entries report every missing field",
   () => validateGlossarySummaries( [ makeTerm({
     _id: "glossary-featured",
@@ -103,7 +116,7 @@ expectThrows(
     hasBody: false,
     lastReviewedAt: undefined,
   }) ] ),
-  "body, image, image.alt, lastReviewedAt",
+  "body, image, lastReviewedAt",
 );
 
 expectEqual( "200 words is one minute", glossaryReadingMinutes( bodyWithWords( 200 ) ), 1 );
@@ -265,6 +278,18 @@ expectEqual(
 const glossarySearchSource = readFileSync(
   new URL( "../src/components/GlossarySearch.astro", import.meta.url ),
   "utf8",
+);
+const globalCssSource = readFileSync(
+  new URL( "../src/styles/global.css", import.meta.url ),
+  "utf8",
+);
+const breadcrumbRule = globalCssSource.match( /\.glossary-breadcrumb\s*\{([^}]*)\}/ )?.[ 1 ] ?? "";
+expectEqual(
+  "entry breadcrumb resets site navigation layout",
+  /\bpadding:\s*0\s*;/.test( breadcrumbRule )
+    && /\bjustify-content:\s*flex-start\s*;/.test( breadcrumbRule )
+    && /\bmax-width:\s*none\s*;/.test( breadcrumbRule ),
+  true,
 );
 expectEqual(
   "controls are hidden before enhancement",
