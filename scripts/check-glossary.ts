@@ -88,6 +88,7 @@ expectThrows(
 
 expectEqual( "200 words is one minute", glossaryReadingMinutes( bodyWithWords( 200 ) ), 1 );
 expectEqual( "201 words rounds up", glossaryReadingMinutes( bodyWithWords( 201 ) ), 2 );
+expectEqual( "present textless body is one minute", glossaryReadingMinutes( bodyWithWords( 0 ) ), 1 );
 expectEqual( "missing body has no reading time", glossaryReadingMinutes( undefined ), undefined );
 
 if( failures.length > 0 ) {

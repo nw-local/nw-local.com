@@ -55,5 +55,5 @@ export function glossaryReadingMinutes( body: PortableText | undefined ): number
     .filter( Boolean )
     .length;
 
-  return Math.ceil( wordCount / WORDS_PER_MINUTE );
+  return Math.max( 1, Math.ceil( wordCount / WORDS_PER_MINUTE ) );
 }
