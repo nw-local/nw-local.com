@@ -36,6 +36,19 @@ export function normalizeGlossarySearchText( value: string ): string {
     .trim();
 }
 
+export function normalizeGlossaryQueryValue( value: string ): string {
+  const trimmedValue = value.trim();
+  return normalizeGlossarySearchText( trimmedValue ) ? trimmedValue : "";
+}
+
+export function hasActiveGlossaryFilters( filters: GlossaryFilters ): boolean {
+  return Boolean(
+    normalizeGlossaryQueryValue( filters.query )
+    || filters.letter
+    || filters.category,
+  );
+}
+
 export function glossarySearchText( term: GlossarySearchRecord ): string {
   if( term.searchText !== undefined ) {
     return normalizeGlossarySearchText( term.searchText );
@@ -59,7 +72,9 @@ export function filterGlossaryTerms(
   terms: readonly GlossarySearchRecord[],
   filters: GlossaryFilters,
 ): string[] {
-  const normalizedQuery = normalizeGlossarySearchText( filters.query );
+  const normalizedQuery = normalizeGlossarySearchText(
+    normalizeGlossaryQueryValue( filters.query ),
+  );
   const normalizedLetter = normalizeGlossarySearchText( filters.letter ?? "" );
 
   return terms
@@ -71,7 +86,7 @@ export function filterGlossaryTerms(
 }
 
 export function parseGlossaryFilters( params: URLSearchParams ): GlossaryFilters {
-  const query = params.get( QUERY_PARAM )?.trim() ?? "";
+  const query = normalizeGlossaryQueryValue( params.get( QUERY_PARAM ) ?? "" );
   const letterCandidate = params.get( LETTER_PARAM )?.trim().toLowerCase() ?? "";
   const categoryCandidate = params.get( CATEGORY_PARAM )?.trim() ?? "";
   const filters: GlossaryFilters = { query };
@@ -84,7 +99,7 @@ export function parseGlossaryFilters( params: URLSearchParams ): GlossaryFilters
 
 export function serializeGlossaryFilters( filters: GlossaryFilters ): URLSearchParams {
   const params = new URLSearchParams();
-  const query = filters.query.trim();
+  const query = normalizeGlossaryQueryValue( filters.query );
   const letter = filters.letter?.trim().toLowerCase() ?? "";
   const category = filters.category?.trim() ?? "";
 

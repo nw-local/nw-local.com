@@ -24,7 +24,12 @@ const availableCategories = new Set( terms.map( term => term.category ) );
 ---
 
 <section class="glossary-search" data-glossary-search>
-  <div class="glossary-search-controls" aria-label="Glossary filters">
+  <div
+    class="glossary-search-controls"
+    aria-label="Glossary filters"
+    data-glossary-controls
+    hidden
+  >
     <div class="glossary-search-row">
       <div class="glossary-search-field">
         <label for="glossary-query">Search terms and definitions</label>
@@ -150,7 +155,8 @@ const availableCategories = new Set( terms.map( term => term.category ) );
 <script>
   import {
     filterGlossaryTerms,
-    normalizeGlossarySearchText,
+    hasActiveGlossaryFilters,
+    normalizeGlossaryQueryValue,
     parseGlossaryFilters,
     serializeGlossaryFilters,
     type GlossaryFilters,
@@ -167,6 +173,12 @@ const availableCategories = new Set( terms.map( term => term.category ) );
     throw new Error( "Glossary search root is missing." );
   }
   const searchRoot = searchRootCandidate;
+
+  const searchControlsCandidate = searchRoot.querySelector( "[data-glossary-controls]" );
+  if( !( searchControlsCandidate instanceof HTMLElement ) ) {
+    throw new Error( "Glossary search control band is missing." );
+  }
+  const searchControls = searchControlsCandidate;
 
   const queryInputCandidate = searchRoot.querySelector( "[data-glossary-query]" );
   if( !( queryInputCandidate instanceof HTMLInputElement ) ) {
@@ -244,14 +256,6 @@ const availableCategories = new Set( terms.map( term => term.category ) );
     new URLSearchParams( window.location.search ),
   );
 
-  function hasActiveFilters(): boolean {
-    return Boolean(
-      normalizeGlossarySearchText( filters.query )
-      || filters.letter
-      || filters.category,
-    );
-  }
-
   function updatePressedState(
     buttons: readonly HTMLButtonElement[],
     activeValue: string | undefined,
@@ -272,7 +276,7 @@ const availableCategories = new Set( terms.map( term => term.category ) );
     }
 
     const matchCount = matchingIds.size;
-    const active = hasActiveFilters();
+    const active = hasActiveGlossaryFilters( filters );
     queryInput.value = filters.query;
     resultCount.textContent = `${matchCount} ${matchCount === 1 ? "term" : "terms"}`;
     clearButton.hidden = !active;
@@ -291,7 +295,7 @@ const availableCategories = new Set( terms.map( term => term.category ) );
   }
 
   queryInput.addEventListener( "input", () => {
-    filters = { ...filters, query: queryInput.value };
+    filters = { ...filters, query: normalizeGlossaryQueryValue( queryInput.value ) };
     render();
     updateUrl( "replace" );
   });
@@ -324,7 +328,10 @@ const availableCategories = new Set( terms.map( term => term.category ) );
   window.addEventListener( "popstate", () => {
     filters = parseGlossaryFilters( new URLSearchParams( window.location.search ) );
     render();
+    updateUrl( "replace" );
   });
 
   render();
+  updateUrl( "replace" );
+  searchControls.hidden = false;
 </script>

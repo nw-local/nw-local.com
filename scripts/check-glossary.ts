@@ -13,6 +13,8 @@ import {
 } from "../src/lib/glossary.ts";
 import {
   filterGlossaryTerms,
+  hasActiveGlossaryFilters,
+  normalizeGlossaryQueryValue,
   normalizeGlossarySearchText,
   parseGlossaryFilters,
   serializeGlossaryFilters,
@@ -20,6 +22,7 @@ import {
   type GlossarySearchRecord,
 } from "../src/lib/glossary-search.ts";
 import type { GlossaryTermSummary, PortableText } from "../src/lib/sanity.ts";
+import { readFileSync } from "node:fs";
 
 type GlossaryTermOverrides = Partial<Omit<GlossaryTermSummary, "category">> & {
   category?: unknown;
@@ -192,6 +195,44 @@ expectEqual(
   "invalid values are not serialized",
   serializeGlossaryFilters({ query: "", letter: "ec", category: "unknown" }).toString(),
   "",
+);
+expectEqual(
+  "punctuation-only query has no visible value",
+  normalizeGlossaryQueryValue( " --- " ),
+  "",
+);
+expectEqual(
+  "punctuation-only query is inactive",
+  hasActiveGlossaryFilters({ query: "---" }),
+  false,
+);
+expectEqual(
+  "punctuation-only query is not serialized",
+  serializeGlossaryFilters({ query: "---" }).toString(),
+  "",
+);
+
+const glossarySearchSource = readFileSync(
+  new URL( "../src/components/GlossarySearch.astro", import.meta.url ),
+  "utf8",
+);
+expectEqual(
+  "controls are hidden before enhancement",
+  /<div\s+class="glossary-search-controls"[^>]*\bhidden\b[^>]*>/.test( glossarySearchSource ),
+  true,
+);
+expectEqual(
+  "controls reveal only after initial render",
+  /render\(\);\s*updateUrl\( "replace" \);\s*searchControls\.hidden = false;/.test(
+    glossarySearchSource,
+  ),
+  true,
+);
+const glossaryDirectoryTag = glossarySearchSource.match( /<dl\s+class="glossary-index"[^>]*>/ )?.[ 0 ];
+expectEqual(
+  "directory remains visible before enhancement",
+  glossaryDirectoryTag?.includes( "hidden" ) ?? true,
+  false,
 );
 
 if( failures.length > 0 ) {
