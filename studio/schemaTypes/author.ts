@@ -25,6 +25,13 @@ export const authorType = defineType({
       description: 'Job title shown under the byline (e.g., "Co-Founder")',
     }),
     defineField({
+      name: 'email',
+      title: 'Direct Email',
+      type: 'string',
+      description: 'Optional direct contact address shown only on this author’s profile.',
+      validation: (rule) => rule.email(),
+    }),
+    defineField({
       name: 'photo',
       title: 'Photo',
       type: 'image',

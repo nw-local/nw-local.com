@@ -48,6 +48,9 @@ jobs:
       - name: Check glossary progressive-enhancement behavior
         run: node scripts/check-glossary-browser.ts
 
+      - name: Check author profile structured data
+        run: node scripts/check-person-jsonld.ts
+
       - name: Check Portable Text glossary heading preparation
         run: node scripts/check-portable-text-headings.ts
 

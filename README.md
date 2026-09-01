@@ -85,8 +85,10 @@ Run `make` (no args) to print the full target list with descriptions.
 | Check analytics     | `make check-analytics` | asserts `./dist/` ships a GA snippet that records hits |
 | Check robots.txt    | `make check-robots`  | asserts `robots.txt` points crawlers at this build's sitemap |
 | Check content style | `make check-content-style` | asserts US spelling and that every temperature carries °F and °C, in that order |
+| Check email routing | `make check-email-routing` | keeps the sales address on business pages and the personal address on Ben's profile |
 | Check heading anchors | `make check-anchors` | asserts section anchor ids are unique per page          |
 | Check drop lookup   | `make check-drop-lookup` | asserts the drop collision rule holds whatever order Sanity returns rows in |
+| Check author JSON-LD | `make check-person-jsonld` | asserts direct author contact reaches Person metadata |
 | Check navigation    | `make check-navigation` | asserts the top and footer navigation order and grouping |
 | Test psychrometrics | `make test-psychrometrics` | unit tests for the Magnus helpers; needs no build |
 | Sanity doc history  | `make sanity-history` | pull a document's revision history (vars: `DOC`, `QUERY`, `MATCH`, `RAW`) |
@@ -100,13 +102,13 @@ The `studio` job in CI runs the three studio checks on every PR.
 
 ## Automated testing
 
-Four GitHub Actions workflows guard the site: [`ci.yml`](.github/workflows/ci.yml) runs type, Studio, glossary, heading, navigation, drop-lookup, and psychrometric checks on every PR and push to `main`, then calls the reusable [`audit.yml`](.github/workflows/audit.yml). The audit builds the site and validates sitemap XML, robots.txt, analytics, content style, heading anchors, glossary output, links, and Lighthouse. [`nightly.yml`](.github/workflows/nightly.yml) calls the same audit on a daily cron with external-link checks enabled. [`deploy.yml`](.github/workflows/deploy.yml) builds and publishes the site, and repeats two selected content-sensitive checks: content style and the rendered glossary contract. Those deploy checks are not redundant because a Sanity publish reaches `deploy.yml` without passing through PR CI or the audit.
+Four GitHub Actions workflows guard the site: [`ci.yml`](.github/workflows/ci.yml) runs type, Studio, glossary, author structured-data, heading, navigation, drop-lookup, and psychrometric checks on every PR and push to `main`, then calls the reusable [`audit.yml`](.github/workflows/audit.yml). The audit builds the site and validates sitemap XML, robots.txt, analytics, content style, email routing, heading anchors, glossary output, links, and Lighthouse. [`nightly.yml`](.github/workflows/nightly.yml) calls the same audit on a daily cron with external-link checks enabled. [`deploy.yml`](.github/workflows/deploy.yml) builds and publishes the site, and repeats three selected content-sensitive checks: content style, email routing, and the rendered glossary contract. Those deploy checks are not redundant because a Sanity publish reaches `deploy.yml` without passing through PR CI or the audit.
 
 `make check` is the local aggregate: it covers lint, type checks, Studio validation, the production build, dependency-free logic checks, and repository-owned rendered-output checks. It does not run the audit workflow's `xmllint` sitemap validation, Lychee link jobs, or informational Lighthouse job; those remain CI-only because they depend on CI tooling or network behavior. A green `make check` is therefore the local preflight, not a claim that every CI job has run.
 
 Five of those steps guard *silent* failures — a stalled nightly cron, a Google Analytics snippet that loads and initialises while recording nothing, British spelling or a lone Celsius figure in published prose, a `robots.txt` that was never created in the first place, and two headings sharing an anchor id so a section link resolves to the wrong section — where every positive signal stays green and only an absence reveals the problem. Print styles are a sixth case that no workflow can cover at all, since `@media print` never executes during a build or an audit. Why each exists, what it asserts, and how to verify print output by hand: [docs/testing.md](docs/testing.md).
 
-There is deliberately no general-purpose test framework. Dependency-free scripts cover the isolated logic and browser-controller contracts, while rendered-output scripts cover the static-site boundaries that can fail despite a successful build. These include glossary search and page contracts, Portable Text headings, drop lookup, navigation, analytics, and the psychrometric helpers used to draft cultivation figures. Full rationale, per-step details, and the considered/rejected list: [docs/testing.md](docs/testing.md).
+There is deliberately no general-purpose test framework. Dependency-free scripts cover the isolated logic and browser-controller contracts, while rendered-output scripts cover the static-site boundaries that can fail despite a successful build. These include glossary search and page contracts, author structured data, email routing, Portable Text headings, drop lookup, navigation, analytics, and the psychrometric helpers used to draft cultivation figures. Full rationale, per-step details, and the considered/rejected list: [docs/testing.md](docs/testing.md).
 
 ---
 
