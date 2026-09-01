@@ -45,9 +45,6 @@ expected_top_navigation = [
     ('"/strains"', "Strains"),
     ('"/products"', "Products"),
     ('"/find-us"', "Find Us"),
-    ('"/blog"', "Blog"),
-    ('"/about-us"', "About"),
-    ('"/contact"', "Contact"),
 ]
 expected_footer_groups = [
     (
