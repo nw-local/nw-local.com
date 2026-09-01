@@ -1,8 +1,6 @@
 ---
 import Layout from "../../layouts/Layout.astro";
-import Hero from "../../components/Hero.astro";
 import PortableText from "../../components/PortableText.astro";
-import SectionHeading from "../../components/SectionHeading.astro";
 import {
   getGlossaryTerms,
   getGlossaryTerm,
@@ -11,7 +9,13 @@ import {
 } from "../../lib/sanity";
 import { formatPostDate } from "../../lib/date";
 import {
+  GLOSSARY_BASE_PATH,
+  glossaryHref,
+} from "../../lib/routes";
+import { glossaryCategoryLabel } from "../../../shared/glossary-categories";
+import {
   buildBreadcrumbList,
+  buildDefinedTerm,
   normalizeSiteUrl,
   type StructuredData,
   requireSiteUrl,
@@ -26,19 +30,23 @@ export async function getStaticPaths() {
 
 const { slug } = Astro.params;
 const term = await getGlossaryTerm( slug! );
-if( !term ) return Astro.redirect( "/glossary" );
+if( !term ) return Astro.redirect( GLOSSARY_BASE_PATH );
+
+const categoryLabel = glossaryCategoryLabel( term.category );
+const relatedTerms = term.relatedTerms ?? [];
+const mentions = term.mentionedIn ?? [];
 
 const siteUrl = requireSiteUrl( Astro.site );
 const baseUrl = normalizeSiteUrl( siteUrl );
+const termUrl = `${baseUrl}${glossaryHref( term.slug.current )}/`;
 const structuredData: StructuredData[] = [
   buildBreadcrumbList( [
     { name: "Home", url: `${baseUrl}/` },
-    { name: "Glossary", url: `${baseUrl}/glossary/` },
-    { name: term.term, url: `${baseUrl}/glossary/${term.slug.current}/` },
+    { name: "Glossary", url: `${baseUrl}${GLOSSARY_BASE_PATH}/` },
+    { name: term.term, url: termUrl },
   ] ),
+  buildDefinedTerm( term, siteUrl ),
 ];
-
-const mentions = term.mentionedIn ?? [];
 
 // Keyed by type, so a new mention type without a label is a compile error.
 const MENTION_LABELS: Record<GlossaryMentionType, string> = {
@@ -49,73 +57,53 @@ const MENTION_LABELS: Record<GlossaryMentionType, string> = {
 ---
 
 <Layout title={term.term} description={term.shortDefinition} structuredData={structuredData}>
-  <Hero title={term.term}>
-    <p class="glossary-lede">{term.shortDefinition}</p>
-  </Hero>
+  <article class="glossary-reference">
+    <header class="glossary-entry-hero">
+      <div class="glossary-entry-hero-copy">
+        <nav class="glossary-breadcrumb" aria-label="Breadcrumb">
+          <a href={GLOSSARY_BASE_PATH}>Glossary</a>
+          <span aria-hidden="true">/</span>
+          <span>{categoryLabel}</span>
+        </nav>
+        <h1>{term.term}</h1>
+        <p class="glossary-lede">{term.shortDefinition}</p>
+      </div>
+    </header>
 
-  <div class="glossary-entry">
-    {term.body && <PortableText value={term.body} />}
+    <div class="glossary-entry-layout">
+      <div class="glossary-entry-reading">
+        {term.body && <PortableText value={term.body} />}
 
-    {mentions.length > 0 && (
-      <section style="margin-top:3rem;">
-        <SectionHeading title="Mentioned in" />
-        <ul class="glossary-mentions">
-          {mentions.map( mention => (
-            <li>
-              <a href={glossaryMentionHref( mention )}>{mention.title}</a>
-              <span class="glossary-mention-meta">
-                {MENTION_LABELS[ mention._type ]}
-                {mention.publishedAt && ` · ${formatPostDate( mention.publishedAt )}`}
-              </span>
-            </li>
-          ) )}
-        </ul>
-      </section>
-    )}
+        {relatedTerms.length > 0 && (
+          <section class="glossary-support-section" aria-labelledby="related-terms-heading">
+            <h2 class="glossary-support-heading" id="related-terms-heading">Related terms</h2>
+            <ul class="glossary-related-terms">
+              {relatedTerms.map( relatedTerm => (
+                <li><a href={glossaryHref( relatedTerm.slug.current )}>{relatedTerm.term}</a></li>
+              ) )}
+            </ul>
+          </section>
+        )}
 
-    <p class="glossary-back"><a href="/glossary">← All terms</a></p>
-  </div>
+        {mentions.length > 0 && (
+          <section class="glossary-support-section" aria-labelledby="mentioned-in-heading">
+            <h2 class="glossary-support-heading" id="mentioned-in-heading">Mentioned in</h2>
+            <ul class="glossary-mentions">
+              {mentions.map( mention => (
+                <li>
+                  <a href={glossaryMentionHref( mention )}>{mention.title}</a>
+                  <span class="glossary-mention-meta">
+                    {MENTION_LABELS[ mention._type ]}
+                    {mention.publishedAt && ` · ${formatPostDate( mention.publishedAt )}`}
+                  </span>
+                </li>
+              ) )}
+            </ul>
+          </section>
+        )}
+
+        <p class="glossary-back"><a href={GLOSSARY_BASE_PATH}>← All terms</a></p>
+      </div>
+    </div>
+  </article>
 </Layout>
-
-<style>
-  .glossary-lede {
-    color: var(--text-secondary);
-    margin-top: 0.5rem;
-    font-size: 1.1rem;
-    max-width: 600px;
-  }
-
-  .glossary-entry {
-    /* Aligns left with the full-width Hero above. */
-    max-width: var(--content-width);
-    margin: 0;
-  }
-
-  .glossary-mentions {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-
-  .glossary-mentions li {
-    padding: 0.85rem 0;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem 1rem;
-    align-items: baseline;
-    justify-content: space-between;
-  }
-
-  .glossary-mention-meta {
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-  }
-
-  .glossary-back {
-    margin-top: 2.5rem;
-    font-size: 0.9rem;
-  }
-</style>

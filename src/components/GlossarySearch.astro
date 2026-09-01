@@ -1,0 +1,158 @@
+---
+import {
+  GLOSSARY_CATEGORIES,
+  glossaryCategoryLabel,
+} from "../../shared/glossary-categories";
+import {
+  GLOSSARY_EMPTY_FILTER_MESSAGE,
+  glossarySearchText,
+  normalizeGlossarySearchText,
+} from "../lib/glossary-search";
+import type { GlossaryTermSummary } from "../lib/sanity";
+import { glossaryHref } from "../lib/routes";
+
+interface Props {
+  terms: readonly GlossaryTermSummary[]
+}
+
+const { terms } = Astro.props;
+const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split( "" );
+const availableLetters = new Set(
+  terms.map( term => normalizeGlossarySearchText( term.term ).charAt( 0 ) ),
+);
+const availableCategories = new Set( terms.map( term => term.category ) );
+---
+
+<section class="glossary-search" data-glossary-search>
+  <div
+    class="glossary-search-controls"
+    aria-label="Glossary filters"
+    data-glossary-controls
+    hidden
+  >
+    <div class="glossary-search-row">
+      <div class="glossary-search-field">
+        <label for="glossary-query">Search terms and definitions</label>
+        <input
+          id="glossary-query"
+          type="search"
+          placeholder="Try EC, dryback, or vapor pressure"
+          autocomplete="off"
+          aria-controls="glossary-directory"
+          data-glossary-query
+        />
+      </div>
+      <p class="glossary-result-count" aria-live="polite" data-glossary-result-count>
+        {terms.length} {terms.length === 1 ? "term" : "terms"}
+      </p>
+      <button type="button" class="glossary-clear" data-glossary-clear hidden>
+        Clear filters
+      </button>
+    </div>
+
+    <fieldset class="glossary-filter-group glossary-letter-filter">
+      <legend>Starts with</legend>
+      <div class="glossary-letter-rail">
+        <button
+          type="button"
+          data-glossary-letter
+          data-filter-value=""
+          aria-pressed="true"
+          aria-controls="glossary-directory"
+        >All</button>
+        {alphabet.map( letter => (
+          <button
+            type="button"
+            data-glossary-letter
+            data-filter-value={letter.toLowerCase()}
+            aria-pressed="false"
+            aria-controls="glossary-directory"
+            disabled={!availableLetters.has( letter.toLowerCase() )}
+          >{letter}</button>
+        ) )}
+      </div>
+    </fieldset>
+
+    <fieldset class="glossary-filter-group glossary-category-filter">
+      <legend>Topic</legend>
+      <div class="glossary-category-rail">
+        <button
+          type="button"
+          data-glossary-category-filter
+          data-filter-value=""
+          aria-pressed="true"
+          aria-controls="glossary-directory"
+        >All topics</button>
+        {GLOSSARY_CATEGORIES.map( category => (
+          <button
+            type="button"
+            data-glossary-category-filter
+            data-filter-value={category.value}
+            aria-pressed="false"
+            aria-controls="glossary-directory"
+            disabled={!availableCategories.has( category.value )}
+          >{category.title}</button>
+        ) )}
+      </div>
+    </fieldset>
+  </div>
+
+  <section class="glossary-directory-section">
+    <div class="glossary-directory-heading">
+      <p class="glossary-directory-kicker">Quick reference</p>
+      <h2>All terms</h2>
+    </div>
+
+    <div class="glossary-directory-columns" aria-hidden="true">
+      <span>Term</span>
+      <span>Definition</span>
+      <span>Category</span>
+    </div>
+
+    <dl class="glossary-index" id="glossary-directory">
+      {terms.map( term => {
+        const normalizedTerm = normalizeGlossarySearchText( term.term );
+        return (
+          <div
+            class="glossary-index-entry"
+            data-glossary-entry
+            data-glossary-id={term._id}
+            data-glossary-term={term.term}
+            data-glossary-initial={normalizedTerm.charAt( 0 )}
+            data-glossary-category={term.category}
+            data-glossary-search-text={glossarySearchText( term )}
+          >
+            <dt><a href={glossaryHref( term.slug.current )}>{term.term}</a></dt>
+            <dd class="glossary-index-definition">{term.shortDefinition}</dd>
+            <dd class="glossary-index-category">{glossaryCategoryLabel( term.category )}</dd>
+          </div>
+        );
+      })}
+    </dl>
+
+    <div class="glossary-empty" data-glossary-empty hidden>
+      <p data-glossary-empty-message>{GLOSSARY_EMPTY_FILTER_MESSAGE}</p>
+    </div>
+  </section>
+
+  <p class="glossary-index-aside">
+    Looking for terpenes? They have <a href="/terpenes">their own section</a>.
+  </p>
+</section>
+
+<script>
+  import { initializeGlossaryBrowser } from "../lib/glossary-browser";
+
+  const searchRootCandidate = document.querySelector( "[data-glossary-search]" );
+  if( !( searchRootCandidate instanceof HTMLElement ) ) {
+    throw new Error( "Glossary search root is missing." );
+  }
+  initializeGlossaryBrowser( searchRootCandidate, {
+    readLocation: () => window.location,
+    updateHistory: ( method, nextUrl ) => {
+      if( method === "push" ) history.pushState({}, "", nextUrl );
+      else history.replaceState({}, "", nextUrl );
+    },
+    onPopState: listener => window.addEventListener( "popstate", listener ),
+  });
+</script>

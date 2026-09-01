@@ -1,6 +1,7 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import Hero from "../../components/Hero.astro";
+import GlossarySearch from "../../components/GlossarySearch.astro";
 import { getGlossaryTerms } from "../../lib/sanity";
 import {
   buildBreadcrumbList,
@@ -8,6 +9,7 @@ import {
   type StructuredData,
   requireSiteUrl,
 } from "../../lib/jsonld";
+import { GLOSSARY_BASE_PATH } from "../../lib/routes";
 
 const terms = await getGlossaryTerms() ?? [];
 
@@ -16,7 +18,7 @@ const baseUrl = normalizeSiteUrl( siteUrl );
 const structuredData: StructuredData[] = [
   buildBreadcrumbList( [
     { name: "Home", url: `${baseUrl}/` },
-    { name: "Glossary", url: `${baseUrl}/glossary/` },
+    { name: "Glossary", url: `${baseUrl}${GLOSSARY_BASE_PATH}/` },
   ] ),
 ];
 ---
@@ -26,64 +28,9 @@ const structuredData: StructuredData[] = [
   description="Definitions for the cannabis cultivation and science terms used across Northwest Local Cannabis."
   structuredData={structuredData}
 >
-  <Hero title="Glossary" subtitle="Plain-language definitions for the terms we use." />
+  <Hero title="Glossary" subtitle="Clear definitions for cannabis cultivation, plant science, and production." />
 
-  {terms.length > 0 ? (
-    <dl class="glossary-index">
-      {terms.map( term => (
-        <div class="glossary-index-entry">
-          <dt>
-            <a href={`/glossary/${term.slug.current}`}>{term.term}</a>
-          </dt>
-          <dd>{term.shortDefinition}</dd>
-        </div>
-      ) )}
-    </dl>
-  ) : (
-    <p style="text-align:center;margin-top:2rem;">No terms yet. Check back soon.</p>
-  )}
-
-  <p class="glossary-index-aside">
-    Looking for terpenes? They have <a href="/terpenes">their own section</a>.
-  </p>
+  {terms.length > 0
+    ? <GlossarySearch terms={terms} />
+    : <p class="glossary-no-terms">No terms yet. Check back soon.</p>}
 </Layout>
-
-<style>
-  .glossary-index {
-    /* Constrain the measure for readability, but align left with the Hero
-       above rather than centering — the Hero is full-width on this page. */
-    max-width: var(--content-width);
-    margin: 0;
-  }
-
-  .glossary-index-entry {
-    padding: 1.25rem 0;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .glossary-index-entry dt {
-    font-weight: 700;
-    font-size: 1.05rem;
-    margin-bottom: 0.35rem;
-  }
-
-  .glossary-index-entry dt a {
-    color: var(--text-primary);
-  }
-
-  .glossary-index-entry dt a:hover {
-    color: var(--accent);
-  }
-
-  .glossary-index-entry dd {
-    margin: 0;
-    color: var(--text-secondary);
-    line-height: 1.6;
-  }
-
-  .glossary-index-aside {
-    max-width: var(--content-width);
-    margin: 2rem 0 0;
-    font-size: 0.9rem;
-  }
-</style>

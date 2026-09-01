@@ -3,7 +3,7 @@ export
 
 .DEFAULT_GOAL := help
 
-.PHONY: help install dev build preview studio deploy-studio upload-image prep-images render-figures check-nightly check-analytics check-robots check-content-style check-anchors check-drop-lookup check-navigation sanity-history lint format upgrade upgrade-latest
+.PHONY: help install dev build preview studio deploy-studio upload-image prep-images render-figures check-nightly check-analytics check-robots check-content-style check-anchors test-psychrometrics check-drop-lookup check-glossary check-glossary-browser check-portable-text-headings check-glossary-build test-check-glossary-build check-navigation check sanity-history lint format upgrade upgrade-latest
 
 help: ## Show this help message with all available targets
 	@grep -hE '^[a-zA-Z_-]+:.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
@@ -39,16 +39,16 @@ render-figures: ## Rasterize figures/**/*.svg to PNG for upload (vars: FIGURE)
 check-nightly: ## Verify the nightly audit's cron is still firing
 	@./scripts/check-nightly-freshness.sh
 
-check-analytics: ## Verify ./dist/ ships a working Google Analytics snippet
+check-analytics: build ## Verify ./dist/ ships a working Google Analytics snippet
 	@./scripts/check-analytics-snippet.sh
 
-check-robots: ## Verify ./dist/robots.txt points crawlers at this build's sitemap
+check-robots: build ## Verify ./dist/robots.txt points crawlers at this build's sitemap
 	@./scripts/check-robots.sh
 
-check-content-style: ## Verify ./dist/ uses US spelling and pairs every temperature °F first
+check-content-style: build ## Verify ./dist/ uses US spelling and pairs every temperature °F first
 	@./scripts/check-content-style.py
 
-check-anchors: ## Verify ./dist/ heading anchor ids are unique per page
+check-anchors: build ## Verify ./dist/ heading anchor ids are unique per page
 	@./scripts/check-heading-anchors.py
 
 test-psychrometrics: ## Run the psychrometrics unit tests (no build required)
@@ -57,8 +57,27 @@ test-psychrometrics: ## Run the psychrometrics unit tests (no build required)
 check-drop-lookup: ## Verify the drop collision rule: strongest status wins, whatever the row order
 	@node scripts/check-drop-lookup.ts
 
+check-glossary: ## Verify glossary content contracts and search mechanics
+	@node scripts/check-glossary.ts
+
+check-glossary-browser: ## Verify glossary progressive-enhancement behavior
+	@node scripts/check-glossary-browser.ts
+
+check-portable-text-headings: ## Verify collision-safe Portable Text heading preparation
+	@node scripts/check-portable-text-headings.ts
+
+check-glossary-build: build ## Verify the built glossary index and entry contracts
+	@./scripts/check-glossary-build.py dist
+
+test-check-glossary-build: build ## Regression-test malformed glossary build fixtures
+	@python3 scripts/test-check-glossary-build.py dist
+
 check-navigation: ## Verify the top and footer navigation structure
 	@python3 scripts/check-navigation.py
+
+check: lint check-drop-lookup check-glossary check-glossary-browser check-portable-text-headings test-psychrometrics build check-analytics check-robots check-content-style check-anchors check-glossary-build test-check-glossary-build check-navigation ## Run the local repository check aggregate
+	@cd studio && yarn lint && yarn typecheck && yarn format:check
+	@yarn astro check
 
 sanity-history: ## Pull a document's revision history from Sanity (vars: DOC, QUERY, MATCH, RAW)
 	@node scripts/sanity-history.ts "$(DOC)" "$(QUERY)"

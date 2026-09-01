@@ -1,13 +1,18 @@
+import type {
+  Author,
+  BlogPost,
+  GlossaryTerm,
+  PortableText,
+  PortableTextBlock,
+  SiteSettings,
+  Strain,
+} from "./sanity.ts";
+import { childrenToText } from "./portableText.ts";
 import {
   AUTHOR_BASE_PATH,
-  type Author,
-  type BlogPost,
-  type PortableText,
-  type PortableTextBlock,
-  type SiteSettings,
-  type Strain,
-} from "./sanity";
-import { childrenToText } from "./portableText";
+  GLOSSARY_BASE_PATH,
+  glossaryHref,
+} from "./routes.ts";
 
 interface SchemaBase {
   "@context": "https://schema.org";
@@ -103,15 +108,46 @@ export interface BreadcrumbListSchema extends SchemaBase {
   itemListElement: BreadcrumbItem[];
 }
 
+export interface DefinedTermSchema extends SchemaBase {
+  "@type": "DefinedTerm";
+  name: string;
+  url: string;
+  description: string;
+  alternateName?: string[];
+  inDefinedTermSet: string;
+}
+
 export type StructuredData =
   | OrganizationSchema
   | ProductSchema
   | ArticleSchema
   | PersonSchema
-  | BreadcrumbListSchema;
+  | BreadcrumbListSchema
+  | DefinedTermSchema;
 
 export function normalizeSiteUrl( siteUrl: string ): string {
   return siteUrl.endsWith( "/" ) ? siteUrl.slice( 0, -1 ) : siteUrl;
+}
+
+export function buildDefinedTerm(
+  term: GlossaryTerm,
+  siteUrl: string,
+): DefinedTermSchema {
+  const baseUrl = normalizeSiteUrl( siteUrl );
+  const schema: DefinedTermSchema = {
+    "@context": "https://schema.org",
+    "@type": "DefinedTerm",
+    name: term.term,
+    url: `${baseUrl}${glossaryHref( term.slug.current )}/`,
+    description: term.shortDefinition,
+    inDefinedTermSet: `${baseUrl}${GLOSSARY_BASE_PATH}/`,
+  };
+
+  if( term.aliases && term.aliases.length > 0 ) {
+    schema.alternateName = term.aliases;
+  }
+
+  return schema;
 }
 
 // `Astro.site` is whatever `site` in astro.config.mjs says, so it is defined on
@@ -319,4 +355,3 @@ export function buildBreadcrumbList(
     }) ),
   };
 }
-

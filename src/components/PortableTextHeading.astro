@@ -1,6 +1,5 @@
 ---
 import type { Block, Props as PortableTextProps } from "astro-portabletext/types";
-import { blockText, headingId } from "../lib/headingId";
 
 // The library types a block component as Props<Block>, which carries `index`
 // and `isInline` alongside `node` plus arbitrary passthrough attrs. Declaring a
@@ -9,6 +8,10 @@ import { blockText, headingId } from "../lib/headingId";
 export type Props = PortableTextProps<Block>;
 
 const { node } = Astro.props;
+
+function hasPreparedHeadingId( block: Block ): block is Block & { _headingId: string } {
+  return "_headingId" in block && typeof block._headingId === "string" && Boolean( block._headingId );
+}
 
 // Only h2 and h3 are mapped in PortableText.astro, so anything else arriving
 // here is a wiring mistake rather than content. Reject it instead of emitting a
@@ -21,7 +24,13 @@ if( style !== "h2" && style !== "h3" ) {
   );
 }
 
-const id = headingId( blockText( node ) );
+if( !hasPreparedHeadingId( node ) ) {
+  throw new Error(
+    `PortableTextHeading received block ${ JSON.stringify( node._key ?? "unknown" ) } without a prepared _headingId.`,
+  );
+}
+
+const id = node._headingId;
 ---
 
 {

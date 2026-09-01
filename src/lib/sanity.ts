@@ -1,4 +1,9 @@
 import { createClient } from "@sanity/client";
+import type { GlossaryCategory } from "../../shared/glossary-categories";
+import { validateGlossarySummaries, validateGlossaryTerm } from "./glossary";
+import { AUTHOR_BASE_PATH } from "./routes";
+
+export { AUTHOR_BASE_PATH } from "./routes";
 
 const SANITY_PROJECT_ID = import.meta.env.SANITY_PROJECT_ID;
 const SANITY_DATASET = import.meta.env.SANITY_DATASET;
@@ -59,6 +64,12 @@ const RETAILER_PROJECTION = `{
   featured,
   productsAvailable[]->{ _id, name, slug, category }
 }`;
+
+// Keep optional glossary explanations out of index data. The directory needs
+// compact search metadata only; full Portable Text belongs on detail pages.
+const GLOSSARY_SUMMARY_PROJECTION = `
+  _id, term, slug, shortDefinition, aliases, category
+`;
 
 // --- Shared types ---
 
@@ -355,8 +366,6 @@ const AUTHOR_SUMMARY_PROJECTION = `{
 
 // The author route is spelled once. jsonld.ts builds absolute URLs from the same
 // constant, so the HTML href and the JSON-LD url can never drift apart.
-export const AUTHOR_BASE_PATH = "/authors";
-
 export function authorHref( slug: SanitySlug ): string {
   return `${AUTHOR_BASE_PATH}/${slug.current}`;
 }
@@ -437,6 +446,16 @@ export interface GlossaryTermSummary {
   term: string;
   slug: SanitySlug;
   shortDefinition: string;
+  aliases?: string[] | null;
+  category: GlossaryCategory;
+}
+
+export interface GlossaryRelatedTerm {
+  _id: string;
+  term: string;
+  slug: SanitySlug;
+  shortDefinition: string;
+  category: GlossaryCategory;
 }
 
 // The document types a glossary term can be cited from. Restricted to types
@@ -475,22 +494,27 @@ export interface GlossaryTermMention {
 
 export interface GlossaryTerm extends GlossaryTermSummary {
   body?: PortableText;
+  relatedTerms?: GlossaryRelatedTerm[];
   mentionedIn?: GlossaryTermMention[];
 }
 
 export async function getGlossaryTerms() {
-  return sanityClient.fetch<GlossaryTermSummary[]>(
+  const terms = await sanityClient.fetch<GlossaryTermSummary[]>(
     `*[_type == "glossaryTerm"] | order(lower(term) asc) {
-      _id, term, slug, shortDefinition
+      ${GLOSSARY_SUMMARY_PROJECTION}
     }`,
   );
+
+  validateGlossarySummaries( terms );
+  return terms;
 }
 
 export async function getGlossaryTerm( slug: string ) {
-  return sanityClient.fetch<GlossaryTerm | null>(
+  const term = await sanityClient.fetch<GlossaryTerm | null>(
     `*[_type == "glossaryTerm" && slug.current == $slug][0] {
-      _id, term, slug, shortDefinition,
+      ${GLOSSARY_SUMMARY_PROJECTION},
       body[] ${PORTABLE_TEXT_PROJECTION},
+      relatedTerms[]->{ _id, term, slug, shortDefinition, category },
       "mentionedIn": *[_type in $mentionTypes && references(^._id)]
         | order(coalesce(publishedAt, "") desc, coalesce(title, name) asc) {
         _id, _type, slug, publishedAt,
@@ -499,6 +523,9 @@ export async function getGlossaryTerm( slug: string ) {
     }`,
     { slug, mentionTypes: GLOSSARY_MENTION_TYPES },
   );
+
+  if( term ) validateGlossaryTerm( term );
+  return term;
 }
 
 // --- Retailers ---

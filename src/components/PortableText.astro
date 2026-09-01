@@ -5,8 +5,16 @@ import PortableTextTable from "./PortableTextTable.astro";
 import GlossaryTerm from "./GlossaryTerm.astro";
 import PortableTextLink from "./PortableTextLink.astro";
 import PortableTextHeading from "./PortableTextHeading.astro";
+import {
+  preparePortableTextHeadings,
+  validatePreparedPortableTextHeadings,
+} from "../lib/portableTextHeadings";
 
-const { value } = Astro.props;
+const { value, prepared = false } = Astro.props;
+
+const renderedValue = prepared
+  ? ( validatePreparedPortableTextHeadings( value ), value )
+  : preparePortableTextHeadings( value ).value;
 
 // astro-portabletext ships no renderer for custom types, and its fallback emits
 // a display:none div — so without this mapping every inline image in a body
@@ -38,5 +46,5 @@ const components = {
 ---
 
 <div class="portable-text">
-  <PT value={value} components={components} />
+  <PT value={renderedValue} components={components} />
 </div>
