@@ -1,17 +1,18 @@
 ---
 interface Props {
   email?: string
+  emailLabel?: string
   phone?: string
   address?: string
 }
 
-const { email, phone, address } = Astro.props;
+const { email, emailLabel = "Email", phone, address } = Astro.props;
 ---
 
 <dl class="contact-info">
   {email && (
     <>
-      <dt>Email</dt>
+      <dt>{emailLabel}</dt>
       <dd><a href={`mailto:${email}`}>{email}</a></dd>
     </>
   )}

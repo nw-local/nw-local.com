@@ -353,6 +353,7 @@ export interface AuthorSummary {
 }
 
 export interface Author extends AuthorSummary {
+  email?: string;
   bio?: PortableText;
   sameAs?: string[];
 }
@@ -379,7 +380,7 @@ export async function getAuthors() {
 export async function getAuthor( slug: string ) {
   return sanityClient.fetch<Author | null>(
     `*[_type == "author" && slug.current == $slug][0] {
-      _id, name, slug, role, sameAs,
+      _id, name, slug, role, email, sameAs,
       photo { asset->, alt, crop, hotspot },
       bio[] ${PORTABLE_TEXT_PROJECTION}
     }`,

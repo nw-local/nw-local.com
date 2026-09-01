@@ -90,6 +90,7 @@ export interface PersonSchema extends SchemaBase {
   "@type": "Person";
   name: string;
   url: string;
+  email?: string;
   image?: string;
   jobTitle?: string;
   sameAs?: string[];
@@ -328,6 +329,7 @@ export function buildPerson( input: BuildPersonInput ): PersonSchema {
 
   if( photoUrl ) person.image = photoUrl;
   if( author.role ) person.jobTitle = author.role;
+  if( author.email ) person.email = author.email;
   if( author.sameAs && author.sameAs.length > 0 ) person.sameAs = author.sameAs;
 
   const description = portableTextToPlainText( author.bio );

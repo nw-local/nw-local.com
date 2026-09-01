@@ -112,6 +112,10 @@ jobs:
       # without any diff at all.
       - name: Check US spelling and paired temperature units
         run: ./scripts/check-content-style.py dist
+      - name: Regression-test malformed email-routing fixtures
+        run: python3 scripts/test-check-email-routing.py
+      - name: Check business and personal email routing
+        run: ./scripts/check-email-routing.py dist
       # Section headings are linked across posts by anchor. Two headings that
       # slugify alike send that link to the wrong section while still resolving,
       # so the page renders, the build passes, and the link checker sees a valid

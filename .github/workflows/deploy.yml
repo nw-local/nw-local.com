@@ -67,6 +67,12 @@ jobs:
       - name: Check US spelling and paired temperature units
         run: ./scripts/check-content-style.py dist
 
+      # Contact fields can change through Sanity without a pull request. Keep
+      # the public sales address on business surfaces and the personal address
+      # confined to its explicitly authored profile.
+      - name: Check business and personal email routing
+        run: ./scripts/check-email-routing.py dist
+
       # Unlike source checks, this contract can be broken by a Sanity publish
       # with no pull request. Fail this build before GitHub Pages receives the
       # artifact, keeping the previous deployment live.
