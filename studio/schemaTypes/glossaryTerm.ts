@@ -1,13 +1,23 @@
 import { defineField, defineType } from 'sanity'
 import { GLOSSARY_CATEGORIES } from '../../shared/glossary-categories'
+import {
+  firstBlankGlossaryAliasIndex,
+  glossaryFeaturedMissingFields,
+  hasGlossaryBody,
+  type GlossaryFeaturedRequirement,
+} from '../../shared/glossary-validation'
 
-function hasImageField(image: unknown, fieldName: string): boolean {
+const FEATURED_FIELD_LABELS: Record<GlossaryFeaturedRequirement, string> = {
+  body: 'Full Entry',
+  image: 'Editorial Image',
+  'image.alt': 'Alternative Text',
+  lastReviewedAt: 'Last Reviewed',
+}
+
+function imageField(image: unknown, fieldName: string): unknown {
   return typeof image === 'object' && image !== null
-    ? Object.entries(image).some(
-        ([candidateFieldName, fieldValue]) =>
-          candidateFieldName === fieldName && Boolean(fieldValue),
-      )
-    : false
+    ? Object.entries(image).find(([candidateFieldName]) => candidateFieldName === fieldName)?.[1]
+    : undefined
 }
 
 export const glossaryTermType = defineType({
@@ -57,7 +67,7 @@ export const glossaryTermType = defineType({
           validation: (rule) =>
             rule.custom((alt, context) => {
               const parent = context.parent
-              if (typeof parent !== 'object' || parent === null || !('asset' in parent)) return true
+              if (!imageField(parent, 'asset')) return true
               return typeof alt === 'string' && alt.trim().length > 0
                 ? true
                 : 'Alternative text is required when an image is attached.'
@@ -70,7 +80,13 @@ export const glossaryTermType = defineType({
       title: 'Aliases',
       type: 'array',
       of: [{ type: 'string' }],
-      validation: (rule) => rule.unique(),
+      validation: (rule) =>
+        rule.unique().custom((aliases) => {
+          const blankAliasIndex = firstBlankGlossaryAliasIndex(aliases)
+          return blankAliasIndex === undefined
+            ? true
+            : `Alias ${blankAliasIndex + 1} cannot be blank.`
+        }),
     }),
     defineField({
       name: 'category',
@@ -117,12 +133,12 @@ export const glossaryTermType = defineType({
     rule.custom((document) => {
       if (!document?.featured) return true
 
-      const missingFields = [
-        !document.body ? 'Full Entry' : undefined,
-        !hasImageField(document.image, 'asset') ? 'Editorial Image' : undefined,
-        !hasImageField(document.image, 'alt') ? 'Alternative Text' : undefined,
-        !document.lastReviewedAt ? 'Last Reviewed' : undefined,
-      ].filter((field) => field !== undefined)
+      const missingFields = glossaryFeaturedMissingFields({
+        hasBody: hasGlossaryBody(document.body),
+        imageAsset: imageField(document.image, 'asset'),
+        imageAlt: imageField(document.image, 'alt'),
+        lastReviewedAt: document.lastReviewedAt,
+      }).map((field) => FEATURED_FIELD_LABELS[field])
 
       return missingFields.length > 0
         ? `Featured in-depth guides require: ${missingFields.join(', ')}.`

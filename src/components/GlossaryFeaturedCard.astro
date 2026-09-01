@@ -2,6 +2,7 @@
 import { glossaryCategoryLabel } from "../../shared/glossary-categories";
 import { validateGlossarySummaries } from "../lib/glossary";
 import { urlFor } from "../lib/image";
+import { glossaryHref } from "../lib/routes";
 import type { GlossaryTermSummary } from "../lib/sanity";
 
 type Props = GlossaryTermSummary;
@@ -22,7 +23,7 @@ if( !image?.asset || !image.alt?.trim() ) {
 const imageUrl = urlFor( image );
 ---
 
-<a href={`/glossary/${term.slug.current}`} class="card glossary-featured-card">
+<a href={glossaryHref( term.slug.current )} class="card glossary-featured-card">
   <div class="card-image glossary-featured-image">
     <img
       src={imageUrl.width( 720 ).height( 450 ).format( "webp" ).url()}

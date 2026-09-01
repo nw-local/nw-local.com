@@ -8,6 +8,8 @@ const QUERY_PARAM = "q";
 const LETTER_PARAM = "letter";
 const CATEGORY_PARAM = "category";
 const SINGLE_LETTER = /^[a-z]$/;
+export const GLOSSARY_EMPTY_FILTER_MESSAGE =
+  "No terms match those filters. Clear a filter or try another search.";
 
 type GlossarySearchFields = Pick<
   GlossaryTermSummary,
@@ -47,6 +49,13 @@ export function hasActiveGlossaryFilters( filters: GlossaryFilters ): boolean {
     || filters.letter
     || filters.category,
   );
+}
+
+export function glossaryEmptyStateMessage( filters: GlossaryFilters ): string {
+  const query = normalizeGlossaryQueryValue( filters.query );
+  return query
+    ? `No terms match “${query}”. Clear a filter or try another search.`
+    : GLOSSARY_EMPTY_FILTER_MESSAGE;
 }
 
 export function glossarySearchText( term: GlossarySearchRecord ): string {

@@ -11,6 +11,10 @@ import { formatPostDate } from "../../lib/date";
 import { glossaryReadingMinutes } from "../../lib/glossary";
 import { urlFor } from "../../lib/image";
 import { preparePortableTextHeadings } from "../../lib/portableTextHeadings";
+import {
+  GLOSSARY_BASE_PATH,
+  glossaryHref,
+} from "../../lib/routes";
 import { glossaryCategoryLabel } from "../../../shared/glossary-categories";
 import {
   buildBreadcrumbList,
@@ -29,7 +33,7 @@ export async function getStaticPaths() {
 
 const { slug } = Astro.params;
 const term = await getGlossaryTerm( slug! );
-if( !term ) return Astro.redirect( "/glossary" );
+if( !term ) return Astro.redirect( GLOSSARY_BASE_PATH );
 
 const preparedBody = term.body
   ? preparePortableTextHeadings( term.body )
@@ -47,11 +51,11 @@ const glossaryImageUrl = glossaryImage ? urlFor( glossaryImage ) : undefined;
 
 const siteUrl = requireSiteUrl( Astro.site );
 const baseUrl = normalizeSiteUrl( siteUrl );
-const termUrl = `${baseUrl}/glossary/${term.slug.current}/`;
+const termUrl = `${baseUrl}${glossaryHref( term.slug.current )}/`;
 const structuredData: StructuredData[] = [
   buildBreadcrumbList( [
     { name: "Home", url: `${baseUrl}/` },
-    { name: "Glossary", url: `${baseUrl}/glossary/` },
+    { name: "Glossary", url: `${baseUrl}${GLOSSARY_BASE_PATH}/` },
     { name: term.term, url: termUrl },
   ] ),
   buildDefinedTerm( term, siteUrl ),
@@ -70,7 +74,7 @@ const MENTION_LABELS: Record<GlossaryMentionType, string> = {
     <header class:list={[ "glossary-entry-hero", { "glossary-entry-hero--text-only": !glossaryImage } ]}>
       <div class="glossary-entry-hero-copy">
         <nav class="glossary-breadcrumb" aria-label="Breadcrumb">
-          <a href="/glossary">Glossary</a>
+          <a href={GLOSSARY_BASE_PATH}>Glossary</a>
           <span aria-hidden="true">/</span>
           <span>{categoryLabel}</span>
         </nav>
@@ -122,7 +126,7 @@ const MENTION_LABELS: Record<GlossaryMentionType, string> = {
             <h2 class="glossary-support-heading" id="related-terms-heading">Related terms</h2>
             <ul class="glossary-related-terms">
               {relatedTerms.map( relatedTerm => (
-                <li><a href={`/glossary/${relatedTerm.slug.current}`}>{relatedTerm.term}</a></li>
+                <li><a href={glossaryHref( relatedTerm.slug.current )}>{relatedTerm.term}</a></li>
               ) )}
             </ul>
           </section>
@@ -145,7 +149,7 @@ const MENTION_LABELS: Record<GlossaryMentionType, string> = {
           </section>
         )}
 
-        <p class="glossary-back"><a href="/glossary">← All terms</a></p>
+        <p class="glossary-back"><a href={GLOSSARY_BASE_PATH}>← All terms</a></p>
       </div>
     </div>
   </article>

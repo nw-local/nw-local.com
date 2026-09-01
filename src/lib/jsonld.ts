@@ -8,7 +8,11 @@ import type {
   Strain,
 } from "./sanity.ts";
 import { childrenToText } from "./portableText.ts";
-import { AUTHOR_BASE_PATH } from "./routes.ts";
+import {
+  AUTHOR_BASE_PATH,
+  GLOSSARY_BASE_PATH,
+  glossaryHref,
+} from "./routes.ts";
 
 interface SchemaBase {
   "@context": "https://schema.org";
@@ -134,9 +138,9 @@ export function buildDefinedTerm(
     "@context": "https://schema.org",
     "@type": "DefinedTerm",
     name: term.term,
-    url: `${baseUrl}/glossary/${term.slug.current}/`,
+    url: `${baseUrl}${glossaryHref( term.slug.current )}/`,
     description: term.shortDefinition,
-    inDefinedTermSet: `${baseUrl}/glossary/`,
+    inDefinedTermSet: `${baseUrl}${GLOSSARY_BASE_PATH}/`,
   };
 
   if( term.aliases && term.aliases.length > 0 ) {

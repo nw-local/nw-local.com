@@ -1,4 +1,8 @@
 import { isGlossaryCategory } from "../../shared/glossary-categories.ts";
+import {
+  firstBlankGlossaryAliasIndex,
+  glossaryFeaturedMissingFields,
+} from "../../shared/glossary-validation.ts";
 import { blocksToText } from "./portableText.ts";
 import type { GlossaryTerm, GlossaryTermSummary, PortableText } from "./sanity";
 
@@ -14,22 +18,39 @@ export function validateGlossarySummaries(
       );
     }
 
-    if( term.image?.asset && !term.image.alt?.trim() ) {
+    if(
+      term.aliases !== undefined
+      && term.aliases !== null
+      && !Array.isArray( term.aliases )
+    ) {
       throw new Error(
-        `Glossary term ${term._id} has an image asset but image.alt is missing or blank.`,
+        `Glossary term ${term._id} has aliases that are not an array.`,
       );
     }
 
-    if( !term.featured ) continue;
-
-    const missingFields: string[] = [];
-    if( !term.hasBody ) missingFields.push( "body" );
-    if( !term.image?.asset ) missingFields.push( "image" );
-    if( !term.lastReviewedAt ) missingFields.push( "lastReviewedAt" );
-
-    if( missingFields.length > 0 ) {
+    const blankAliasIndex = firstBlankGlossaryAliasIndex( term.aliases );
+    if( blankAliasIndex !== undefined ) {
       throw new Error(
-        `Featured glossary term ${term._id} is missing: ${missingFields.join( ", " )}.`,
+        `Glossary term ${term._id} has a blank alias at index ${blankAliasIndex}.`,
+      );
+    }
+
+    if( term.featured ) {
+      const missingFields = glossaryFeaturedMissingFields({
+        hasBody: term.hasBody,
+        imageAsset: term.image?.asset,
+        imageAlt: term.image?.alt,
+        lastReviewedAt: term.lastReviewedAt,
+      });
+
+      if( missingFields.length > 0 ) {
+        throw new Error(
+          `Featured glossary term ${term._id} is missing: ${missingFields.join( ", " )}.`,
+        );
+      }
+    } else if( term.image?.asset && !term.image.alt?.trim() ) {
+      throw new Error(
+        `Glossary term ${term._id} has an image asset but image.alt is missing or blank.`,
       );
     }
   }

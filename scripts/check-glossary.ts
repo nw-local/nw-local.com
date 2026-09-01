@@ -12,6 +12,11 @@ import {
   validateGlossarySummaries,
 } from "../src/lib/glossary.ts";
 import { buildDefinedTerm } from "../src/lib/jsonld.ts";
+import { GLOSSARY_BASE_PATH, glossaryHref } from "../src/lib/routes.ts";
+import {
+  glossaryFeaturedMissingFields,
+  hasGlossaryBody,
+} from "../shared/glossary-validation.ts";
 import {
   filterGlossaryTerms,
   hasActiveGlossaryFilters,
@@ -29,7 +34,8 @@ import type {
 } from "../src/lib/sanity.ts";
 import { readFileSync } from "node:fs";
 
-type GlossaryTermOverrides = Partial<Omit<GlossaryTermSummary, "category">> & {
+type GlossaryTermOverrides = Partial<Omit<GlossaryTermSummary, "aliases" | "category">> & {
+  aliases?: unknown;
   category?: unknown;
 };
 
@@ -88,6 +94,16 @@ function expectThrows( label: string, action: () => void, expectedMessage: strin
   }
 }
 
+function expectDoesNotThrow( label: string, action: () => void ): void {
+  try {
+    action();
+  } catch ( error ) {
+    failures.push(
+      `${label}: expected no error, got ${JSON.stringify( error instanceof Error ? error.message : String( error ) )}`,
+    );
+  }
+}
+
 expectThrows(
   "unknown category names the document",
   () => validateGlossarySummaries( [ makeTerm({ _id: "glossary-bad", category: "unknown" }) ] ),
@@ -116,7 +132,66 @@ expectThrows(
     hasBody: false,
     lastReviewedAt: undefined,
   }) ] ),
-  "body, image, lastReviewedAt",
+  "body, image, image.alt, lastReviewedAt",
+);
+
+expectThrows(
+  "featured entries accumulate blank alt with other missing fields",
+  () => validateGlossarySummaries( [ makeTerm({
+    _id: "glossary-featured-blank-alt",
+    featured: true,
+    image: {
+      asset: { _id: "image-with-blank-alt" },
+      alt: "   ",
+    },
+    hasBody: false,
+    lastReviewedAt: undefined,
+  }) ] ),
+  "body, image.alt, lastReviewedAt",
+);
+
+expectThrows(
+  "blank aliases are rejected at the runtime boundary",
+  () => validateGlossarySummaries( [ makeTerm({
+    _id: "glossary-blank-alias",
+    aliases: [ "resin gland", "   " ],
+  }) ] ),
+  "Glossary term glossary-blank-alias has a blank alias at index 1.",
+);
+
+expectDoesNotThrow(
+  "null aliases represent an absent optional field",
+  () => validateGlossarySummaries( [ makeTerm({
+    _id: "glossary-without-aliases",
+    aliases: null,
+  }) ] ),
+);
+
+expectDoesNotThrow(
+  "review dates remain optional for non-featured body entries",
+  () => validateGlossarySummaries( [ makeTerm({
+    _id: "glossary-unreviewed-body",
+    featured: false,
+    hasBody: true,
+    lastReviewedAt: undefined,
+  }) ] ),
+);
+
+expectEqual( "an empty Portable Text array has no glossary body", hasGlossaryBody( [] ), false );
+expectEqual(
+  "a populated Portable Text array has a glossary body",
+  hasGlossaryBody( bodyWithWords( 1 ) ),
+  true,
+);
+expectEqual(
+  "featured validation reports every blank requirement",
+  glossaryFeaturedMissingFields({
+    hasBody: false,
+    imageAsset: undefined,
+    imageAlt: "   ",
+    lastReviewedAt: " ",
+  }),
+  [ "body", "image", "image.alt", "lastReviewedAt" ],
 );
 
 expectEqual( "200 words is one minute", glossaryReadingMinutes( bodyWithWords( 200 ) ), 1 );
@@ -168,6 +243,19 @@ expectEqual( "canonical name", schema.name, "Electrical conductivity (EC)" );
 expectEqual( "canonical url", schema.url, "https://nw-local.com/glossary/ec/" );
 expectEqual( "description", schema.description, ec.shortDefinition );
 expectEqual( "aliases", schema.alternateName, [ "EC", "conductivity" ] );
+expectEqual( "defined term set", schema.inDefinedTermSet, "https://nw-local.com/glossary/" );
+expectEqual( "glossary base path", GLOSSARY_BASE_PATH, "/glossary" );
+expectEqual( "glossary detail href", glossaryHref( "ec" ), "/glossary/ec" );
+
+const schemaWithoutAliases = buildDefinedTerm(
+  { ...ec, aliases: [] },
+  "https://nw-local.com/",
+);
+expectEqual(
+  "empty aliases are omitted from defined-term metadata",
+  "alternateName" in schemaWithoutAliases,
+  false,
+);
 
 const searchTerms: GlossarySearchRecord[] = [
   {
@@ -275,10 +363,6 @@ expectEqual(
   "",
 );
 
-const glossarySearchSource = readFileSync(
-  new URL( "../src/components/GlossarySearch.astro", import.meta.url ),
-  "utf8",
-);
 const globalCssSource = readFileSync(
   new URL( "../src/styles/global.css", import.meta.url ),
   "utf8",
@@ -291,25 +375,6 @@ expectEqual(
     && /\bmax-width:\s*none\s*;/.test( breadcrumbRule ),
   true,
 );
-expectEqual(
-  "controls are hidden before enhancement",
-  /<div\s+class="glossary-search-controls"[^>]*\bhidden\b[^>]*>/.test( glossarySearchSource ),
-  true,
-);
-expectEqual(
-  "controls reveal only after initial render",
-  /render\(\);\s*updateUrl\( "replace" \);\s*searchControls\.hidden = false;/.test(
-    glossarySearchSource,
-  ),
-  true,
-);
-const glossaryDirectoryTag = glossarySearchSource.match( /<dl\s+class="glossary-index"[^>]*>/ )?.[ 0 ];
-expectEqual(
-  "directory remains visible before enhancement",
-  glossaryDirectoryTag?.includes( "hidden" ) ?? true,
-  false,
-);
-
 if( failures.length > 0 ) {
   console.error( "Glossary contract violated:" );
   for( const failure of failures ) console.error( `  - ${failure}` );

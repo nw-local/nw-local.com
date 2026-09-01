@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Regression cases for scripts/check-glossary-build.py.
 
-The checker consumes built HTML, so these cases copy its three required pages
-into a temporary dist directory and make one deliberate malformed mutation per
-case. Run after `make build`; the script never contacts Sanity.
+The checker consumes built HTML, so these cases copy every glossary page into
+a temporary dist directory and make one deliberate mutation per case. Run
+after `make build`; the script never contacts Sanity.
 """
 import pathlib
 import re
@@ -20,7 +20,6 @@ SOURCE_DIST = pathlib.Path( sys.argv[ 1 ] if len( sys.argv ) > 1 else "dist" )
 REQUIRED_PAGES = (
     pathlib.Path( "glossary/index.html" ),
     pathlib.Path( "glossary/ec/index.html" ),
-    pathlib.Path( "glossary/cultivar/index.html" ),
 )
 FAILURE_EPILOGUE = "Glossary build contracts failed. Fix the rendered page or its Sanity content before deploying."
 
@@ -31,6 +30,70 @@ def replace_once( page: pathlib.Path, pattern: str, replacement: str ) -> None:
     if replacements != 1:
         raise AssertionError( f"{page}: expected exactly one mutation for {pattern!r}, got {replacements}" )
     page.write_text( updated, encoding="utf-8" )
+
+
+def replace_once_in_entry(
+    page: pathlib.Path,
+    entry_id: str,
+    pattern: str,
+    replacement: str,
+) -> None:
+    source = page.read_text( encoding="utf-8" )
+    entry_pattern = re.compile(
+        rf'<div class="glossary-index-entry"[^>]*data-glossary-id="{re.escape( entry_id )}".*?</div>',
+        re.DOTALL,
+    )
+    entry_match = entry_pattern.search( source )
+    if not entry_match:
+        raise AssertionError( f"{page}: could not find directory entry {entry_id!r}" )
+
+    updated_entry, replacements = re.subn(
+        pattern,
+        replacement,
+        entry_match.group( 0 ),
+        count=1,
+        flags=re.DOTALL,
+    )
+    if replacements != 1:
+        raise AssertionError(
+            f"{page}: expected exactly one entry mutation for {pattern!r}, got {replacements}"
+        )
+    page.write_text(
+        source[ :entry_match.start() ] + updated_entry + source[ entry_match.end(): ],
+        encoding="utf-8",
+    )
+
+
+def replace_once_in_featured_card(
+    page: pathlib.Path,
+    href: str,
+    pattern: str,
+    replacement: str,
+) -> None:
+    source = page.read_text( encoding="utf-8" )
+    card_pattern = re.compile(
+        rf'<a href="{re.escape( href )}" class="card glossary-featured-card">.*?</a>',
+        re.DOTALL,
+    )
+    card_match = card_pattern.search( source )
+    if not card_match:
+        raise AssertionError( f"{page}: could not find featured card {href!r}" )
+
+    updated_card, replacements = re.subn(
+        pattern,
+        replacement,
+        card_match.group( 0 ),
+        count=1,
+        flags=re.DOTALL,
+    )
+    if replacements != 1:
+        raise AssertionError(
+            f"{page}: expected exactly one featured-card mutation for {pattern!r}, got {replacements}"
+        )
+    page.write_text(
+        source[ :card_match.start() ] + updated_card + source[ card_match.end(): ],
+        encoding="utf-8",
+    )
 
 
 def make_fixture( temporary_root: pathlib.Path ) -> pathlib.Path:
@@ -58,7 +121,12 @@ def run_checker( fixture_dist: pathlib.Path ) -> subprocess.CompletedProcess[str
     )
 
 
-def assert_rejected( label: str, mutate: Callable[[pathlib.Path], None], expected_failure: str ) -> None:
+def assert_rejected(
+    label: str,
+    mutate: Callable[[pathlib.Path], None],
+    expected_failure: str,
+    expected_page: str = "glossary/index.html",
+) -> None:
     with tempfile.TemporaryDirectory( prefix="check-glossary-build-" ) as temporary_directory:
         fixture_dist = make_fixture( pathlib.Path( temporary_directory ) )
         pristine = run_checker( fixture_dist )
@@ -66,51 +134,314 @@ def assert_rejected( label: str, mutate: Callable[[pathlib.Path], None], expecte
             raise AssertionError(
                 f"{label}: pristine fixture must pass, got {pristine.returncode}: {pristine.stderr}"
             )
-        mutate( fixture_dist / "glossary/index.html" )
+        mutate( fixture_dist )
         result = run_checker( fixture_dist )
         if result.returncode != 1:
             raise AssertionError(
                 f"{label}: expected checker exit 1, got {result.returncode}: {result.stderr}"
             )
-        expected_stderr = f"glossary/index.html: {expected_failure}\n\n{FAILURE_EPILOGUE}\n"
+        expected_stderr = f"{expected_page}: {expected_failure}\n\n{FAILURE_EPILOGUE}\n"
         if result.stderr != expected_stderr:
             raise AssertionError(
                 f"{label}: expected only {expected_stderr!r}, got: {result.stderr}"
             )
 
 
-assert_rejected(
+def assert_accepted( label: str, mutate: Callable[[pathlib.Path], None] ) -> None:
+    with tempfile.TemporaryDirectory( prefix="check-glossary-build-" ) as temporary_directory:
+        fixture_dist = make_fixture( pathlib.Path( temporary_directory ) )
+        mutate( fixture_dist )
+        result = run_checker( fixture_dist )
+        if result.returncode != 0:
+            raise AssertionError(
+                f"{label}: expected checker exit 0, got {result.returncode}: {result.stderr}"
+            )
+
+
+def add_valid_future_term( fixture_dist: pathlib.Path ) -> None:
+    index_page = fixture_dist / "glossary/index.html"
+    source = index_page.read_text( encoding="utf-8" )
+    entry_match = re.search(
+        r'<div class="glossary-index-entry"[^>]*data-glossary-term="Cultivar".*?</div>',
+        source,
+        flags=re.DOTALL,
+    )
+    if not entry_match:
+        raise AssertionError( f"{index_page}: could not find the cultivar directory entry" )
+
+    future_entry = re.sub(
+        r'data-glossary-id="[^"]+"',
+        'data-glossary-id="glossary-future"',
+        entry_match.group( 0 ),
+        count=1,
+    ).replace(
+        'href="/glossary/cultivar"',
+        'href="/glossary/future"',
+    )
+    updated_source, replacements = re.subn(
+        r"</dl>",
+        future_entry + "</dl>",
+        source,
+        count=1,
+    )
+    if replacements != 1:
+        raise AssertionError( f"{index_page}: could not append a future directory entry" )
+    index_page.write_text( updated_source, encoding="utf-8" )
+
+    future_page = fixture_dist / "glossary/future/index.html"
+    future_page.parent.mkdir( parents=True )
+    shutil.copy2( fixture_dist / "glossary/cultivar/index.html", future_page )
+
+
+def add_valid_body_to_cultivar( fixture_dist: pathlib.Path ) -> None:
+    page = fixture_dist / "glossary/cultivar/index.html"
+    body_markup = (
+        '<p class="glossary-entry-meta"><span>2 min read</span></p>'
+        '<aside class="glossary-entry-contents"><a href="#future-heading">Future heading</a></aside>'
+        '<div class="portable-text"><h2 id="future-heading">Future heading</h2><p>Expanded entry.</p></div>'
+    )
+    replace_once( page, r"</article>", body_markup + "</article>" )
+
+
+case_failures: list[str] = []
+
+
+def run_case( label: str, action: Callable[[], None] ) -> None:
+    try:
+        action()
+    except ( AssertionError, FileNotFoundError ) as error:
+        case_failures.append( f"{label}: {error}" )
+
+
+run_case(
+    "directory size follows the built corpus",
+    lambda: assert_accepted( "directory size follows the built corpus", add_valid_future_term ),
+)
+run_case(
+    "a formerly concise entry may gain a body",
+    lambda: assert_accepted( "a formerly concise entry may gain a body", add_valid_body_to_cultivar ),
+)
+run_case(
     "duplicate letter value",
-    lambda page: replace_once( page, r'(data-glossary-letter\s+data-filter-value=")z(")', r"\1a\2" ),
-    "expected exactly the A-Z filter values",
+    lambda: assert_rejected(
+        "duplicate letter value",
+        lambda fixture_dist: replace_once(
+            fixture_dist / "glossary/index.html",
+            r'(data-glossary-letter\s+data-filter-value=")z(")',
+            r"\1a\2",
+        ),
+        "expected exactly the A-Z filter values",
+    ),
 )
-assert_rejected(
+run_case(
     "duplicate category value",
-    lambda page: replace_once(
-        page,
-        r'(data-glossary-category\s+data-filter-value=")business-regulation(")',
-        r"\1nutrition\2",
+    lambda: assert_rejected(
+        "duplicate category value",
+        lambda fixture_dist: replace_once(
+            fixture_dist / "glossary/index.html",
+            r'(data-glossary-category-filter\s+data-filter-value=")business-regulation(")',
+            r"\1nutrition\2",
+        ),
+        "expected exactly the category filter values",
     ),
-    "expected exactly the category filter values",
 )
-assert_rejected(
+run_case(
     "duplicate directory identity",
-    lambda page: replace_once(
-        page,
-        r'(data-glossary-id=")glossary-anemometer(")',
-        r"\1glossary-allele\2",
+    lambda: assert_rejected(
+        "duplicate directory identity",
+        lambda fixture_dist: replace_once(
+            fixture_dist / "glossary/index.html",
+            r'(data-glossary-id=")glossary-anemometer(")',
+            r"\1glossary-allele\2",
+        ),
+        "directory identities must be distinct: glossary-allele",
     ),
-    "directory identities must be distinct: glossary-allele",
 )
-assert_rejected(
+run_case(
     "duplicate directory link",
-    lambda page: replace_once( page, r'(<a href=")/glossary/anemometer(">Anemometer</a>)', r"\1/glossary/allele\2" ),
-    "directory links must be distinct: /glossary/allele",
+    lambda: assert_rejected(
+        "duplicate directory link",
+        lambda fixture_dist: replace_once(
+            fixture_dist / "glossary/index.html",
+            r'(<a href=")/glossary/anemometer(">Anemometer</a>)',
+            r"\1/glossary/allele\2",
+        ),
+        "directory links must be distinct: /glossary/allele",
+    ),
 )
-assert_rejected(
+run_case(
     "missing directory link",
-    lambda page: replace_once( page, r'<a href="/glossary/allele">Allele</a>', "<a>Allele</a>" ),
-    "directory entry must have exactly one glossary link",
+    lambda: assert_rejected(
+        "missing directory link",
+        lambda fixture_dist: replace_once(
+            fixture_dist / "glossary/index.html",
+            r'<a href="/glossary/allele">Allele</a>',
+            "<a>Allele</a>",
+        ),
+        "directory entry must have exactly one glossary link",
+    ),
 )
+run_case(
+    "missing canonical-term metadata",
+    lambda: assert_rejected(
+        "missing canonical-term metadata",
+        lambda fixture_dist: replace_once_in_entry(
+            fixture_dist / "glossary/index.html",
+            "glossary-allele",
+            r'\sdata-glossary-term="Allele"',
+            "",
+        ),
+        "/glossary/allele: directory entry has no data-glossary-term",
+    ),
+)
+run_case(
+    "canonical-term metadata matches visible text",
+    lambda: assert_rejected(
+        "canonical-term metadata matches visible text",
+        lambda fixture_dist: replace_once_in_entry(
+            fixture_dist / "glossary/index.html",
+            "glossary-allele",
+            r'data-glossary-term="Allele"',
+            'data-glossary-term="Wrong term"',
+        ),
+        "/glossary/allele: data-glossary-term does not match the visible term",
+    ),
+)
+run_case(
+    "initial metadata follows the canonical term",
+    lambda: assert_rejected(
+        "initial metadata follows the canonical term",
+        lambda fixture_dist: replace_once_in_entry(
+            fixture_dist / "glossary/index.html",
+            "glossary-allele",
+            r'data-glossary-initial="a"',
+            'data-glossary-initial="z"',
+        ),
+        '/glossary/allele: data-glossary-initial "z" does not match "a"',
+    ),
+)
+run_case(
+    "category metadata is recognized",
+    lambda: assert_rejected(
+        "category metadata is recognized",
+        lambda fixture_dist: replace_once_in_entry(
+            fixture_dist / "glossary/index.html",
+            "glossary-allele",
+            r'data-glossary-category="plant-biology"',
+            'data-glossary-category="unknown"',
+        ),
+        '/glossary/allele: data-glossary-category has unknown value "unknown"',
+    ),
+)
+run_case(
+    "search metadata includes the visible definition",
+    lambda: assert_rejected(
+        "search metadata includes the visible definition",
+        lambda fixture_dist: replace_once_in_entry(
+            fixture_dist / "glossary/index.html",
+            "glossary-allele",
+            r'data-glossary-search-text="[^"]*"',
+            'data-glossary-search-text="allele plant biology"',
+        ),
+        "/glossary/allele: data-glossary-search-text does not include the visible definition",
+    ),
+)
+run_case(
+    "visible definitions are nonempty",
+    lambda: assert_rejected(
+        "visible definitions are nonempty",
+        lambda fixture_dist: replace_once_in_entry(
+            fixture_dist / "glossary/index.html",
+            "glossary-allele",
+            r'(<dd class="glossary-index-definition">)[^<]+(</dd>)',
+            r"\1\2",
+        ),
+        "/glossary/allele: directory entry has no visible definition",
+    ),
+)
+run_case(
+    "visible categories match category metadata",
+    lambda: assert_rejected(
+        "visible categories match category metadata",
+        lambda fixture_dist: replace_once_in_entry(
+            fixture_dist / "glossary/index.html",
+            "glossary-allele",
+            r'(<dd class="glossary-index-category">)Plant Biology(</dd>)',
+            r"\1Chemistry\2",
+        ),
+        '/glossary/allele: visible category "Chemistry" does not match "Plant Biology"',
+    ),
+)
+run_case(
+    "category controls use a marker entries cannot satisfy",
+    lambda: assert_rejected(
+        "category controls use a marker entries cannot satisfy",
+        lambda fixture_dist: replace_once_in_entry(
+            fixture_dist / "glossary/index.html",
+            "glossary-allele",
+            r"data-glossary-entry",
+            "data-glossary-entry data-glossary-category-filter",
+        ),
+        "/glossary/allele: data-glossary-category-filter belongs only on filter buttons inside the control band",
+    ),
+)
+run_case(
+    "featured term matches its directory entry",
+    lambda: assert_rejected(
+        "featured term matches its directory entry",
+        lambda fixture_dist: replace_once_in_featured_card(
+            fixture_dist / "glossary/index.html",
+            "/glossary/ec",
+            r"<h3>Electrical conductivity \(EC\)</h3>",
+            "<h3>Wrong term</h3>",
+        ),
+        "/glossary/ec: featured-card term does not match its directory entry",
+    ),
+)
+run_case(
+    "featured definition matches its directory entry",
+    lambda: assert_rejected(
+        "featured definition matches its directory entry",
+        lambda fixture_dist: replace_once_in_featured_card(
+            fixture_dist / "glossary/index.html",
+            "/glossary/ec",
+            r"(<div class=\"card-body glossary-featured-body\">.*?<p>)[^<]+(</p>)",
+            r"\1Wrong definition.\2",
+        ),
+        "/glossary/ec: featured-card definition does not match its directory entry",
+    ),
+)
+run_case(
+    "featured card emits a hotspot-aware source",
+    lambda: assert_rejected(
+        "featured card emits a hotspot-aware source",
+        lambda fixture_dist: replace_once_in_featured_card(
+            fixture_dist / "glossary/index.html",
+            "/glossary/ec",
+            r'(src="[^"]*?)rect=[^&"]+(?:&#38;|&amp;|&)',
+            r"\1",
+        ),
+        "/glossary/ec: featured-card image src is not hotspot-aware",
+    ),
+)
+run_case(
+    "detail hero emits a hotspot-aware source",
+    lambda: assert_rejected(
+        "detail hero emits a hotspot-aware source",
+        lambda fixture_dist: replace_once(
+            fixture_dist / "glossary/ec/index.html",
+            r'(class="glossary-specimen".*?<img\s+src="[^"]*?)rect=[^&"]+(?:&#38;|&amp;|&)',
+            r"\1",
+        ),
+        "glossary specimen image src is not hotspot-aware",
+        expected_page="glossary/ec/index.html",
+    ),
+)
+
+if case_failures:
+    print( "check-glossary-build regression cases failed:", file=sys.stderr )
+    for failure in case_failures:
+        print( f"  - {failure}", file=sys.stderr )
+    sys.exit( 1 )
 
 print( "check-glossary-build regression cases hold" )

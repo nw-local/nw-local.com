@@ -50,6 +50,16 @@ expectIds(
   [ heading( "h2", "Feed EC" ), heading( "h2", "Feed: EC" ) ],
   [ "feed-ec", "feed-ec-2" ],
 );
+expectIds(
+  "natural suffix after a duplicate remains globally unique",
+  [ heading( "h2", "Sources" ), heading( "h2", "Sources" ), heading( "h2", "Sources 2" ) ],
+  [ "sources", "sources-2", "sources-2-2" ],
+);
+expectIds(
+  "duplicate after a natural suffix skips the occupied id",
+  [ heading( "h2", "Sources" ), heading( "h2", "Sources 2" ), heading( "h2", "Sources" ) ],
+  [ "sources", "sources-2", "sources-3" ],
+);
 expectThrows( "symbol-only heading fails loudly", () => preparePortableTextHeadings( [ heading( "h2", "§" ) ] ) );
 
 if( failures.length > 0 ) {

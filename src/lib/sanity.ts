@@ -448,7 +448,7 @@ export interface GlossaryTermSummary {
   term: string;
   slug: SanitySlug;
   shortDefinition: string;
-  aliases?: string[];
+  aliases?: string[] | null;
   category: GlossaryCategory;
   featured?: boolean;
   image?: SanityImage;

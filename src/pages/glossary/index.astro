@@ -9,6 +9,7 @@ import {
   type StructuredData,
   requireSiteUrl,
 } from "../../lib/jsonld";
+import { GLOSSARY_BASE_PATH } from "../../lib/routes";
 
 const terms = await getGlossaryTerms() ?? [];
 
@@ -17,7 +18,7 @@ const baseUrl = normalizeSiteUrl( siteUrl );
 const structuredData: StructuredData[] = [
   buildBreadcrumbList( [
     { name: "Home", url: `${baseUrl}/` },
-    { name: "Glossary", url: `${baseUrl}/glossary/` },
+    { name: "Glossary", url: `${baseUrl}${GLOSSARY_BASE_PATH}/` },
   ] ),
 ];
 ---

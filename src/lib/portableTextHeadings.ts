@@ -37,7 +37,7 @@ function blockLabel( block: PortableTextBlock ): string {
 export function preparePortableTextHeadings(
   value: PortableText,
 ): { value: PortableText; headings: PortableTextHeadingRecord[] } {
-  const occurrences = new Map<string, number>();
+  const allocatedIds = new Set<string>();
   const headings: PortableTextHeadingRecord[] = [];
 
   const preparedValue = value.map( block => {
@@ -46,10 +46,13 @@ export function preparePortableTextHeadings(
 
     const text = headingText( block );
     const baseId = headingId( text );
-    const occurrence = ( occurrences.get( baseId ) ?? 0 ) + 1;
-    occurrences.set( baseId, occurrence );
-
-    const id = occurrence === 1 ? baseId : `${baseId}-${occurrence}`;
+    let id = baseId;
+    let suffix = 2;
+    while ( allocatedIds.has( id ) ) {
+      id = `${baseId}-${suffix}`;
+      suffix += 1;
+    }
+    allocatedIds.add( id );
     headings.push({ id, level, text });
 
     return { ...block, _headingId: id };

@@ -1,5 +1,6 @@
 ---
 import type { MarkProps } from "astro-portabletext/types";
+import { glossaryHref } from "../lib/routes";
 
 export interface GlossaryRefTarget {
   _type?: string;
@@ -32,7 +33,7 @@ if( !term?.slug ) {
 // Terpenes keep their existing richer pages; everything else lives in the glossary.
 const href = term._type === "terpene"
   ? `/terpenes/${term.slug}`
-  : `/glossary/${term.slug}`;
+  : glossaryHref( term.slug );
 
 const tipId = `glossary-tip-${node.markKey}`;
 ---

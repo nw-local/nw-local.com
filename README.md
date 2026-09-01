@@ -75,7 +75,7 @@ Run `make` (no args) to print the full target list with descriptions.
 | Type check          | `yarn astro check`   |                                                      |
 | Lint                | `make lint`          | ESLint                                               |
 | Format              | `make format`        | ESLint `--fix` (auto-fix)                            |
-| Full local checks   | `make check`         | core repository checks, including build and Studio validation |
+| Full local checks   | `make check`         | CI-equivalent checks, including build and Studio validation |
 | Upgrade deps (safe) | `make upgrade`       | minor/patch only, respects tilde ranges              |
 | Upgrade deps (major)| `make upgrade-latest`| ignores semver — review `yarn outdated` before/after |
 | Prep images         | `make prep-images`   | see [Image workflow](#image-workflow)                |
@@ -145,7 +145,7 @@ Every page emits **JSON-LD structured data** (`Organization` everywhere; `Produc
 
 The site auto-deploys to GitHub Pages on every push to `main`, via [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml). Publishing content in Sanity also triggers a rebuild through a webhook (~1-2 min end-to-end), because the build fetches all content at build time.
 
-Deploys are not unconditional: the build runs `make check-content-style` against the freshly built `dist/`, and a failure skips the deploy job and leaves the previous site live. **If published content does not appear, check that run first** — a British spelling, an unpaired temperature, or a Celsius-first pair will each hold it back, and nothing else announces it.
+Deploys are not unconditional: the build runs the content-style and glossary reference-library checks against the freshly built `dist/`, and a failure skips the deploy job and leaves the previous site live. **If published content does not appear, check that run first** — invalid glossary search metadata or featured content, a British spelling, an unpaired temperature, or a Celsius-first pair will each hold it back, and nothing else announces it.
 
 The Studio itself is hosted separately at <https://nw-local.sanity.studio/> and deploys with `make deploy-studio` — **not** with the site. A schema or sidebar change needs that command before editors see it.
 
