@@ -695,6 +695,12 @@ def check_detail_entry(
             )
 
     entry_layouts = elements_with_class( elements, "glossary-entry-layout" )
+    require(
+        failures,
+        page,
+        len( entry_layouts ) == 1,
+        "glossary entry must contain exactly one reading layout",
+    )
     if len( entry_layouts ) == 1:
         layout_child_elements = [
             child for child in entry_layouts[ 0 ].children if isinstance( child, Element )

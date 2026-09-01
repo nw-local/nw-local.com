@@ -565,6 +565,19 @@ run_case(
     ),
 )
 run_case(
+    "duplicate reading layouts stay removed from term pages",
+    lambda: assert_rejected(
+        "duplicate reading layouts stay removed from term pages",
+        lambda fixture_dist: replace_once(
+            fixture_dist / "glossary/ec/index.html",
+            r'(<div class="glossary-entry-reading">)',
+            r'\1<div class="glossary-entry-layout"><div>2 min read</div></div>',
+        ),
+        "glossary entry must contain exactly one reading layout",
+        expected_page="glossary/ec/index.html",
+    ),
+)
+run_case(
     "article contents stay removed from term pages",
     lambda: assert_rejected(
         "article contents stay removed from term pages",
