@@ -1,16 +1,11 @@
 import { defineField, defineType } from 'sanity'
+import { certificateAssetValidation } from './certificateValidation'
 
 const MACHINE_OWNED_DESCRIPTION = 'Set by Northwest Local OPS. Do not edit in Studio.'
 const STATUS_OPTIONS = [
   { title: 'Pass', value: 'pass' },
   { title: 'Fail', value: 'fail' },
 ]
-
-export function certificateAssetValidation<
-  Rule extends { required: () => Rule; assetRequired: () => Rule },
->(rule: Rule): Rule {
-  return rule.required().assetRequired()
-}
 
 const statusField = (name: string, title: string, required: boolean) =>
   defineField({

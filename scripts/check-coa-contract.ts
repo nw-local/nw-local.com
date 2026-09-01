@@ -3,7 +3,9 @@
 import assert from "node:assert/strict";
 import { assertCoa, normalizeCoa } from "../src/lib/coa.ts";
 import { makeCoaFixture } from "./fixtures/coa.ts";
-import { certificateAssetValidation } from "../studio/schemaTypes/coa.ts";
+// Import the pure rule, not `studio/schemaTypes/coa.ts`, which imports `sanity`
+// (present only under studio/node_modules and absent in the root-only CI job).
+import { certificateAssetValidation } from "../studio/schemaTypes/certificateValidation.ts";
 
 const fixture: unknown = makeCoaFixture();
 
