@@ -15,7 +15,6 @@ import pathlib
 import re
 import sys
 import unicodedata
-import urllib.parse
 from dataclasses import dataclass, field
 from html.parser import HTMLParser
 from typing import Iterable
@@ -146,33 +145,6 @@ def ancestor_with_attribute( element: Element, attribute_name: str ) -> Element 
             return candidate
         candidate = candidate.parent
     return None
-
-
-def image_urls( image: Element ) -> list[str]:
-    urls: list[str] = []
-    source = ( image.attribute( "src" ) or "" ).strip()
-    if source:
-        urls.append( source )
-
-    source_set = image.attribute( "srcset" ) or ""
-    # Sanity's `rect=x,y,w,h` query value contains commas. Srcset candidates
-    # are separated by a comma followed by whitespace, while those coordinate
-    # commas are not, so splitting on every comma corrupts valid image URLs.
-    for candidate in re.split( r",\s+", source_set ):
-        candidate_url = candidate.strip().split( " ", maxsplit=1 )[ 0 ]
-        if candidate_url:
-            urls.append( candidate_url )
-    return urls
-
-
-def image_uses_hotspot_crop( url: str ) -> bool:
-    query = urllib.parse.parse_qs( urllib.parse.urlsplit( url ).query )
-    return bool( query.get( "rect" ) )
-
-
-def image_asset_identity( url: str ) -> str:
-    parsed_url = urllib.parse.urlsplit( url )
-    return f"{parsed_url.netloc}{parsed_url.path}"
 
 
 def page_elements( page: pathlib.Path ) -> list[ Element ]:
@@ -412,142 +384,34 @@ def check_category_filter_markers( elements: list[Element], failures: list[str] 
         )
 
 
-def check_featured_card(
-    card: Element,
-    directory_records: dict[str, DirectoryRecord],
-    detail_pages: dict[str, pathlib.Path],
-    failures: list[str],
-) -> None:
-    card_href = ( card.attribute( "href" ) or "" ).strip()
-    record = directory_records.get( card_href )
-    require(
-        failures,
-        INDEX_PAGE,
-        record is not None,
-        f"{card_href or 'featured card without an href'}: featured card has no matching directory entry",
-    )
-    if record is None:
-        return
-
-    term_elements = [ element for element in descendants( card ) if element.name == "h3" ]
-    featured_term = normalized_text( term_elements[ 0 ] ) if len( term_elements ) == 1 else ""
-    require(
-        failures,
-        INDEX_PAGE,
-        featured_term == record.term,
-        f"{card_href}: featured-card term does not match its directory entry",
-    )
-
-    category_elements = elements_with_class( descendants( card ), "glossary-category-label" )
-    featured_category = normalized_text( category_elements[ 0 ] ) if len( category_elements ) == 1 else ""
-    require(
-        failures,
-        INDEX_PAGE,
-        featured_category == record.category_label,
-        f"{card_href}: featured-card category does not match its directory entry",
-    )
-
-    card_bodies = elements_with_class( descendants( card ), "glossary-featured-body" )
-    definition_elements = [
-        element
-        for card_body in card_bodies
-        for element in descendants( card_body )
-        if element.name == "p" and not element.has_class( "glossary-category-label" )
-    ]
-    featured_definition = normalized_text( definition_elements[ 0 ] ) if len( definition_elements ) == 1 else ""
-    require(
-        failures,
-        INDEX_PAGE,
-        featured_definition == record.definition,
-        f"{card_href}: featured-card definition does not match its directory entry",
-    )
-
-    nested_links = [ element for element in descendants( card ) if element.name == "a" ]
-    require(
-        failures,
-        INDEX_PAGE,
-        not nested_links,
-        f"{card_href}: featured card contains a nested link",
-    )
-
-    images = [ element for element in descendants( card ) if element.name == "img" ]
-    require(
-        failures,
-        INDEX_PAGE,
-        len( images ) == 1,
-        f"{card_href}: featured card must have exactly one image",
-    )
-    if len( images ) != 1:
-        return
-
-    card_image = images[ 0 ]
-    card_alt = ( card_image.attribute( "alt" ) or "" ).strip()
-    require(
-        failures,
-        INDEX_PAGE,
-        bool( card_alt ),
-        f"{card_href}: featured-card image has an empty alt attribute",
-    )
-    card_source = ( card_image.attribute( "src" ) or "" ).strip()
-    require(
-        failures,
-        INDEX_PAGE,
-        image_uses_hotspot_crop( card_source ),
-        f"{card_href}: featured-card image src is not hotspot-aware",
-    )
-    source_set_urls = image_urls( card_image )[ 1: ]
-    require(
-        failures,
-        INDEX_PAGE,
-        bool( source_set_urls ) and all( image_uses_hotspot_crop( url ) for url in source_set_urls ),
-        f"{card_href}: featured-card image srcset is not hotspot-aware",
-    )
-
-    detail_page = detail_pages.get( card_href )
-    require(
-        failures,
-        INDEX_PAGE,
-        detail_page is not None,
-        f"{card_href}: featured card has no built detail page",
-    )
-    if detail_page is None:
-        return
-
-    detail_elements = page_elements( DIST / detail_page )
-    detail_images = [
-        image
-        for specimen in elements_with_class( detail_elements, "glossary-specimen" )
-        for image in descendants( specimen )
-        if image.name == "img"
-    ]
-    require(
-        failures,
-        INDEX_PAGE,
-        len( detail_images ) == 1,
-        f"{card_href}: featured detail page must have exactly one specimen image",
-    )
-    if len( detail_images ) == 1:
-        detail_image = detail_images[ 0 ]
-        detail_source = ( detail_image.attribute( "src" ) or "" ).strip()
-        require(
-            failures,
-            INDEX_PAGE,
-            ( detail_image.attribute( "alt" ) or "" ).strip() == card_alt,
-            f"{card_href}: featured card and detail image alt text differ",
-        )
-        require(
-            failures,
-            INDEX_PAGE,
-            image_asset_identity( detail_source ) == image_asset_identity( card_source ),
-            f"{card_href}: featured card and detail page use different image assets",
-        )
-
-
 def check_index(
     elements: list[ Element ],
     detail_pages: dict[str, pathlib.Path],
     failures: list[str],
 ) -> None:
+    require(
+        failures,
+        INDEX_PAGE,
+        any(
+            normalized_text( element )
+            == "Clear definitions for cannabis cultivation, plant science, and production."
+            for element in elements
+            if element.name == "p"
+        ),
+        "glossary index is missing its plain-language introduction",
+    )
+    require(
+        failures,
+        INDEX_PAGE,
+        not elements_with_class( elements, "glossary-featured-guides" ),
+        "glossary index must not render a selected-reference-article section",
+    )
+    require(
+        failures,
+        INDEX_PAGE,
+        not elements_with_class( elements, "glossary-featured-card" ),
+        "glossary index must not render featured guide cards",
+    )
     require(
         failures,
         INDEX_PAGE,
@@ -657,56 +521,6 @@ def check_index(
             f"directory links do not resolve to built glossary pages: {', '.join( extra_links )}",
         )
 
-    directory_records = { record.href: record for record in records }
-    featured_cards = elements_with_class( elements, "glossary-featured-card" )
-    require(
-        failures,
-        INDEX_PAGE,
-        any( card.name == "a" and card.attribute( "href" ) == "/glossary/ec" for card in featured_cards ),
-        "missing the featured EC card",
-    )
-    for card in featured_cards:
-        check_featured_card( card, directory_records, detail_pages, failures )
-
-
-def has_reading_time( elements: Iterable[Element] ) -> bool:
-    return any(
-        re.search( r"\b\d+ min read\b", normalized_text( element ) )
-        for element in elements
-        if element.name == "p"
-    )
-
-
-def check_contents_targets(
-    page: pathlib.Path,
-    elements: list[Element],
-    contents: Element,
-    expected_targets: set[str],
-    failures: list[str],
-) -> None:
-    contents_links = [
-        link
-        for link in descendants( contents )
-        if link.name == "a" and ( link.attribute( "href" ) or "" ).startswith( "#" )
-    ]
-    link_targets = {
-        ( link.attribute( "href" ) or "" )[ 1: ]
-        for link in contents_links
-    }
-    require(
-        failures,
-        page,
-        link_targets == expected_targets,
-        "table-of-contents links do not match the rendered article headings",
-    )
-    for target in link_targets:
-        target_count = sum( element.attribute( "id" ) == target for element in elements )
-        require(
-            failures,
-            page,
-            target_count == 1,
-            f"table-of-contents target #{target} exists {target_count} times",
-        )
 
 
 def check_detail_entry(
@@ -732,138 +546,49 @@ def check_detail_entry(
         has_json_ld_type( elements, "BreadcrumbList", failures, page ),
         "missing BreadcrumbList JSON-LD",
     )
-
-    for specimen in elements_with_class( elements, "glossary-specimen" ):
-        specimen_images = [
-            element
-            for element in descendants( specimen )
-            if element.name == "img"
-        ]
-        require(
-            failures,
-            page,
-            len( specimen_images ) == 1,
-            "glossary specimen must contain exactly one image",
-        )
-        if len( specimen_images ) != 1:
-            continue
-
-        specimen_image = specimen_images[ 0 ]
-        require(
-            failures,
-            page,
-            bool( ( specimen_image.attribute( "alt" ) or "" ).strip() ),
-            "glossary specimen image has an empty alt attribute",
-        )
-        specimen_source = ( specimen_image.attribute( "src" ) or "" ).strip()
-        require(
-            failures,
-            page,
-            image_uses_hotspot_crop( specimen_source ),
-            "glossary specimen image src is not hotspot-aware",
-        )
-        source_set_urls = image_urls( specimen_image )[ 1: ]
-        require(
-            failures,
-            page,
-            bool( source_set_urls ) and all( image_uses_hotspot_crop( url ) for url in source_set_urls ),
-            "glossary specimen image srcset is not hotspot-aware",
-        )
+    require(
+        failures,
+        page,
+        not elements_with_class( elements, "glossary-specimen" ),
+        "glossary entries must not render editorial hero images",
+    )
+    require(
+        failures,
+        page,
+        not elements_with_class( elements, "glossary-entry-meta" ),
+        "glossary entries must not render article reading metadata",
+    )
+    require(
+        failures,
+        page,
+        not elements_with_class( elements, "glossary-entry-contents" ),
+        "glossary entries must not render article contents navigation",
+    )
 
     body_containers = elements_with_class( elements, "portable-text" )
-    contents = elements_with_class( elements, "glossary-entry-contents" )
-    reading_time = has_reading_time( elements )
-    if not body_containers:
-        require(
-            failures,
-            page,
-            not reading_time,
-            "entry without a body unexpectedly has a reading-time label",
-        )
-        require(
-            failures,
-            page,
-            not contents,
-            "entry without a body unexpectedly has contents navigation",
-        )
-        return
-
     require(
         failures,
         page,
-        len( body_containers ) == 1,
-        "entry must render exactly one Portable Text body",
+        len( body_containers ) <= 1,
+        "entry must render at most one expanded explanation",
     )
-    require(
-        failures,
-        page,
-        reading_time,
-        "entry with a body is missing its reading-time label",
-    )
-    article_heading_ids = {
-        ( heading.attribute( "id" ) or "" ).strip()
-        for body_container in body_containers
-        for heading in descendants( body_container )
-        if heading.name in { "h2", "h3" } and ( heading.attribute( "id" ) or "" ).strip()
-    }
-    if article_heading_ids:
-        require(
-            failures,
-            page,
-            len( contents ) == 1,
-            "entry with article headings must render one contents navigation",
-        )
-        if len( contents ) == 1:
-            check_contents_targets(
-                page,
-                elements,
-                contents[ 0 ],
-                article_heading_ids,
-                failures,
-            )
-    else:
-        require(
-            failures,
-            page,
-            not contents,
-            "entry without article headings unexpectedly has contents navigation",
-        )
 
 
 def check_ec( elements: list[ Element ], failures: list[str] ) -> None:
-    specimen_images = [
-        image
-        for specimen in elements_with_class( elements, "glossary-specimen" )
-        for image in descendants( specimen )
-        if image.name == "img"
-    ]
-    require(
-        failures,
-        EC_PAGE,
-        len( specimen_images ) == 1,
-        "missing the EC specimen image",
-    )
-    require(
-        failures,
-        EC_PAGE,
-        any(
-            element.name == "time"
-            and bool( ( element.attribute( "datetime" ) or "" ).strip() )
-            and "Reviewed" in normalized_text( element.parent ) if element.parent else False
-            for element in elements
-        ),
-        "missing the EC reviewed date",
-    )
-    require( failures, EC_PAGE, has_reading_time( elements ), "missing the EC reading-time label" )
-
-    contents = elements_with_class( elements, "glossary-entry-contents" )
-    contents_links = [
-        link
-        for container in contents
-        for link in descendants( container )
-        if link.name == "a" and ( link.attribute( "href" ) or "" ).startswith( "#" )
-    ]
-    require( failures, EC_PAGE, len( contents_links ) > 0, "missing table-of-contents links" )
+    body_containers = elements_with_class( elements, "portable-text" )
+    require( failures, EC_PAGE, len( body_containers ) == 1, "missing the EC expanded explanation" )
+    if len( body_containers ) == 1:
+        article_headings = [
+            element
+            for element in descendants( body_containers[ 0 ] )
+            if element.name in { "h2", "h3", "h4" }
+        ]
+        require(
+            failures,
+            EC_PAGE,
+            not article_headings,
+            "EC explanation must remain glossary-scale rather than article-structured",
+        )
     related_lists = elements_with_class( elements, "glossary-related-terms" )
     require(
         failures,

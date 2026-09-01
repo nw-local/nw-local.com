@@ -65,12 +65,10 @@ const RETAILER_PROJECTION = `{
   productsAvailable[]->{ _id, name, slug, category }
 }`;
 
-// Keep long glossary bodies out of index data. hasBody gives the featured-term
-// contract the one fact it needs without serializing every article at once.
+// Keep optional glossary explanations out of index data. The directory needs
+// compact search metadata only; full Portable Text belongs on detail pages.
 const GLOSSARY_SUMMARY_PROJECTION = `
-  _id, term, slug, shortDefinition, aliases, category, featured, lastReviewedAt,
-  image { asset->, alt, crop, hotspot },
-  "hasBody": defined(body[0])
+  _id, term, slug, shortDefinition, aliases, category
 `;
 
 // --- Shared types ---
@@ -450,10 +448,6 @@ export interface GlossaryTermSummary {
   shortDefinition: string;
   aliases?: string[] | null;
   category: GlossaryCategory;
-  featured?: boolean;
-  image?: SanityImage;
-  lastReviewedAt?: string;
-  hasBody: boolean;
 }
 
 export interface GlossaryRelatedTerm {

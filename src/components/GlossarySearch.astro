@@ -10,7 +10,6 @@ import {
 } from "../lib/glossary-search";
 import type { GlossaryTermSummary } from "../lib/sanity";
 import { glossaryHref } from "../lib/routes";
-import GlossaryFeaturedCard from "./GlossaryFeaturedCard.astro";
 
 interface Props {
   terms: readonly GlossaryTermSummary[]
@@ -18,7 +17,6 @@ interface Props {
 
 const { terms } = Astro.props;
 const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split( "" );
-const featuredTerms = terms.filter( term => term.featured );
 const availableLetters = new Set(
   terms.map( term => normalizeGlossarySearchText( term.term ).charAt( 0 ) ),
 );
@@ -98,18 +96,6 @@ const availableCategories = new Set( terms.map( term => term.category ) );
       </div>
     </fieldset>
   </div>
-
-  {featuredTerms.length > 0 && (
-    <section class="glossary-featured-guides" data-glossary-featured>
-      <div class="glossary-directory-heading">
-        <p class="glossary-directory-kicker">Selected reference articles</p>
-        <h2>In-depth guides</h2>
-      </div>
-      <div class="glossary-featured-grid">
-        {featuredTerms.map( term => <GlossaryFeaturedCard {...term} /> )}
-      </div>
-    </section>
-  )}
 
   <section class="glossary-directory-section">
     <div class="glossary-directory-heading">

@@ -1,22 +1,15 @@
 #!/usr/bin/env node
 /**
- * Verify the glossary content contract and reading-time calculation.
+ * Verify the glossary content, structured-data, and search contracts.
  *
  * This runs under bare node with no .env loaded. glossary.ts consequently
  * imports its Sanity shapes with `import type` only, so validating fetched data
  * does not initialize the Sanity client.
  */
 
-import {
-  glossaryReadingMinutes,
-  validateGlossarySummaries,
-} from "../src/lib/glossary.ts";
+import { validateGlossarySummaries } from "../src/lib/glossary.ts";
 import { buildDefinedTerm } from "../src/lib/jsonld.ts";
 import { GLOSSARY_BASE_PATH, glossaryHref } from "../src/lib/routes.ts";
-import {
-  glossaryFeaturedMissingFields,
-  hasGlossaryBody,
-} from "../shared/glossary-validation.ts";
 import {
   filterGlossaryTerms,
   hasActiveGlossaryFilters,
@@ -27,11 +20,7 @@ import {
   type GlossaryFilters,
   type GlossarySearchRecord,
 } from "../src/lib/glossary-search.ts";
-import type {
-  GlossaryTerm,
-  GlossaryTermSummary,
-  PortableText,
-} from "../src/lib/sanity.ts";
+import type { GlossaryTerm, GlossaryTermSummary } from "../src/lib/sanity.ts";
 import { readFileSync } from "node:fs";
 
 type GlossaryTermOverrides = Partial<Omit<GlossaryTermSummary, "aliases" | "category">> & {
@@ -47,13 +36,6 @@ function makeTerm( overrides: GlossaryTermOverrides = {}): GlossaryTermSummary {
     shortDefinition: "A resin gland on cannabis flowers.",
     aliases: [ "resin gland" ],
     category: "plant-biology",
-    featured: false,
-    image: {
-      asset: { _id: "image-valid" },
-      alt: "A magnified trichome on a cannabis flower.",
-    },
-    hasBody: true,
-    lastReviewedAt: "2026-08-31",
   };
 
   for( const [ fieldName, value ] of Object.entries( overrides ) ) {
@@ -61,13 +43,6 @@ function makeTerm( overrides: GlossaryTermOverrides = {}): GlossaryTermSummary {
   }
 
   return term;
-}
-
-function bodyWithWords( wordCount: number ): PortableText {
-  return [ {
-    _type: "block",
-    children: [ { _type: "span", text: Array.from({ length: wordCount }, () => "word" ).join( " " ) } ],
-  } ];
 }
 
 const failures: string[] = [];
@@ -111,46 +86,6 @@ expectThrows(
 );
 
 expectThrows(
-  "non-featured images require alt text",
-  () => validateGlossarySummaries( [ makeTerm({
-    _id: "glossary-non-featured-image",
-    featured: false,
-    image: {
-      asset: { _id: "image-without-alt" },
-      alt: "   ",
-    },
-  }) ] ),
-  "Glossary term glossary-non-featured-image has an image asset but image.alt is missing or blank.",
-);
-
-expectThrows(
-  "featured entries report every missing field",
-  () => validateGlossarySummaries( [ makeTerm({
-    _id: "glossary-featured",
-    featured: true,
-    image: undefined,
-    hasBody: false,
-    lastReviewedAt: undefined,
-  }) ] ),
-  "body, image, image.alt, lastReviewedAt",
-);
-
-expectThrows(
-  "featured entries accumulate blank alt with other missing fields",
-  () => validateGlossarySummaries( [ makeTerm({
-    _id: "glossary-featured-blank-alt",
-    featured: true,
-    image: {
-      asset: { _id: "image-with-blank-alt" },
-      alt: "   ",
-    },
-    hasBody: false,
-    lastReviewedAt: undefined,
-  }) ] ),
-  "body, image.alt, lastReviewedAt",
-);
-
-expectThrows(
   "blank aliases are rejected at the runtime boundary",
   () => validateGlossarySummaries( [ makeTerm({
     _id: "glossary-blank-alias",
@@ -167,38 +102,6 @@ expectDoesNotThrow(
   }) ] ),
 );
 
-expectDoesNotThrow(
-  "review dates remain optional for non-featured body entries",
-  () => validateGlossarySummaries( [ makeTerm({
-    _id: "glossary-unreviewed-body",
-    featured: false,
-    hasBody: true,
-    lastReviewedAt: undefined,
-  }) ] ),
-);
-
-expectEqual( "an empty Portable Text array has no glossary body", hasGlossaryBody( [] ), false );
-expectEqual(
-  "a populated Portable Text array has a glossary body",
-  hasGlossaryBody( bodyWithWords( 1 ) ),
-  true,
-);
-expectEqual(
-  "featured validation reports every blank requirement",
-  glossaryFeaturedMissingFields({
-    hasBody: false,
-    imageAsset: undefined,
-    imageAlt: "   ",
-    lastReviewedAt: " ",
-  }),
-  [ "body", "image", "image.alt", "lastReviewedAt" ],
-);
-
-expectEqual( "200 words is one minute", glossaryReadingMinutes( bodyWithWords( 200 ) ), 1 );
-expectEqual( "201 words rounds up", glossaryReadingMinutes( bodyWithWords( 201 ) ), 2 );
-expectEqual( "present textless body is one minute", glossaryReadingMinutes( bodyWithWords( 0 ) ), 1 );
-expectEqual( "missing body has no reading time", glossaryReadingMinutes( undefined ), undefined );
-
 const ec: GlossaryTerm = {
   _id: "glossary-ec",
   term: "Electrical conductivity (EC)",
@@ -206,13 +109,6 @@ const ec: GlossaryTerm = {
   shortDefinition: "A measure of how well dissolved fertilizer ions conduct electricity.",
   aliases: [ "EC", "conductivity" ],
   category: "nutrition",
-  featured: true,
-  image: {
-    asset: { _id: "image-ec-1600x1000-jpg" },
-    alt: "An electrical conductivity probe immersed in a fertigation reservoir.",
-  },
-  lastReviewedAt: "2026-08-31",
-  hasBody: true,
   body: [ {
     _type: "block",
     style: "normal",

@@ -24,9 +24,7 @@ REQUIRED_PAGES = (
 FAILURE_EPILOGUE = "Glossary build contracts failed. Fix the rendered page or its Sanity content before deploying."
 FIXTURE_TERM_SLUG_STEM = "fixture-growth"
 VALID_BODY_MARKUP = (
-    '<p class="glossary-entry-meta"><span>2 min read</span></p>'
-    '<aside class="glossary-entry-contents"><a href="#future-heading">Future heading</a></aside>'
-    '<div class="portable-text"><h2 id="future-heading">Future heading</h2><p>Expanded entry.</p></div>'
+    '<div class="portable-text"><p>Expanded entry.</p></div>'
 )
 
 
@@ -66,38 +64,6 @@ def replace_once_in_entry(
         )
     page.write_text(
         source[ :entry_match.start() ] + updated_entry + source[ entry_match.end(): ],
-        encoding="utf-8",
-    )
-
-
-def replace_once_in_featured_card(
-    page: pathlib.Path,
-    href: str,
-    pattern: str,
-    replacement: str,
-) -> None:
-    source = page.read_text( encoding="utf-8" )
-    card_pattern = re.compile(
-        rf'<a href="{re.escape( href )}" class="card glossary-featured-card">.*?</a>',
-        re.DOTALL,
-    )
-    card_match = card_pattern.search( source )
-    if not card_match:
-        raise AssertionError( f"{page}: could not find featured card {href!r}" )
-
-    updated_card, replacements = re.subn(
-        pattern,
-        replacement,
-        card_match.group( 0 ),
-        count=1,
-        flags=re.DOTALL,
-    )
-    if replacements != 1:
-        raise AssertionError(
-            f"{page}: expected exactly one featured-card mutation for {pattern!r}, got {replacements}"
-        )
-    page.write_text(
-        source[ :card_match.start() ] + updated_card + source[ card_match.end(): ],
         encoding="utf-8",
     )
 
@@ -447,54 +413,53 @@ run_case(
     ),
 )
 run_case(
-    "featured term matches its directory entry",
+    "selected reference sections stay removed",
     lambda: assert_rejected(
-        "featured term matches its directory entry",
-        lambda fixture_dist: replace_once_in_featured_card(
+        "selected reference sections stay removed",
+        lambda fixture_dist: replace_once(
             fixture_dist / "glossary/index.html",
-            "/glossary/ec",
-            r"<h3>Electrical conductivity \(EC\)</h3>",
-            "<h3>Wrong term</h3>",
+            r'(<section class="glossary-directory-section">)',
+            r'<section class="glossary-featured-guides"></section>\1',
         ),
-        "/glossary/ec: featured-card term does not match its directory entry",
+        "glossary index must not render a selected-reference-article section",
     ),
 )
 run_case(
-    "featured definition matches its directory entry",
+    "editorial heroes stay removed from term pages",
     lambda: assert_rejected(
-        "featured definition matches its directory entry",
-        lambda fixture_dist: replace_once_in_featured_card(
-            fixture_dist / "glossary/index.html",
-            "/glossary/ec",
-            r"(<div class=\"card-body glossary-featured-body\">.*?<p>)[^<]+(</p>)",
-            r"\1Wrong definition.\2",
-        ),
-        "/glossary/ec: featured-card definition does not match its directory entry",
-    ),
-)
-run_case(
-    "featured card emits a hotspot-aware source",
-    lambda: assert_rejected(
-        "featured card emits a hotspot-aware source",
-        lambda fixture_dist: replace_once_in_featured_card(
-            fixture_dist / "glossary/index.html",
-            "/glossary/ec",
-            r'(src="[^"]*?)rect=[^&"]+(?:&#38;|&amp;|&)',
-            r"\1",
-        ),
-        "/glossary/ec: featured-card image src is not hotspot-aware",
-    ),
-)
-run_case(
-    "detail hero emits a hotspot-aware source",
-    lambda: assert_rejected(
-        "detail hero emits a hotspot-aware source",
+        "editorial heroes stay removed from term pages",
         lambda fixture_dist: replace_once(
             fixture_dist / "glossary/ec/index.html",
-            r'(class="glossary-specimen".*?<img\s+src="[^"]*?)rect=[^&"]+(?:&#38;|&amp;|&)',
-            r"\1",
+            r'(</header>)',
+            r'<figure class="glossary-specimen"></figure>\1',
         ),
-        "glossary specimen image src is not hotspot-aware",
+        "glossary entries must not render editorial hero images",
+        expected_page="glossary/ec/index.html",
+    ),
+)
+run_case(
+    "article metadata stays removed from term pages",
+    lambda: assert_rejected(
+        "article metadata stays removed from term pages",
+        lambda fixture_dist: replace_once(
+            fixture_dist / "glossary/ec/index.html",
+            r'(</header>)',
+            r'<p class="glossary-entry-meta">2 min read</p>\1',
+        ),
+        "glossary entries must not render article reading metadata",
+        expected_page="glossary/ec/index.html",
+    ),
+)
+run_case(
+    "article contents stay removed from term pages",
+    lambda: assert_rejected(
+        "article contents stay removed from term pages",
+        lambda fixture_dist: replace_once(
+            fixture_dist / "glossary/ec/index.html",
+            r'(<div class="glossary-entry-reading">)',
+            r'<aside class="glossary-entry-contents"></aside>\1',
+        ),
+        "glossary entries must not render article contents navigation",
         expected_page="glossary/ec/index.html",
     ),
 )

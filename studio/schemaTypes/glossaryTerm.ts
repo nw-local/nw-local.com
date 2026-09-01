@@ -1,24 +1,6 @@
 import { defineField, defineType } from 'sanity'
 import { GLOSSARY_CATEGORIES } from '../../shared/glossary-categories'
-import {
-  firstBlankGlossaryAliasIndex,
-  glossaryFeaturedMissingFields,
-  hasGlossaryBody,
-  type GlossaryFeaturedRequirement,
-} from '../../shared/glossary-validation'
-
-const FEATURED_FIELD_LABELS: Record<GlossaryFeaturedRequirement, string> = {
-  body: 'Full Entry',
-  image: 'Editorial Image',
-  'image.alt': 'Alternative Text',
-  lastReviewedAt: 'Last Reviewed',
-}
-
-function imageField(image: unknown, fieldName: string): unknown {
-  return typeof image === 'object' && image !== null
-    ? Object.entries(image).find(([candidateFieldName]) => candidateFieldName === fieldName)?.[1]
-    : undefined
-}
+import { firstBlankGlossaryAliasIndex } from '../../shared/glossary-validation'
 
 export const glossaryTermType = defineType({
   name: 'glossaryTerm',
@@ -50,30 +32,10 @@ export const glossaryTermType = defineType({
     }),
     defineField({
       name: 'body',
-      title: 'Full Entry',
+      title: 'Expanded Explanation',
       type: 'blockContent',
-      description: 'Optional longer explanation shown on the term page.',
-    }),
-    defineField({
-      name: 'image',
-      title: 'Editorial Image',
-      type: 'image',
-      options: { hotspot: true },
-      fields: [
-        defineField({
-          name: 'alt',
-          title: 'Alternative Text',
-          type: 'string',
-          validation: (rule) =>
-            rule.custom((alt, context) => {
-              const parent = context.parent
-              if (!imageField(parent, 'asset')) return true
-              return typeof alt === 'string' && alt.trim().length > 0
-                ? true
-                : 'Alternative text is required when an image is attached.'
-            }),
-        }),
-      ],
+      description:
+        'Optional supporting context for the term. Keep procedures, recommendations, and article-length treatment in a blog post.',
     }),
     defineField({
       name: 'aliases',
@@ -117,33 +79,7 @@ export const glossaryTermType = defineType({
           return includesSelfReference ? 'A glossary term cannot reference itself.' : true
         }),
     }),
-    defineField({
-      name: 'featured',
-      title: 'Feature as an In-Depth Guide',
-      type: 'boolean',
-      initialValue: false,
-    }),
-    defineField({
-      name: 'lastReviewedAt',
-      title: 'Last Reviewed',
-      type: 'date',
-    }),
   ],
-  validation: (rule) =>
-    rule.custom((document) => {
-      if (!document?.featured) return true
-
-      const missingFields = glossaryFeaturedMissingFields({
-        hasBody: hasGlossaryBody(document.body),
-        imageAsset: imageField(document.image, 'asset'),
-        imageAlt: imageField(document.image, 'alt'),
-        lastReviewedAt: document.lastReviewedAt,
-      }).map((field) => FEATURED_FIELD_LABELS[field])
-
-      return missingFields.length > 0
-        ? `Featured in-depth guides require: ${missingFields.join(', ')}.`
-        : true
-    }),
   orderings: [
     {
       title: 'Term A-Z',

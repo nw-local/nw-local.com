@@ -137,14 +137,6 @@ export function initializeGlossaryBrowser(
     "Glossary empty-state message is missing.",
   );
 
-  const featuredGuidesCandidate = searchRoot.querySelector( "[data-glossary-featured]" );
-  if( featuredGuidesCandidate !== null && !( featuredGuidesCandidate instanceof HTMLElement ) ) {
-    throw new Error( "Glossary featured guide container is invalid." );
-  }
-  const featuredGuides = featuredGuidesCandidate instanceof HTMLElement
-    ? featuredGuidesCandidate
-    : undefined;
-
   const letterButtons = collectButtons( searchControls, "[data-glossary-letter]" );
   const categoryButtons = collectButtons(
     searchControls,
@@ -172,7 +164,6 @@ export function initializeGlossaryBrowser(
     clearButton.hidden = !activeFilters;
     emptyState.hidden = matchCount !== 0;
     emptyStateMessage.textContent = glossaryEmptyStateMessage( filters );
-    if( featuredGuides ) featuredGuides.hidden = activeFilters;
     updatePressedState( letterButtons, filters.letter );
     updatePressedState( categoryButtons, filters.category );
   }
