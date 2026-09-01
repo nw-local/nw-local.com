@@ -121,6 +121,8 @@ jobs:
       # The glossary has a code path (this workflow) and a content-only path
       # (deploy.yml below). Reading the rendered pages is the only way to prove
       # the index filters and long-form reference fields both shipped.
+      - name: Regression-test malformed glossary build fixtures
+        run: python3 scripts/test-check-glossary-build.py dist
       - name: Check glossary reference-library build contracts
         run: ./scripts/check-glossary-build.py dist
 

@@ -3,7 +3,7 @@ export
 
 .DEFAULT_GOAL := help
 
-.PHONY: help install dev build preview studio deploy-studio upload-image prep-images render-figures check-nightly check-analytics check-robots check-content-style check-anchors check-drop-lookup check-glossary check-portable-text-headings check-glossary-build check-navigation check sanity-history lint format upgrade upgrade-latest
+.PHONY: help install dev build preview studio deploy-studio upload-image prep-images render-figures check-nightly check-analytics check-robots check-content-style check-anchors check-drop-lookup check-glossary check-portable-text-headings check-glossary-build test-check-glossary-build check-navigation check sanity-history lint format upgrade upgrade-latest
 
 help: ## Show this help message with all available targets
 	@grep -hE '^[a-zA-Z_-]+:.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
@@ -66,10 +66,13 @@ check-portable-text-headings: ## Verify collision-safe Portable Text heading pre
 check-glossary-build: build ## Verify the built glossary index and entry contracts
 	@./scripts/check-glossary-build.py dist
 
+test-check-glossary-build: build ## Regression-test malformed glossary build fixtures
+	@python3 scripts/test-check-glossary-build.py dist
+
 check-navigation: ## Verify the top and footer navigation structure
 	@python3 scripts/check-navigation.py
 
-check: lint check-glossary check-portable-text-headings build check-analytics check-robots check-content-style check-anchors check-glossary-build check-navigation ## Run CI-equivalent repository checks
+check: lint check-glossary check-portable-text-headings build check-analytics check-robots check-content-style check-anchors check-glossary-build test-check-glossary-build check-navigation ## Run CI-equivalent repository checks
 	@cd studio && yarn lint && yarn typecheck && yarn format:check
 	@yarn astro check
 

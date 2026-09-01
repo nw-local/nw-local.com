@@ -9,6 +9,7 @@ before it replaces the live site.
 
 Usage: check-glossary-build.py [dist-dir]
 """
+import collections
 import json
 import pathlib
 import re
@@ -23,8 +24,17 @@ INDEX_PAGE = pathlib.Path( "glossary/index.html" )
 EC_PAGE = pathlib.Path( "glossary/ec/index.html" )
 CONCISE_PAGE = pathlib.Path( "glossary/cultivar/index.html" )
 EXPECTED_DIRECTORY_ENTRIES = 59
-EXPECTED_LETTER_CONTROLS = 27  # All plus A through Z.
-EXPECTED_CATEGORY_CONTROLS = 8  # All topics plus every glossary category.
+EXPECTED_LETTER_VALUES = frozenset( [ "", *"abcdefghijklmnopqrstuvwxyz" ] )
+EXPECTED_CATEGORY_VALUES = frozenset( {
+    "",
+    "plant-biology",
+    "cultivation",
+    "environment",
+    "nutrition",
+    "chemistry",
+    "post-harvest",
+    "business-regulation",
+} )
 VOID_TAGS = { "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr" }
 
 
@@ -104,6 +114,14 @@ def elements_with_class( elements: Iterable[ Element ], class_name: str ) -> lis
     return [ element for element in elements if element.has_class( class_name ) ]
 
 
+def filter_values( elements: Iterable[ Element ], marker: str ) -> list[ str | None ]:
+    return [
+        element.attribute( "data-filter-value" )
+        for element in elements
+        if element.name == "button" and element.has_attribute( marker )
+    ]
+
+
 def require( failures: list[str], where: pathlib.Path, condition: bool, message: str ) -> None:
     if not condition:
         failures.append( f"{where}: {message}" )
@@ -153,22 +171,21 @@ def check_index( elements: list[ Element ], failures: list[str] ) -> None:
         has_labeled_search_input( elements ),
         "missing the labeled glossary search input",
     )
+    letter_values = filter_values( elements, "data-glossary-letter" )
     require(
         failures,
         INDEX_PAGE,
-        sum( element.has_attribute( "data-glossary-letter" ) for element in elements )
-        == EXPECTED_LETTER_CONTROLS,
-        f"expected {EXPECTED_LETTER_CONTROLS} A-Z controls",
+        len( letter_values ) == len( EXPECTED_LETTER_VALUES )
+        and frozenset( letter_values ) == EXPECTED_LETTER_VALUES,
+        "expected exactly the A-Z filter values",
     )
+    category_values = filter_values( elements, "data-glossary-category" )
     require(
         failures,
         INDEX_PAGE,
-        sum(
-            element.name == "button" and element.has_attribute( "data-glossary-category" )
-            for element in elements
-        )
-        == EXPECTED_CATEGORY_CONTROLS,
-        f"expected {EXPECTED_CATEGORY_CONTROLS} category controls",
+        len( category_values ) == len( EXPECTED_CATEGORY_VALUES )
+        and frozenset( category_values ) == EXPECTED_CATEGORY_VALUES,
+        "expected exactly the category filter values",
     )
     require(
         failures,
@@ -187,11 +204,72 @@ def check_index( elements: list[ Element ], failures: list[str] ) -> None:
         any( card.name == "a" and card.attribute( "href" ) == "/glossary/ec" for card in featured_cards ),
         "missing the featured EC card",
     )
+    directory_entries = elements_with_class( elements, "glossary-index-entry" )
     require(
         failures,
         INDEX_PAGE,
-        len( elements_with_class( elements, "glossary-index-entry" ) ) == EXPECTED_DIRECTORY_ENTRIES,
+        len( directory_entries ) == EXPECTED_DIRECTORY_ENTRIES,
         f"expected {EXPECTED_DIRECTORY_ENTRIES} complete directory entries",
+    )
+
+    directory_ids: list[str] = []
+    directory_links: list[str] = []
+    for entry in directory_entries:
+        entry_id = ( entry.attribute( "data-glossary-id" ) or "" ).strip()
+        require(
+            failures,
+            INDEX_PAGE,
+            bool( entry_id ),
+            "directory entry has no glossary identity",
+        )
+        if entry_id:
+            directory_ids.append( entry_id )
+
+        glossary_links = [
+            link
+            for link in descendants( entry )
+            if link.name == "a"
+            and ( link.attribute( "href" ) or "" ).startswith( "/glossary/" )
+        ]
+        require(
+            failures,
+            INDEX_PAGE,
+            len( glossary_links ) == 1,
+            "directory entry must have exactly one glossary link",
+        )
+        if len( glossary_links ) != 1:
+            continue
+
+        glossary_link = ( glossary_links[ 0 ].attribute( "href" ) or "" ).strip()
+        directory_links.append( glossary_link )
+        require(
+            failures,
+            INDEX_PAGE,
+            ( DIST / glossary_link.removeprefix( "/" ) / "index.html" ).is_file(),
+            f"directory link {glossary_link} does not resolve to a built glossary page",
+        )
+
+    duplicate_ids = sorted(
+        identity
+        for identity, count in collections.Counter( directory_ids ).items()
+        if count > 1
+    )
+    require(
+        failures,
+        INDEX_PAGE,
+        not duplicate_ids,
+        f"directory identities must be distinct: {', '.join( duplicate_ids )}",
+    )
+    duplicate_links = sorted(
+        link
+        for link, count in collections.Counter( directory_links ).items()
+        if count > 1
+    )
+    require(
+        failures,
+        INDEX_PAGE,
+        not duplicate_links,
+        f"directory links must be distinct: {', '.join( duplicate_links )}",
     )
 
     for card in featured_cards:
