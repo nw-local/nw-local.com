@@ -1054,6 +1054,16 @@ footer {
      leave them floating with no edge. */
   background: #f8f6f9;
 }
+.portable-text figure video {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0;
+  border-radius: 8px;
+  /* A clip is dark until it plays; give it a plate so a letterboxed poster or a
+     paused frame does not float on the dark page. */
+  background: #000000;
+}
 .portable-text figcaption {
   margin-top: 0.75rem;
   font-size: 0.85rem;
@@ -2121,6 +2131,19 @@ footer {
     background: none;
     border: 1px solid var(--border);
     color: #000000;
+  }
+
+  /* A <video> prints its poster frame, so an embedded clip still carries an
+     image onto paper. Keep it inside the page box, drop the dark on-screen
+     plate (backgrounds do not print anyway), and keep the figure and its
+     caption from splitting across a page break. */
+  .portable-text figure {
+    break-inside: avoid;
+  }
+  .portable-text figure video {
+    max-width: 100%;
+    height: auto;
+    background: none;
   }
 
   /* --- Articles --- */

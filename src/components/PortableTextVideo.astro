@@ -1,0 +1,63 @@
+---
+import { urlFor, resolveImageDimensions, type SanityImageAssetLike } from "../lib/image";
+
+export interface PortableTextVideoNode {
+  _type: "videoFile";
+  _key?: string;
+  // The dereferenced file url, projected as `src` in PORTABLE_TEXT_PROJECTION.
+  src?: string;
+  poster?: { asset?: SanityImageAssetLike; alt?: string };
+  alt?: string;
+  caption?: string;
+}
+
+interface Props {
+  node: PortableTextVideoNode;
+}
+
+const { node } = Astro.props;
+
+// astro-portabletext renders unhandled or malformed nodes into a display:none
+// div, so a video block with no resolved file would silently vanish from the
+// page rather than fail. Throw at build time instead, matching PortableTextImage.
+if( !node.src ) {
+  throw new Error(
+    `Portable Text video block ${node._key ?? "(no _key)"} has no file url. `
+    + "Attach an MP4 in Sanity Studio, or confirm PORTABLE_TEXT_PROJECTION still "
+    + "projects \"src\": file.asset->url.",
+  );
+}
+
+// The poster is optional in the schema, but without one the <video> has no
+// intrinsic size to reserve and prints as a blank rectangle. When it is present,
+// reuse its dimensions to lock the aspect ratio and avoid layout shift.
+const poster = node.poster?.asset
+  ? ( () => {
+    const { width, height } = resolveImageDimensions(
+      node.poster?.asset,
+      `Portable Text video poster ${node._key ?? "(no _key)"}`,
+    );
+    const displayWidth = Math.min( width, 1400 );
+    return {
+      url: urlFor( node.poster ).width( displayWidth ).format( "webp" ).url(),
+      width: displayWidth,
+      height: Math.round( displayWidth * ( height / width ) ),
+    };
+  })()
+  : null;
+---
+
+<figure>
+  <video
+    controls
+    preload="metadata"
+    playsinline
+    poster={poster?.url}
+    width={poster?.width}
+    height={poster?.height}
+    aria-label={node.alt || node.caption || undefined}
+  >
+    <source src={node.src} type="video/mp4" />
+  </video>
+  {node.caption && <figcaption>{node.caption}</figcaption>}
+</figure>
