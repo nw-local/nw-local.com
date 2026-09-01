@@ -1,6 +1,7 @@
 import { authorType } from './author'
 import { blockContentType } from './blockContent'
 import { blogPostType } from './blogPost'
+import { coaType } from './coa'
 import { dropType } from './drop'
 import { glossaryTermType } from './glossaryTerm'
 import { pageType } from './page'
@@ -16,6 +17,7 @@ export const schemaTypes = [
   authorType,
   blockContentType,
   blogPostType,
+  coaType,
   dropType,
   glossaryTermType,
   pageType,

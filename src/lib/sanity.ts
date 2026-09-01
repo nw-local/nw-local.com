@@ -1,9 +1,20 @@
 import { createClient } from "@sanity/client";
+import { assertCoa, type Coa } from "./coa.ts";
 import type { GlossaryCategory } from "../../shared/glossary-categories";
 import { validateGlossarySummaries, validateGlossaryTerm } from "./glossary";
 import { AUTHOR_BASE_PATH } from "./routes";
 
 export { AUTHOR_BASE_PATH } from "./routes";
+export { assertCoa } from "./coa.ts";
+export type {
+  Coa,
+  CoaCertificate,
+  CoaMetric,
+  CoaPanel,
+  CoaReading,
+  CoaStatus,
+  CoaStrain,
+} from "./coa.ts";
 
 const SANITY_PROJECT_ID = import.meta.env.SANITY_PROJECT_ID;
 const SANITY_DATASET = import.meta.env.SANITY_DATASET;
@@ -70,6 +81,47 @@ const RETAILER_PROJECTION = `{
 const GLOSSARY_SUMMARY_PROJECTION = `
   _id, term, slug, shortDefinition, aliases, category
 `;
+
+const COA_PROJECTION = `{
+  _id, sourceId, labResultId, sampleId, status,
+  totalThc { label, value, unit },
+  waterActivity { label, value, unit },
+  panels[] {
+    name, status,
+    metrics[] { name, value, unit, status }
+  },
+  strain { name, url },
+  certificate { filename, sha256, "url": asset->url }
+}`;
+
+// --- Certificates of Analysis ---
+
+export async function getCoas(): Promise<Coa[]> {
+  const values = await sanityClient.fetch<unknown>(
+    `*[_type == "coa"] | order(sourceId asc) ${COA_PROJECTION}`,
+  );
+
+  if( !Array.isArray( values ) ) {
+    throw new Error( "COA query must return an array." );
+  }
+
+  const coas: Coa[] = [];
+  for( const value of values ) {
+    assertCoa( value );
+    coas.push( value );
+  }
+  return coas;
+}
+
+export async function getCoaBySourceId( sourceId: string ): Promise<Coa | null> {
+  const value = await sanityClient.fetch<unknown>(
+    `*[_type == "coa" && sourceId == $sourceId][0] ${COA_PROJECTION}`,
+    { sourceId },
+  );
+  if( value === null ) return null;
+  assertCoa( value );
+  return value;
+}
 
 // --- Shared types ---
 
