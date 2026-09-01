@@ -40,6 +40,14 @@ jobs:
       - name: Check the buildDropLookup collision rule
         run: node scripts/check-drop-lookup.ts
 
+      # No yarn install: both glossary checks import dependency-free modules and
+      # run under node's built-in type stripping.
+      - name: Check glossary content contracts and search mechanics
+        run: node scripts/check-glossary.ts
+
+      - name: Check Portable Text glossary heading preparation
+        run: node scripts/check-portable-text-headings.ts
+
       # psychrometrics.py computes figures that end up in published prose, so
       # its constants are pinned against values already in the CO2 post. Pure
       # arithmetic, no artifact, no build.

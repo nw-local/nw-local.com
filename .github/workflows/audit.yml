@@ -118,6 +118,11 @@ jobs:
       # same-page fragment. Only an absence of the right destination reveals it.
       - name: Check heading anchors are unique
         run: ./scripts/check-heading-anchors.py dist
+      # The glossary has a code path (this workflow) and a content-only path
+      # (deploy.yml below). Reading the rendered pages is the only way to prove
+      # the index filters and long-form reference fields both shipped.
+      - name: Check glossary reference-library build contracts
+        run: ./scripts/check-glossary-build.py dist
 
   validate-links:
     name: Check links
