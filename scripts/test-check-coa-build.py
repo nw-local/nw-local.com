@@ -14,6 +14,7 @@ UNBOUND_CERTIFICATE_FIXTURE = (
 )
 FIXTURE_PAGE_NAME = "coa-page.html"
 EXPECTED_FAILURE = "expected one visible COA certificate anchor, found 0"
+EMPTY_BUILD_ROOT_SUCCESS = "COA build contract OK: no generated COA pages to verify."
 
 
 with tempfile.TemporaryDirectory(prefix="check-coa-build-") as temporary_directory:
@@ -33,3 +34,21 @@ if result.returncode != 1 or EXPECTED_FAILURE not in result.stderr:
     )
 
 print("check-coa-build certificate binding regression holds")
+
+
+with tempfile.TemporaryDirectory(prefix="check-coa-build-empty-") as temporary_directory:
+    empty_build_root = Path(temporary_directory)
+    result = subprocess.run(
+        ["python3", str(CHECKER), str(empty_build_root)],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+if result.returncode != 0 or result.stdout.strip() != EMPTY_BUILD_ROOT_SUCCESS:
+    raise AssertionError(
+        "empty build root: expected a successful pre-publication result, got "
+        f"exit {result.returncode}: {result.stdout!r} {result.stderr!r}"
+    )
+
+print("check-coa-build empty build-root regression holds")

@@ -300,8 +300,11 @@ def main() -> int:
 
     fixture_mode, pages = pages_for_root(build_root)
     if not pages:
-        print(f"check-coa-build: no COA pages found under {build_root}", file=sys.stderr)
-        return 2
+        if fixture_mode:
+            print(f"check-coa-build: no fixture page found under {build_root}", file=sys.stderr)
+            return 2
+        print("COA build contract OK: no generated COA pages to verify.")
+        return 0
 
     failures: list[str] = []
     for page, expected_source_id in pages:
