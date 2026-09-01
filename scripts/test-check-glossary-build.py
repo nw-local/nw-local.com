@@ -22,6 +22,7 @@ REQUIRED_PAGES = (
     pathlib.Path( "glossary/ec/index.html" ),
     pathlib.Path( "glossary/cultivar/index.html" ),
 )
+FAILURE_EPILOGUE = "Glossary build contracts failed. Fix the rendered page or its Sanity content before deploying."
 
 
 def replace_once( page: pathlib.Path, pattern: str, replacement: str ) -> None:
@@ -38,29 +39,43 @@ def make_fixture( temporary_root: pathlib.Path ) -> pathlib.Path:
         source_page = SOURCE_DIST / required_page
         if not source_page.is_file():
             raise FileNotFoundError( f"{source_page} is missing; run `make build` first." )
-        destination_page = fixture_dist / required_page
+    source_pages = sorted( SOURCE_DIST.glob( "glossary/**/index.html" ) )
+    if not source_pages:
+        raise FileNotFoundError( f"{SOURCE_DIST}/glossary contains no built pages; run `make build` first." )
+    for source_page in source_pages:
+        destination_page = fixture_dist / source_page.relative_to( SOURCE_DIST )
         destination_page.parent.mkdir( parents=True, exist_ok=True )
         shutil.copy2( source_page, destination_page )
     return fixture_dist
 
 
-def assert_rejected( label: str, mutate: Callable[[pathlib.Path], None], expected_message: str ) -> None:
+def run_checker( fixture_dist: pathlib.Path ) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [ str( CHECKER ), str( fixture_dist ) ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+
+def assert_rejected( label: str, mutate: Callable[[pathlib.Path], None], expected_failure: str ) -> None:
     with tempfile.TemporaryDirectory( prefix="check-glossary-build-" ) as temporary_directory:
         fixture_dist = make_fixture( pathlib.Path( temporary_directory ) )
+        pristine = run_checker( fixture_dist )
+        if pristine.returncode != 0:
+            raise AssertionError(
+                f"{label}: pristine fixture must pass, got {pristine.returncode}: {pristine.stderr}"
+            )
         mutate( fixture_dist / "glossary/index.html" )
-        result = subprocess.run(
-            [ str( CHECKER ), str( fixture_dist ) ],
-            check=False,
-            capture_output=True,
-            text=True,
-        )
+        result = run_checker( fixture_dist )
         if result.returncode != 1:
             raise AssertionError(
                 f"{label}: expected checker exit 1, got {result.returncode}: {result.stderr}"
             )
-        if expected_message not in result.stderr:
+        expected_stderr = f"glossary/index.html: {expected_failure}\n\n{FAILURE_EPILOGUE}\n"
+        if result.stderr != expected_stderr:
             raise AssertionError(
-                f"{label}: expected {expected_message!r} in checker output, got: {result.stderr}"
+                f"{label}: expected only {expected_stderr!r}, got: {result.stderr}"
             )
 
 
@@ -85,12 +100,12 @@ assert_rejected(
         r'(data-glossary-id=")glossary-anemometer(")',
         r"\1glossary-allele\2",
     ),
-    "directory identities must be distinct",
+    "directory identities must be distinct: glossary-allele",
 )
 assert_rejected(
     "duplicate directory link",
     lambda page: replace_once( page, r'(<a href=")/glossary/anemometer(">Anemometer</a>)', r"\1/glossary/allele\2" ),
-    "directory links must be distinct",
+    "directory links must be distinct: /glossary/allele",
 )
 assert_rejected(
     "missing directory link",
