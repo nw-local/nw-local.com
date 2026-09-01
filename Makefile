@@ -75,7 +75,7 @@ test-check-glossary-build: build ## Regression-test malformed glossary build fix
 check-navigation: ## Verify the top and footer navigation structure
 	@python3 scripts/check-navigation.py
 
-check: lint check-drop-lookup check-glossary check-glossary-browser check-portable-text-headings test-psychrometrics build check-analytics check-robots check-content-style check-anchors check-glossary-build test-check-glossary-build check-navigation ## Run CI-equivalent repository checks
+check: lint check-drop-lookup check-glossary check-glossary-browser check-portable-text-headings test-psychrometrics build check-analytics check-robots check-content-style check-anchors check-glossary-build test-check-glossary-build check-navigation ## Run the local repository check aggregate
 	@cd studio && yarn lint && yarn typecheck && yarn format:check
 	@yarn astro check
 

@@ -22,6 +22,12 @@ REQUIRED_PAGES = (
     pathlib.Path( "glossary/ec/index.html" ),
 )
 FAILURE_EPILOGUE = "Glossary build contracts failed. Fix the rendered page or its Sanity content before deploying."
+FIXTURE_TERM_SLUG_STEM = "fixture-growth"
+VALID_BODY_MARKUP = (
+    '<p class="glossary-entry-meta"><span>2 min read</span></p>'
+    '<aside class="glossary-entry-contents"><a href="#future-heading">Future heading</a></aside>'
+    '<div class="portable-text"><h2 id="future-heading">Future heading</h2><p>Expanded entry.</p></div>'
+)
 
 
 def replace_once( page: pathlib.Path, pattern: str, replacement: str ) -> None:
@@ -158,25 +164,29 @@ def assert_accepted( label: str, mutate: Callable[[pathlib.Path], None] ) -> Non
             )
 
 
-def add_valid_future_term( fixture_dist: pathlib.Path ) -> None:
+def unused_fixture_term_slug( fixture_dist: pathlib.Path ) -> str:
+    candidate_slug = FIXTURE_TERM_SLUG_STEM
+    candidate_number = 2
+    while ( fixture_dist / "glossary" / candidate_slug / "index.html" ).exists():
+        candidate_slug = f"{FIXTURE_TERM_SLUG_STEM}-{candidate_number}"
+        candidate_number += 1
+    return candidate_slug
+
+
+def add_valid_future_term( fixture_dist: pathlib.Path ) -> pathlib.Path:
     index_page = fixture_dist / "glossary/index.html"
     source = index_page.read_text( encoding="utf-8" )
-    entry_match = re.search(
-        r'<div class="glossary-index-entry"[^>]*data-glossary-term="Cultivar".*?</div>',
-        source,
-        flags=re.DOTALL,
-    )
-    if not entry_match:
-        raise AssertionError( f"{index_page}: could not find the cultivar directory entry" )
-
-    future_entry = re.sub(
-        r'data-glossary-id="[^"]+"',
-        'data-glossary-id="glossary-future"',
-        entry_match.group( 0 ),
-        count=1,
-    ).replace(
-        'href="/glossary/cultivar"',
-        'href="/glossary/future"',
+    future_slug = unused_fixture_term_slug( fixture_dist )
+    future_href = f"/glossary/{future_slug}"
+    future_entry = (
+        '<div class="glossary-index-entry" data-glossary-entry '
+        f'data-glossary-id="glossary-{future_slug}" data-glossary-term="Future glossary term" '
+        'data-glossary-initial="f" data-glossary-category="cultivation" '
+        'data-glossary-search-text="future glossary term a synthetic reference entry used to prove valid content growth cultivation">'
+        f'<dt><a href="{future_href}">Future glossary term</a></dt>'
+        '<dd class="glossary-index-definition">A synthetic reference entry used to prove valid content growth.</dd>'
+        '<dd class="glossary-index-category">Cultivation</dd>'
+        '</div>'
     )
     updated_source, replacements = re.subn(
         r"</dl>",
@@ -188,19 +198,38 @@ def add_valid_future_term( fixture_dist: pathlib.Path ) -> None:
         raise AssertionError( f"{index_page}: could not append a future directory entry" )
     index_page.write_text( updated_source, encoding="utf-8" )
 
-    future_page = fixture_dist / "glossary/future/index.html"
+    future_page = fixture_dist / "glossary" / future_slug / "index.html"
     future_page.parent.mkdir( parents=True )
-    shutil.copy2( fixture_dist / "glossary/cultivar/index.html", future_page )
-
-
-def add_valid_body_to_cultivar( fixture_dist: pathlib.Path ) -> None:
-    page = fixture_dist / "glossary/cultivar/index.html"
-    body_markup = (
-        '<p class="glossary-entry-meta"><span>2 min read</span></p>'
-        '<aside class="glossary-entry-contents"><a href="#future-heading">Future heading</a></aside>'
-        '<div class="portable-text"><h2 id="future-heading">Future heading</h2><p>Expanded entry.</p></div>'
+    future_page.write_text(
+        '<!doctype html><html><head>'
+        '<script type="application/ld+json">{"@type":"DefinedTerm"}</script>'
+        '<script type="application/ld+json">{"@type":"BreadcrumbList"}</script>'
+        '</head><body><article class="glossary-reference"></article></body></html>',
+        encoding="utf-8",
     )
-    replace_once( page, r"</article>", body_markup + "</article>" )
+    return future_page
+
+
+def add_valid_body( page: pathlib.Path ) -> None:
+    if 'class="portable-text"' in page.read_text( encoding="utf-8" ):
+        raise AssertionError( f"{page}: growth fixture requires a concise entry" )
+    replace_once( page, r"</article>", VALID_BODY_MARKUP + "</article>" )
+
+
+def add_valid_future_body( fixture_dist: pathlib.Path ) -> None:
+    future_page = add_valid_future_term( fixture_dist )
+    add_valid_body( future_page )
+
+
+def add_valid_directory_growth( fixture_dist: pathlib.Path ) -> None:
+    add_valid_future_term( fixture_dist )
+
+
+def add_body_growth_after_cultivar_is_long_form( fixture_dist: pathlib.Path ) -> None:
+    cultivar_page = fixture_dist / "glossary/cultivar/index.html"
+    if 'class="portable-text"' not in cultivar_page.read_text( encoding="utf-8" ):
+        add_valid_body( cultivar_page )
+    add_valid_future_body( fixture_dist )
 
 
 case_failures: list[str] = []
@@ -215,11 +244,43 @@ def run_case( label: str, action: Callable[[], None] ) -> None:
 
 run_case(
     "directory size follows the built corpus",
-    lambda: assert_accepted( "directory size follows the built corpus", add_valid_future_term ),
+    lambda: assert_accepted( "directory size follows the built corpus", add_valid_directory_growth ),
 )
 run_case(
     "a formerly concise entry may gain a body",
-    lambda: assert_accepted( "a formerly concise entry may gain a body", add_valid_body_to_cultivar ),
+    lambda: assert_accepted( "a formerly concise entry may gain a body", add_valid_future_body ),
+)
+run_case(
+    "content growth does not depend on Cultivar remaining concise",
+    lambda: assert_accepted(
+        "content growth does not depend on Cultivar remaining concise",
+        add_body_growth_after_cultivar_is_long_form,
+    ),
+)
+run_case(
+    "search input keeps its controller hook",
+    lambda: assert_rejected(
+        "search input keeps its controller hook",
+        lambda fixture_dist: replace_once(
+            fixture_dist / "glossary/index.html",
+            r"\sdata-glossary-query",
+            "",
+        ),
+        "search input is missing the data-glossary-query controller hook",
+    ),
+)
+run_case(
+    "directory entry keeps its controller hook",
+    lambda: assert_rejected(
+        "directory entry keeps its controller hook",
+        lambda fixture_dist: replace_once_in_entry(
+            fixture_dist / "glossary/index.html",
+            "glossary-allele",
+            r"\sdata-glossary-entry",
+            "",
+        ),
+        "/glossary/allele: directory entry is missing the data-glossary-entry controller hook",
+    ),
 )
 run_case(
     "duplicate letter value",

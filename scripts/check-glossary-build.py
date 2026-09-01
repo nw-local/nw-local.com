@@ -35,6 +35,9 @@ EXPECTED_CATEGORY_LABELS = {
     "business-regulation": "Business & Regulation",
 }
 EXPECTED_CATEGORY_VALUES = frozenset( [ "", *EXPECTED_CATEGORY_LABELS ] )
+# These hooks mirror the selectors consumed by src/lib/glossary-browser.ts.
+GLOSSARY_DIRECTORY_ENTRY_HOOK = "data-glossary-entry"
+GLOSSARY_QUERY_HOOK = "data-glossary-query"
 VOID_TAGS = { "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr" }
 
 
@@ -196,6 +199,16 @@ def require( failures: list[str], where: pathlib.Path, condition: bool, message:
         failures.append( f"{where}: {message}" )
 
 
+def glossary_search_inputs( elements: list[ Element ] ) -> list[ Element ]:
+    return [
+        element
+        for element in elements
+        if element.name == "input"
+        and element.attribute( "id" ) == "glossary-query"
+        and element.attribute( "type" ) == "search"
+    ]
+
+
 def has_labeled_search_input( elements: list[ Element ] ) -> bool:
     labels = [
         element
@@ -204,13 +217,7 @@ def has_labeled_search_input( elements: list[ Element ] ) -> bool:
         and element.attribute( "for" ) == "glossary-query"
         and normalized_text( element ) == "Search terms and definitions"
     ]
-    inputs = [
-        element
-        for element in elements
-        if element.name == "input"
-        and element.attribute( "id" ) == "glossary-query"
-        and element.attribute( "type" ) == "search"
-    ]
+    inputs = glossary_search_inputs( elements )
     return len( labels ) == 1 and len( inputs ) == 1
 
 
@@ -258,6 +265,12 @@ def check_directory_entry(
 
     glossary_link = ( glossary_links[ 0 ].attribute( "href" ) or "" ).strip()
     visible_term = normalized_text( glossary_links[ 0 ] )
+    require(
+        failures,
+        INDEX_PAGE,
+        entry.has_attribute( GLOSSARY_DIRECTORY_ENTRY_HOOK ),
+        f"{glossary_link}: directory entry is missing the {GLOSSARY_DIRECTORY_ENTRY_HOOK} controller hook",
+    )
     entry_id = ( entry.attribute( "data-glossary-id" ) or "" ).strip()
     require(
         failures,
@@ -541,6 +554,14 @@ def check_index(
         has_labeled_search_input( elements ),
         "missing the labeled glossary search input",
     )
+    search_inputs = glossary_search_inputs( elements )
+    if len( search_inputs ) == 1:
+        require(
+            failures,
+            INDEX_PAGE,
+            search_inputs[ 0 ].has_attribute( GLOSSARY_QUERY_HOOK ),
+            f"search input is missing the {GLOSSARY_QUERY_HOOK} controller hook",
+        )
     controls = [
         element
         for element in elements
