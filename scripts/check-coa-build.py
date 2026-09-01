@@ -33,6 +33,7 @@ METRIC_NAME_ATTRIBUTE = "data-coa-metric-name"
 METRIC_VALUE_ATTRIBUTE = "data-coa-metric-value"
 METRIC_UNIT_ATTRIBUTE = "data-coa-metric-unit"
 CERTIFICATE_ATTRIBUTE = "data-coa-certificate"
+CERTIFICATE_LINK_TEXT = "Download certificate PDF"
 VALID_STATUSES = { "pass", "fail" }
 UUID_PATTERN = re.compile(
     r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
@@ -68,15 +69,12 @@ class CoaPageParser(HTMLParser):
         super().__init__()
         self.elements: list[Element] = []
         self.stack: list[Element] = []
-        self.links: list[str] = []
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         attributes = { key: value or "" for key, value in attrs }
         element = Element(tag, attributes, self.stack[-1] if self.stack else None)
         self.elements.append(element)
         self.stack.append(element)
-        if tag == "a" and attributes.get("href"):
-            self.links.append(attributes["href"])
 
     def handle_startendtag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         self.handle_starttag(tag, attrs)
@@ -119,6 +117,10 @@ def expect_exactly_one(
 
 def is_canonical_decimal(value: str) -> bool:
     return bool(DECIMAL_PATTERN.fullmatch(value))
+
+
+def is_pdf_href(href: str) -> bool:
+    return href.lower().split("?", maxsplit=1)[0].endswith(".pdf")
 
 
 def check_page(page: Path, expected_source_id: str | None = None) -> list[str]:
@@ -206,17 +208,33 @@ def check_page(page: Path, expected_source_id: str | None = None) -> list[str]:
             if field_value not in metric.text:
                 failures.append(f"COA metric {field_name} is not visible: {field_value!r}")
 
-    certificate_links = [
-        link
-        for link in parser.links
-        if link.lower().split("?", maxsplit=1)[0].endswith(".pdf")
+    pdf_links = [
+        element
+        for element in parser.elements
+        if element.name == "a" and is_pdf_href(element.attributes.get("href", ""))
     ]
-    if len(certificate_links) != 1:
-        failures.append(f"expected one COA PDF link, found {len(certificate_links)}")
-    else:
-        certificate_elements = elements_with_attribute(parser, CERTIFICATE_ATTRIBUTE)
-        if len(certificate_elements) != 1:
-            failures.append(f"expected one marked COA certificate link, found {len(certificate_elements)}")
+    certificate_anchor = expect_exactly_one(
+        [
+            element
+            for element in elements_with_attribute(parser, CERTIFICATE_ATTRIBUTE)
+            if element.name == "a"
+        ],
+        "visible COA certificate anchor",
+        failures,
+    )
+    if certificate_anchor:
+        certificate_href = certificate_anchor.attributes.get("href", "")
+        if not is_pdf_href(certificate_href):
+            failures.append("COA certificate anchor href is not a PDF link")
+        if certificate_anchor.text != CERTIFICATE_LINK_TEXT:
+            failures.append(
+                f"COA certificate anchor text must be {CERTIFICATE_LINK_TEXT!r}"
+            )
+
+    if len(pdf_links) != 1:
+        failures.append(f"expected one COA PDF link, found {len(pdf_links)}")
+    elif certificate_anchor and certificate_anchor.attributes.get("href") != pdf_links[0].attributes.get("href"):
+        failures.append("COA certificate anchor href does not match the sole PDF link")
 
     return failures
 
