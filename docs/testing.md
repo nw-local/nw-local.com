@@ -4,7 +4,7 @@ For a content-driven static site with no business logic, heavy testing is overki
 
 ## Workflow layout
 
-- [`ci.yml`](../.github/workflows/ci.yml) — runs on every PR and push to `main`. Type check + audit.
+- [`ci.yml`](../.github/workflows/ci.yml) — runs on every PR and push to `main`. Type checks, Studio checks, source-level glossary and drop-lookup contracts, then calls the audit.
 - [`audit.yml`](../.github/workflows/audit.yml) — **reusable** workflow (`workflow_call`) that does build + sitemap validation + link check + Lighthouse. Called by both CI and the nightly job.
 - [`nightly.yml`](../.github/workflows/nightly.yml) — runs the same audit on a daily cron (08:27 UTC). Catches content drift on `main` between PRs (e.g., a Sanity-published strain whose Learn More link rotted last week), and gives Lighthouse a daily perf data point. Manual `workflow_dispatch` trigger for ad-hoc runs.
 - [`deploy.yml`](../.github/workflows/deploy.yml) — builds and publishes to Pages. Not an audit workflow, but it carries one blocking check, and it is the **only** workflow on the path a content publish takes. See [Content publishes skip the audit workflow](#content-publishes-skip-the-audit-workflow).
@@ -12,12 +12,14 @@ For a content-driven static site with no business logic, heavy testing is overki
 ## What each audit step does
 
 - **Type check** (CI only) — `yarn astro check`. Catches broken GROQ query types, missing required fields on Sanity entity types, and Astro template errors. The data layer in [`src/lib/sanity.ts`](../src/lib/sanity.ts) parameterizes each `fetch<T>()` call with a typed entity (`Strain`, `Product`, etc.), so consumers in `.astro` pages get strict typing for free.
+- **Validate glossary source contracts and search mechanics** (CI only) — `make check-glossary` runs dependency-free fixtures for the category and featured-entry boundary, reading-time calculation, JSON-LD, search text, combined filters, and URL filter serialization. It protects the pure data and interaction helpers, but cannot establish that the templates emitted their controls or that published content produced valid pages.
 - **Build** — `yarn build`. Uploads `dist/` as an artifact for the audit jobs below.
 - **Validate sitemap** — `xmllint` checks `dist/sitemap-index.xml` and `dist/sitemap-0.xml` are well-formed and contain `<loc>` entries.
 - **Check links** — [Lychee](https://lychee.cli.rs/) walks every link in built HTML (internal + external). Accepts 200/301/302 plus 403/429 (bot-blockers and rate limits) so well-known breeder sites that block automated requests don't cause false positives. Blocking — broken links fail the check. A green result on the two `wa.cultiveramarket.com` storefront URLs is not evidence those URLs are right. Cultivera Market is a client-rendered SPA: the server returns the same shell for every path and resolves the slug in JavaScript afterwards. Requests for both real slugs and a deliberately fabricated control slug returned byte-identical 200s (7,659 bytes, same SHA), so an HTTP status check there asserts nothing and fails open — the same trap as the GROQ `match` operator in `CLAUDE.md`'s invariants. The slugs are correct because the operator confirmed them, and that is the only available source of truth. If one is ever mistyped, the link checker will stay green and the page will send licensed buyers to an empty storefront.
 - **Check robots.txt** — [`scripts/check-robots.sh`](../scripts/check-robots.sh), run inside the sitemap job. Asserts `dist/robots.txt` exists, that its `Sitemap:` directive is absolute, and that its host matches the sitemap's own `<loc>` host. The site had no `robots.txt` at all until 2026-08-20; see [Silent-failure guards](#silent-failure-guards).
 - **Validate analytics snippet** — [`scripts/check-analytics-snippet.sh`](../scripts/check-analytics-snippet.sh) asserts every built page still ships a Google Analytics snippet that can record hits. Redirect stubs emitted by `astro.config.mjs` `redirects` are exempt and reported in the pass line, since the browser leaves before a hit could be recorded; the exemption requires a meta refresh **and** a `noindex` **and** no `googletagmanager.com`, so a real page that merely gained a refresh tag still fails. See [Silent-failure guards](#silent-failure-guards) below for why this is a separate check rather than something the other steps would notice.
 - **Validate content style** — [`scripts/check-content-style.py`](../scripts/check-content-style.py) reads the rendered prose and fails on British spelling, on a temperature given in only one unit, or on a pair written Celsius first. The one check that also runs outside this workflow, as a blocking step in `deploy.yml`. See [Silent-failure guards](#silent-failure-guards) and [Content publishes skip the audit workflow](#content-publishes-skip-the-audit-workflow).
+- **Validate glossary reference-library output** — `make check-glossary-build` reads the built glossary directory and entry pages. It verifies the search controls and filter metadata, directory links and cards, and the long-form and text-only entry boundaries, including image alt text and hotspot-aware image URLs. It runs in the PR audit because template changes can break the rendered contract, and in `deploy.yml` because a Sanity publish can change the same output without a pull request. That deploy check fails before GitHub Pages receives the artifact, leaving the prior deployment live.
 - **Lighthouse audit** (informational, doesn't block PRs) — runs Lighthouse against the homepage, a strain page, and the about page; reports Performance, SEO, Accessibility, and Best Practices scores. HTML reports are uploaded to temporary public storage and linked in the workflow logs. Configured in [`lighthouserc.json`](../lighthouserc.json).
 
 ## Silent-failure guards
@@ -46,7 +48,9 @@ Content reaches production by a path no audit workflow watches, and this is wort
 
 `deploy.yml` therefore runs `check-content-style.py` itself, against the `dist/` the build step just produced. It is the last step of the `build` job and `deploy` declares `needs: build`, so a failure skips deployment entirely and the previously deployed site stays live. **The visible symptom of a rejected publish is that the content does not appear on the site.** There is no notification: if an editor publishes and the change never shows up, this check is the first thing to look at.
 
-Only this one check is duplicated here. `robots` and the analytics snippet can only be broken by a code change, which always goes through a pull request and is already covered. Link checking is the other one content can genuinely break — a post linking to a deleted page — but it needs the built site served and is much slower, and `deploy.yml` is already serialized behind a Pages concurrency group that a document-batch publish floods. The nightly run covers it instead, within 24 hours.
+Content style is one of two checks duplicated here. `robots` and the analytics snippet can only be broken by a code change, which always goes through a pull request and is already covered. Link checking is the other one content can genuinely break — a post linking to a deleted page — but it needs the built site served and is much slower, and `deploy.yml` is already serialized behind a Pages concurrency group that a document-batch publish floods. The nightly run covers it instead, within 24 hours.
+
+The glossary build contract is also duplicated there. A published glossary document can change the directory's category, featured status, image, body, or related references without a code diff; `check-glossary-build.py` reads the emitted pages, so it is the guard that confirms both the code path and the content-only path preserve the same reference-library contract.
 
 ### The allowlist
 
@@ -59,6 +63,19 @@ Two properties keep it from becoming the fail-open hole an allowlist invites. Ex
 Note that the link checker cannot catch a related class of problem either: `audit.yml` excludes `^https?://(www\.)?nw-local\.com` from Lychee, because each page's canonical tag is self-referencing and unresolvable until after its PR merges. A canonical pointing at the wrong host of your own domain is therefore invisible to it.
 
 ## Manual verification of built output
+
+### Manual glossary interaction checklist
+
+Use the existing local server after a glossary change; do not start another one for this check.
+
+- **Instant search:** enter a canonical term, an alias, and definition text. Results and the live count update while typing.
+- **Combined filters:** choose a letter and a topic, then add a search query. Only terms meeting every active filter remain; clear filters restores the full directory and featured guides.
+- **URL state:** reload a filtered URL, then use Back and Forward after changing filters. The input, pressed buttons, result set, and URL stay synchronized.
+- **Keyboard operation:** tab to the search field, filter buttons, clear button, directory links, and featured cards. Visible focus appears, Space or Enter activates a selected filter, and Clear returns focus to the search field.
+- **Responsive layout:** check the directory, filter rails, and featured cards at a narrow viewport as well as desktop width. Controls remain usable without clipped content or horizontal overflow.
+- **Zero results:** search for text that cannot match. The empty state appears and Clear filters restores the directory.
+- **Text-only entries:** open an entry without a specimen image or long body. It has no empty image frame, review metadata, reading-time line, or table of contents.
+- **Hotspot crops:** open a featured entry with an editor-set hotspot. Its specimen and card crops preserve the selected subject rather than reverting to a center crop.
 
 Content changes are routinely verified by grepping `dist/` directly, outside CI — publish in Sanity,
 `make build`, then assert the markup landed. With no test framework, these greps are the whole

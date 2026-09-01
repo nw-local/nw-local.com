@@ -29,7 +29,7 @@ The site is a static, content-driven catalog of strains, products, limited relea
 | Image handling   | `sharp`, `@sanity/image-url`                           |
 | Analytics        | Google Analytics 4 (production builds only)             |
 
-There are no Markdown files in the repo — every piece of content (strains, products, drops, blog posts, pages, retailers, site settings) lives in Sanity and is fetched at build time via GROQ queries in `src/lib/sanity.ts`.
+Visitor-facing content lives in Sanity rather than Markdown files in the repository: strains, products, drops, blog posts, pages, retailers, terpenes, glossary terms, and site settings are fetched at build time through GROQ queries in `src/lib/sanity.ts`.
 
 ---
 
@@ -75,6 +75,7 @@ Run `make` (no args) to print the full target list with descriptions.
 | Type check          | `yarn astro check`   |                                                      |
 | Lint                | `make lint`          | ESLint                                               |
 | Format              | `make format`        | ESLint `--fix` (auto-fix)                            |
+| Full local checks   | `make check`         | core repository checks, including build and Studio validation |
 | Upgrade deps (safe) | `make upgrade`       | minor/patch only, respects tilde ranges              |
 | Upgrade deps (major)| `make upgrade-latest`| ignores semver — review `yarn outdated` before/after |
 | Prep images         | `make prep-images`   | see [Image workflow](#image-workflow)                |
