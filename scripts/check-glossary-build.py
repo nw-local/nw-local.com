@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify the glossary's built HTML keeps its reference-library contracts.
+"""Verify the glossary's built HTML keeps its directory and entry contracts.
 
 Glossary content is published directly from Sanity, bypassing pull-request CI.
 The data-layer checks catch malformed source documents, but cannot prove the
@@ -37,6 +37,7 @@ EXPECTED_CATEGORY_VALUES = frozenset( [ "", *EXPECTED_CATEGORY_LABELS ] )
 # These hooks mirror the selectors consumed by src/lib/glossary-browser.ts.
 GLOSSARY_DIRECTORY_ENTRY_HOOK = "data-glossary-entry"
 GLOSSARY_QUERY_HOOK = "data-glossary-query"
+GLOSSARY_SEARCH_ROOT_HOOK = "data-glossary-search"
 VOID_TAGS = { "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr" }
 
 
@@ -400,7 +401,17 @@ def check_index(
         ),
         "glossary index is missing its plain-language introduction",
     )
-    search_roots = elements_with_class( elements, "glossary-search" )
+    search_roots = [
+        element
+        for element in elements
+        if element.has_attribute( GLOSSARY_SEARCH_ROOT_HOOK )
+    ]
+    require(
+        failures,
+        INDEX_PAGE,
+        len( search_roots ) == 1,
+        f"glossary index must contain exactly one {GLOSSARY_SEARCH_ROOT_HOOK} controller root",
+    )
     if len( search_roots ) == 1:
         search_sections = [
             element
@@ -414,6 +425,19 @@ def check_index(
             and search_sections[ 0 ].has_class( "glossary-directory-section" ),
             "glossary search must contain only the directory section",
         )
+    promoted_detail_links = [
+        element
+        for element in elements
+        if element.name == "a"
+        and re.fullmatch( r"/glossary/[^/]+", ( element.attribute( "href" ) or "" ).strip() )
+        and not ancestor_with_class( element, "glossary-index" )
+    ]
+    require(
+        failures,
+        INDEX_PAGE,
+        not promoted_detail_links,
+        "glossary detail links must live inside the directory",
+    )
     require(
         failures,
         INDEX_PAGE,
@@ -530,11 +554,12 @@ def check_detail_entry(
     elements: list[Element],
     failures: list[str],
 ) -> None:
+    reference_roots = elements_with_class( elements, "glossary-reference" )
     require(
         failures,
         page,
-        len( elements_with_class( elements, "glossary-reference" ) ) == 1,
-        "missing the glossary reference article",
+        len( reference_roots ) == 1,
+        "missing the glossary entry",
     )
     require(
         failures,
@@ -548,16 +573,40 @@ def check_detail_entry(
         has_json_ld_type( elements, "BreadcrumbList", failures, page ),
         "missing BreadcrumbList JSON-LD",
     )
-    entry_headers = elements_with_class( elements, "glossary-entry-hero" )
+    entry_headers = [
+        child
+        for reference_root in reference_roots
+        for child in reference_root.children
+        if isinstance( child, Element ) and child.name == "header"
+    ]
+    require(
+        failures,
+        page,
+        len( entry_headers ) == 1,
+        "glossary entry must contain exactly one direct header",
+    )
     if len( entry_headers ) == 1:
+        header_elements = list( descendants( entry_headers[ 0 ] ) )
         require(
             failures,
             page,
-            not any( element.name == "figure" for element in descendants( entry_headers[ 0 ] ) ),
-            "glossary entry header must not contain an editorial figure",
+            not any(
+                element.name in { "figure", "picture", "img", "video" }
+                for element in header_elements
+            ),
+            "glossary entry header must not contain editorial media",
+        )
+        require(
+            failures,
+            page,
+            not any(
+                element.name in { "p", "span", "time" }
+                and re.search( r"\breviewed\b", normalized_text( element ), re.IGNORECASE )
+                for element in header_elements
+            ),
+            "glossary entries must not render review metadata",
         )
 
-    reference_roots = elements_with_class( elements, "glossary-reference" )
     if len( reference_roots ) == 1:
         reference_elements = list( descendants( reference_roots[ 0 ] ) )
         reading_time_elements = [

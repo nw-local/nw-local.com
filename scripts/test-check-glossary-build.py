@@ -170,7 +170,7 @@ def add_valid_future_term( fixture_dist: pathlib.Path ) -> pathlib.Path:
         '<!doctype html><html><head>'
         '<script type="application/ld+json">{"@type":"DefinedTerm"}</script>'
         '<script type="application/ld+json">{"@type":"BreadcrumbList"}</script>'
-        '</head><body><article class="glossary-reference"></article></body></html>',
+        '</head><body><article class="glossary-reference"><header></header></article></body></html>',
         encoding="utf-8",
     )
     return future_page
@@ -416,12 +416,31 @@ run_case(
     "selected reference sections stay removed",
     lambda: assert_rejected(
         "selected reference sections stay removed",
-        lambda fixture_dist: replace_once(
-            fixture_dist / "glossary/index.html",
-            r'(<section class="glossary-directory-section">)',
-            r'<section class="promoted-terms"></section>\1',
+        lambda fixture_dist: (
+            replace_once(
+                fixture_dist / "glossary/index.html",
+                r'class="glossary-search"',
+                'class="search-shell"',
+            ),
+            replace_once(
+                fixture_dist / "glossary/index.html",
+                r'(<section class="glossary-directory-section">)',
+                r'<section class="promoted-terms"></section>\1',
+            ),
         ),
         "glossary search must contain only the directory section",
+    ),
+)
+run_case(
+    "promoted glossary links stay inside the directory",
+    lambda: assert_rejected(
+        "promoted glossary links stay inside the directory",
+        lambda fixture_dist: replace_once(
+            fixture_dist / "glossary/index.html",
+            r'(<section class="glossary-search")',
+            r'<section class="recommended-term"><a href="/glossary/ec">EC guide</a></section>\1',
+        ),
+        "glossary detail links must live inside the directory",
     ),
 )
 run_case(
@@ -431,9 +450,22 @@ run_case(
         lambda fixture_dist: replace_once(
             fixture_dist / "glossary/ec/index.html",
             r'(<header class="glossary-entry-hero">.*?)(</header>)',
-            r'\1<figure class="term-visual"></figure>\2',
+            r'\1<picture><img src="term-visual.jpg" alt="EC monitor" /></picture>\2',
         ),
-        "glossary entry header must not contain an editorial figure",
+        "glossary entry header must not contain editorial media",
+        expected_page="glossary/ec/index.html",
+    ),
+)
+run_case(
+    "review metadata stays removed from term pages",
+    lambda: assert_rejected(
+        "review metadata stays removed from term pages",
+        lambda fixture_dist: replace_once(
+            fixture_dist / "glossary/ec/index.html",
+            r'(<header class="glossary-entry-hero">.*?)(</header>)',
+            r'\1<p class="term-review">Reviewed August 31, 2026</p>\2',
+        ),
+        "glossary entries must not render review metadata",
         expected_page="glossary/ec/index.html",
     ),
 )
