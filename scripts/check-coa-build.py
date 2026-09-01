@@ -10,6 +10,7 @@ from the emitted page rather than a fixed content count.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import datetime
 from html.parser import HTMLParser
 from pathlib import Path
 import re
@@ -22,6 +23,7 @@ FIXTURE_MODE_FLAG = "--fixture"
 COA_PAGE_NAME = "index.html"
 SOURCE_ID_ATTRIBUTE = "data-coa-source-id"
 STATUS_ATTRIBUTE = "data-coa-status"
+PUBLISHED_AT_ATTRIBUTE = "data-coa-published-at"
 SUMMARY_ATTRIBUTE = "data-coa-summary"
 READING_ATTRIBUTE = "data-coa-reading"
 READING_LABEL_ATTRIBUTE = "data-coa-reading-label"
@@ -30,6 +32,7 @@ READING_UNIT_ATTRIBUTE = "data-coa-reading-unit"
 PANEL_ATTRIBUTE = "data-coa-panel"
 PANEL_NAME_ATTRIBUTE = "data-coa-panel-name"
 METRIC_ATTRIBUTE = "data-coa-metric"
+METRIC_STATUS_ATTRIBUTE = "data-coa-metric-status"
 METRIC_NAME_ATTRIBUTE = "data-coa-metric-name"
 METRIC_VALUE_ATTRIBUTE = "data-coa-metric-value"
 METRIC_UNIT_ATTRIBUTE = "data-coa-metric-unit"
@@ -41,15 +44,19 @@ UUID_PATTERN = re.compile(
     re.IGNORECASE,
 )
 DECIMAL_PATTERN = re.compile(r"^(?:0|[1-9]\d*)(?:\.\d*[1-9])?$")
+RFC3339_PATTERN = re.compile(
+    r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2})$"
+)
 EXPECTED_FIXTURE_SOURCE_ID = "00000000-0000-4000-8000-000000000001"
 EXPECTED_FIXTURE_STATUS = "pass"
+EXPECTED_FIXTURE_PUBLISHED_AT = "2026-09-01T21:15:30Z"
 EXPECTED_FIXTURE_READINGS = (
     ( "Total THC (calculated)", "29.39", "%" ),
     ( "Water activity", "0", "aw" ),
 )
 EXPECTED_FIXTURE_PANELS = (
-    ( "Cannabinoids", "pass", ( ( "D9-THC", "0.12", "%", "pass" ), ) ),
-    ( "Microbial", "pass", ( ( "Total yeast and mold", "0", "CFU/g", "pass" ), ) ),
+    ( "Cannabinoids", "pass", ( ( "D9-THC", "0.12", "%", "fail", "fail" ), ) ),
+    ( "Microbial", "pass", ( ( "Total yeast and mold", "0", "CFU/g", "pass", "" ), ) ),
 )
 COMMITTED_FIXTURE_ROOT = Path(__file__).resolve().parent / "fixtures"
 
@@ -125,6 +132,16 @@ def is_pdf_href(href: str) -> bool:
     return href.lower().split("?", maxsplit=1)[0].endswith(".pdf")
 
 
+def is_rfc3339_timestamp(value: str) -> bool:
+    if not RFC3339_PATTERN.fullmatch(value):
+        return False
+    try:
+        datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    return True
+
+
 def check_page(page: Path, expected_source_id: str | None = None) -> list[str]:
     parser = CoaPageParser()
     parser.feed(page.read_text(encoding="utf-8"))
@@ -152,6 +169,22 @@ def check_page(page: Path, expected_source_id: str | None = None) -> list[str]:
     )
     if status and status.attributes[STATUS_ATTRIBUTE] not in VALID_STATUSES:
         failures.append(f"COA status is invalid: {status.attributes[STATUS_ATTRIBUTE]!r}")
+
+    published_at = expect_exactly_one(
+        elements_with_attribute(parser, PUBLISHED_AT_ATTRIBUTE),
+        "COA publication timestamp",
+        failures,
+    )
+    if published_at:
+        timestamp = published_at.attributes[PUBLISHED_AT_ATTRIBUTE]
+        if published_at.name != "time":
+            failures.append("COA publication timestamp must be rendered by a time element")
+        if not is_rfc3339_timestamp(timestamp):
+            failures.append(f"COA publication timestamp is not RFC3339: {timestamp!r}")
+        if published_at.attributes.get("datetime") != timestamp:
+            failures.append("COA publication timestamp datetime does not match its source value")
+        if not published_at.text:
+            failures.append("COA publication timestamp is not visible")
 
     expect_exactly_one(
         elements_with_attribute(parser, SUMMARY_ATTRIBUTE),
@@ -195,6 +228,7 @@ def check_page(page: Path, expected_source_id: str | None = None) -> list[str]:
         value = metric.attributes.get(METRIC_VALUE_ATTRIBUTE, "")
         unit = metric.attributes.get(METRIC_UNIT_ATTRIBUTE, "")
         metric_status = metric.attributes[METRIC_ATTRIBUTE]
+        explicit_status = metric.attributes.get(METRIC_STATUS_ATTRIBUTE, "")
         if not metric_name or not value or not unit:
             failures.append("COA metric is missing name, value, or unit metadata")
             continue
@@ -202,6 +236,13 @@ def check_page(page: Path, expected_source_id: str | None = None) -> list[str]:
             failures.append(f"COA metric has a non-canonical value: {value!r}")
         if metric_status not in VALID_STATUSES:
             failures.append(f"COA metric status is invalid: {metric_status!r}")
+        if explicit_status:
+            if explicit_status not in VALID_STATUSES:
+                failures.append(f"COA explicit metric status is invalid: {explicit_status!r}")
+            if explicit_status != metric_status:
+                failures.append("COA explicit metric status does not match its effective status")
+            if explicit_status not in metric.text.lower():
+                failures.append(f"COA explicit metric status is not visible: {explicit_status!r}")
         for field_name, field_value in (
             ( "name", metric_name ),
             ( "value", value ),
@@ -251,6 +292,14 @@ def check_fixture(page: Path) -> list[str]:
     if status_elements and status_elements[0].attributes[STATUS_ATTRIBUTE] != EXPECTED_FIXTURE_STATUS:
         failures.append("fixture COA status does not match the expected result")
 
+    published_at_elements = elements_with_attribute(parser, PUBLISHED_AT_ATTRIBUTE)
+    if (
+        published_at_elements
+        and published_at_elements[0].attributes[PUBLISHED_AT_ATTRIBUTE]
+        != EXPECTED_FIXTURE_PUBLISHED_AT
+    ):
+        failures.append("fixture COA publication timestamp does not match the expected value")
+
     readings = [
         (
             element.attributes.get(READING_LABEL_ATTRIBUTE, ""),
@@ -262,7 +311,7 @@ def check_fixture(page: Path) -> list[str]:
     if readings != list(EXPECTED_FIXTURE_READINGS):
         failures.append("fixture COA headline readings do not match the expected register")
 
-    panels: list[tuple[str, str, tuple[tuple[str, str, str, str], ...]]] = []
+    panels: list[tuple[str, str, tuple[tuple[str, str, str, str, str], ...]]] = []
     for panel in elements_with_attribute(parser, PANEL_ATTRIBUTE):
         panel_name = panel.attributes.get(PANEL_NAME_ATTRIBUTE, "")
         panel_status = panel.attributes[PANEL_ATTRIBUTE]
@@ -272,6 +321,7 @@ def check_fixture(page: Path) -> list[str]:
                 metric.attributes.get(METRIC_VALUE_ATTRIBUTE, ""),
                 metric.attributes.get(METRIC_UNIT_ATTRIBUTE, ""),
                 metric.attributes[METRIC_ATTRIBUTE],
+                metric.attributes.get(METRIC_STATUS_ATTRIBUTE, ""),
             )
             for metric in elements_with_attribute(parser, METRIC_ATTRIBUTE)
             if is_descendant_of(metric, panel)

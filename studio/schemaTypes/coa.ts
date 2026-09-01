@@ -112,6 +112,14 @@ export const coaType = defineType({
     }),
     statusField('status', 'Result Status', true),
     defineField({
+      name: 'publishedAt',
+      title: 'Published At',
+      type: 'datetime',
+      description: MACHINE_OWNED_DESCRIPTION,
+      readOnly: true,
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
       name: 'totalThc',
       title: 'Total THC',
       type: 'object',

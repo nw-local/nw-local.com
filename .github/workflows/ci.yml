@@ -20,6 +20,8 @@ jobs:
           node-version: "22.20"
           cache: yarn
       - run: yarn install --frozen-lockfile
+      - name: Test public COA contracts and Astro rendering
+        run: make check-coa-contract test-coa
       - run: yarn astro check
         env:
           SANITY_PROJECT_ID: ${{ secrets.SANITY_PROJECT_ID }}

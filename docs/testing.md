@@ -1,10 +1,10 @@
 # Automated testing
 
-For a content-driven static site with a small isolated logic surface, a general-purpose test framework would add more machinery than value. The checks are shaped around failures that *do* happen here: broken queries, broken links, regressed SEO/perf signals, controller regressions, and content drift over time.
+For a content-driven static site with a small isolated logic surface, most checks stay dependency-free and focus on failures that *do* happen here: broken queries, broken links, regressed SEO/perf signals, controller regressions, and content drift over time. Public COAs are the narrow exception: Vitest provides the Vite environment required by Astro's supported Container API, so a real validated result renders through the real `.astro` component before any live COA exists.
 
 ## Workflow layout
 
-- [`ci.yml`](../.github/workflows/ci.yml) — runs on every PR and push to `main`. Type checks, Studio checks, glossary source and browser contracts, author structured data, Portable Text headings, drop lookup, psychrometrics, and navigation, then calls the audit. Pushes also check nightly freshness.
+- [`ci.yml`](../.github/workflows/ci.yml) — runs on every PR and push to `main`. Type checks, Studio checks, glossary source and browser contracts, author structured data, Portable Text headings, drop lookup, public-COA contract/component tests, psychrometrics, and navigation, then calls the audit. Pushes also check nightly freshness.
 - [`audit.yml`](../.github/workflows/audit.yml) — **reusable** workflow (`workflow_call`) that builds once, then validates sitemap XML, robots.txt, analytics, content style, email routing, heading anchors, glossary output, links, and Lighthouse. Called by both CI and the nightly job.
 - [`nightly.yml`](../.github/workflows/nightly.yml) — runs the same audit on a daily cron (08:27 UTC). Catches content drift on `main` between PRs (e.g., a Sanity-published strain whose Learn More link rotted last week), and gives Lighthouse a daily perf data point. Manual `workflow_dispatch` trigger for ad-hoc runs.
 - [`deploy.yml`](../.github/workflows/deploy.yml) — builds and publishes to Pages. Not an audit workflow, but it carries the three content-sensitive blocking checks, and it is the **only** workflow on the path a content publish takes. See [Content publishes skip the audit workflow](#content-publishes-skip-the-audit-workflow).
@@ -17,6 +17,7 @@ For a content-driven static site with a small isolated logic surface, a general-
 - **Validate glossary source contracts and search mechanics** (local aggregate and CI) — `make check-glossary` runs dependency-free fixtures for category and alias validation, JSON-LD, search text, combined filters, and URL filter serialization. It protects the pure data and search helpers, but cannot establish that the templates emitted their controls or that published content produced valid pages.
 - **Validate glossary browser behavior** (local aggregate and CI) — `make check-glossary-browser` runs the real progressive-enhancement controller against a small dependency-free DOM boundary. It proves filter discovery stays inside the control band, multi-word typing preserves the input value, clicking an active letter or topic deselects it, zero results name the active query, and `popstate` restores state. It does not replace the manual keyboard and visual checks below.
 - **Validate author structured data** (local aggregate and CI) — `make check-person-jsonld` runs `buildPerson` against a complete author fixture and asserts the canonical profile URL and optional direct email reach the resulting `Person`. It protects the person-scoped contact boundary without depending on live Sanity content.
+- **Validate public COA contracts and rendering** (local aggregate and CI) — `make test-coa` audits raw destination fields at every stored contract level, validates deterministic identity and route uniqueness, and renders a complete validated fixture through `CoaBody.astro` with Astro's Container API. The emitted HTML is then passed to the same built-page checker used after production builds, covering ordered readings, explicit metric status, publication time, and the bound certificate-PDF link without requiring a live COA document.
 - **Validate email routing** (local aggregate, CI audit, and deploy) — `make check-email-routing` inspects the built site and fails if the personal address appears outside Ben Petty's author page, if the contact and retailer pages lose the sales address, or if any other `@nw-local.com` address reaches a generated artifact. Isolated malformed fixtures prove each negative check fails closed. The deploy copy protects content-only changes because Sanity publishes bypass pull-request CI.
 - **Build** (local aggregate and CI) — `yarn build`. CI uploads `dist/` as an artifact for the audit jobs below; local checks consume it in place.
 - **Validate sitemap XML** (CI audit only) — `xmllint` checks `dist/sitemap-index.xml` and `dist/sitemap-0.xml` are well-formed and contain `<loc>` entries. `make check` does not install or invoke `xmllint`.
@@ -84,8 +85,9 @@ Use the existing local server after a glossary change; do not start another one 
 - **Expanded explanations:** open EC and one definition-only term. EC may add concise supporting context, while neither page should look or read like a blog article.
 
 Content changes are routinely verified by grepping `dist/` directly, outside CI — publish in Sanity,
-`make build`, then assert the markup landed. With no test framework, these greps are the whole
-automated surface, so it matters that they assert what they look like they assert. Two gotchas recur:
+`make build`, then assert the markup landed. Outside the deliberately narrow COA component test,
+these greps are the whole automated surface, so it matters that they assert what they look like they
+assert. Two gotchas recur:
 
 - **Count occurrences with `grep -o 'pattern' file | wc -l`, never `grep -c`.** `grep -c` counts
   matching *lines*, and Astro emits minified single-line HTML, so `grep -c` silently returns `1`
@@ -130,6 +132,6 @@ automated surface, so it matters that they assert what they look like they asser
 
 ## Out of scope
 
-- **General-purpose unit-test framework** — most code is data fetching and static rendering. The dependency-free glossary, drop, heading, and psychrometric checks cover the isolated logic that warrants it.
+- **Broad unit-test framework coverage** — Vitest exists for the Astro Container API needed by public COAs. The dependency-free glossary, drop, heading, and psychrometric checks still cover the other isolated logic that warrants automated tests.
 - **Visual regression** — overkill unless the design is iterating frequently.
 - **Content metadata outside the glossary contract** (ghost terpenes and missing fields on other document types) — covered by the [`/audit-content`](../README.md#claude-code-skills) skill, which can be run on a schedule rather than as a CI gate. Glossary category and search metadata remain blocking build contracts.

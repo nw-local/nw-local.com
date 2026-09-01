@@ -1,5 +1,10 @@
 import { createClient } from "@sanity/client";
-import { assertCoa, normalizeCoa, type Coa } from "./coa.ts";
+import {
+  fetchCoaBySourceIdFromDestination,
+  fetchCoasFromDestination,
+  type Coa,
+  type CoaDestinationFetcher,
+} from "./coa.ts";
 import type { GlossaryCategory } from "../../shared/glossary-categories";
 import { validateGlossarySummaries, validateGlossaryTerm } from "./glossary";
 import { AUTHOR_BASE_PATH } from "./routes";
@@ -7,6 +12,7 @@ import { AUTHOR_BASE_PATH } from "./routes";
 export { AUTHOR_BASE_PATH } from "./routes";
 export { assertCoa } from "./coa.ts";
 export { normalizeCoa } from "./coa.ts";
+export { prepareCoaStaticPaths, resolveCoaRouteDocument } from "./coa.ts";
 export type {
   Coa,
   CoaCertificate,
@@ -32,6 +38,11 @@ export const sanityClient = createClient({
   useCdn: false,
   token: SANITY_API_TOKEN,
 });
+
+const fetchCoaDestination: CoaDestinationFetcher = ( query, parameters ) => {
+  if( parameters ) return sanityClient.fetch<unknown>( query, parameters );
+  return sanityClient.fetch<unknown>( query );
+};
 
 // Portable Text bodies must dereference their markDefs. A glossaryRef stores a
 // reference, so left unresolved the renderer receives an id and has nothing to
@@ -83,50 +94,14 @@ const GLOSSARY_SUMMARY_PROJECTION = `
   _id, term, slug, shortDefinition, aliases, category
 `;
 
-const COA_PROJECTION = `{
-  _id, sourceId, labResultId, sampleId, status,
-  defined(totalThc) => { "totalThc": totalThc { label, value, unit } },
-  defined(waterActivity) => { "waterActivity": waterActivity { label, value, unit } },
-  panels[] {
-    name, status,
-    metrics[] {
-      name, value, unit,
-      defined(status) => { "status": status }
-    }
-  },
-  defined(strain) => { "strain": strain { name, url } },
-  certificate { filename, sha256, "url": asset->url }
-}`;
-
 // --- Certificates of Analysis ---
 
 export async function getCoas(): Promise<Coa[]> {
-  const values = await sanityClient.fetch<unknown>(
-    `*[_type == "coa"] | order(sourceId asc) ${COA_PROJECTION}`,
-  );
-
-  if( !Array.isArray( values ) ) {
-    throw new Error( "COA query must return an array." );
-  }
-
-  const coas: Coa[] = [];
-  for( const value of values ) {
-    const normalizedValue = normalizeCoa( value );
-    assertCoa( normalizedValue );
-    coas.push( normalizedValue );
-  }
-  return coas;
+  return fetchCoasFromDestination( fetchCoaDestination );
 }
 
 export async function getCoaBySourceId( sourceId: string ): Promise<Coa | null> {
-  const value = await sanityClient.fetch<unknown>(
-    `*[_type == "coa" && sourceId == $sourceId][0] ${COA_PROJECTION}`,
-    { sourceId },
-  );
-  if( value === null ) return null;
-  const normalizedValue = normalizeCoa( value );
-  assertCoa( normalizedValue );
-  return normalizedValue;
+  return fetchCoaBySourceIdFromDestination( fetchCoaDestination, sourceId );
 }
 
 // --- Shared types ---
