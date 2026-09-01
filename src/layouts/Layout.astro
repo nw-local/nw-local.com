@@ -11,9 +11,10 @@ interface Props {
   description?: string
   ogImage?: string
   structuredData?: StructuredData[]
+  mainCoaSourceId?: string
 }
 
-const { title, description, ogImage, structuredData = [] } = Astro.props;
+const { title, description, ogImage, structuredData = [], mainCoaSourceId } = Astro.props;
 const settings = await getSiteSettings();
 const siteUrl = requireSiteUrl( Astro.site );
 const organization = buildOrganization( settings, siteUrl );
@@ -30,7 +31,7 @@ const allStructuredData: StructuredData[] = organization
   <body>
     <AgeGate message={settings?.ageGateMessage} />
     <Nav settings={settings} />
-    <main>
+    <main data-coa-source-id={mainCoaSourceId}>
       <slot />
     </main>
     <Footer settings={settings} />

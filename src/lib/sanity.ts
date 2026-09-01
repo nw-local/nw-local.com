@@ -1,9 +1,27 @@
 import { createClient } from "@sanity/client";
+import {
+  fetchCoaBySourceIdFromDestination,
+  fetchCoasFromDestination,
+  type Coa,
+  type CoaDestinationFetcher,
+} from "./coa.ts";
 import type { GlossaryCategory } from "../../shared/glossary-categories";
 import { validateGlossarySummaries, validateGlossaryTerm } from "./glossary";
 import { AUTHOR_BASE_PATH } from "./routes";
 
 export { AUTHOR_BASE_PATH } from "./routes";
+export { assertCoa } from "./coa.ts";
+export { normalizeCoa } from "./coa.ts";
+export { prepareCoaStaticPaths, resolveCoaRouteDocument } from "./coa.ts";
+export type {
+  Coa,
+  CoaCertificate,
+  CoaMetric,
+  CoaPanel,
+  CoaReading,
+  CoaStatus,
+  CoaStrain,
+} from "./coa.ts";
 
 const SANITY_PROJECT_ID = import.meta.env.SANITY_PROJECT_ID;
 const SANITY_DATASET = import.meta.env.SANITY_DATASET;
@@ -20,6 +38,11 @@ export const sanityClient = createClient({
   useCdn: false,
   token: SANITY_API_TOKEN,
 });
+
+const fetchCoaDestination: CoaDestinationFetcher = ( query, parameters ) => {
+  if( parameters ) return sanityClient.fetch<unknown>( query, parameters );
+  return sanityClient.fetch<unknown>( query );
+};
 
 // Portable Text bodies must dereference their markDefs. A glossaryRef stores a
 // reference, so left unresolved the renderer receives an id and has nothing to
@@ -75,6 +98,16 @@ const RETAILER_PROJECTION = `{
 const GLOSSARY_SUMMARY_PROJECTION = `
   _id, term, slug, shortDefinition, aliases, category
 `;
+
+// --- Certificates of Analysis ---
+
+export async function getCoas(): Promise<Coa[]> {
+  return fetchCoasFromDestination( fetchCoaDestination );
+}
+
+export async function getCoaBySourceId( sourceId: string ): Promise<Coa | null> {
+  return fetchCoaBySourceIdFromDestination( fetchCoaDestination, sourceId );
+}
 
 // --- Shared types ---
 

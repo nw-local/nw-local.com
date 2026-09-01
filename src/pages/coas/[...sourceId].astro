@@ -1,0 +1,28 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import CoaBody from "../../components/CoaBody.astro";
+import {
+  getCoaBySourceId,
+  getCoas,
+  prepareCoaStaticPaths,
+  resolveCoaRouteDocument,
+} from "../../lib/sanity";
+
+const PAGE_TITLE_PREFIX = "Certificate of analysis";
+
+export async function getStaticPaths() {
+  return prepareCoaStaticPaths( await getCoas() );
+}
+
+const { sourceId } = Astro.params;
+if( !sourceId ) throw new Error( "COA route requires a source ID." );
+
+const directlyFetchedCoa = await getCoaBySourceId( sourceId );
+if( !directlyFetchedCoa ) return Astro.redirect( "/strains" );
+const coa = resolveCoaRouteDocument( sourceId, directlyFetchedCoa );
+const pageTitle = `${PAGE_TITLE_PREFIX}: ${coa.labResultId}`;
+---
+
+<Layout title={pageTitle} description={`Laboratory result ${coa.labResultId} for Northwest Local Cannabis.`} mainCoaSourceId={coa.sourceId}>
+  <CoaBody {coa} />
+</Layout>

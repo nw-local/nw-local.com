@@ -17,6 +17,7 @@ All content types are defined in `studio/schemaTypes/`. Sanity is the single sou
 | `retailerPage` | Wholesale singleton page: Cultivera storefront links, contact details, downloadable product sheets |
 | `terpene` | Terpene reference documents — aroma, effects, foundIn, hero image |
 | `glossaryTerm` | Glossary definitions, backlinked from the content that mentions them |
+| `coa` | Machine-owned public laboratory-result projection and paired certificate PDF |
 
 `blockContent` is also registered, but it is an object type used for rich text bodies, not a document. `tableBlock` is likewise an object type, available inside any `blockContent` body.
 
@@ -65,6 +66,12 @@ And the break is a `<br>` rather than `white-space: pre-line` on the cells. Both
 `PortableTextTable.astro` throws when a row's cell count does not match the header count, because a ragged row silently shifts every later cell into the wrong column — worse than a missing table, since it still looks like data. The schema repeats the check as a Studio validation so an editor sees it while they can still fix it, but per the `rule.required()` gotcha below, only the renderer's throw actually stops bad content reaching the site.
 
 Strain, product, blog post, author, terpene, and glossary pages are statically generated via `getStaticPaths()`.
+
+### Public COAs are an exact machine-owned contract
+
+`coa` documents are written by Northwest Local OPS, not authored in Studio. Their stable identity is `coa.<sourceId>`, where `sourceId` is the immutable OPS laboratory-result UUID, and their required `publishedAt` records the publication act rather than a laboratory test time. The site fetch boundary audits the complete stored object at every public contract level before returning the separate buyer-safe projection, so unknown destination fields, duplicate routes, malformed timestamps, or non-deterministic IDs fail the build instead of producing a plausible partial certificate.
+
+The public route is `/coas/<sourceId>/`. It renders the validated direct fetch, ordered panels and metrics, explicit metric statuses, publication time, and the Sanity-hosted certificate link. Raw WCIA payloads, operator provenance, storage keys, and private URLs are never part of the public `Coa` interface or page.
 
 ## Gotchas
 

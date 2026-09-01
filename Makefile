@@ -3,7 +3,7 @@ export
 
 .DEFAULT_GOAL := help
 
-.PHONY: help install dev build preview studio deploy-studio upload-image prep-images render-figures check-nightly check-analytics check-robots check-content-style check-email-routing test-check-email-routing check-anchors test-psychrometrics check-drop-lookup check-glossary check-glossary-browser check-person-jsonld check-portable-text-headings check-glossary-build test-check-glossary-build check-navigation check sanity-history lint format upgrade upgrade-latest
+.PHONY: help install dev build preview studio deploy-studio upload-image prep-images render-figures check-nightly check-analytics check-robots check-content-style check-email-routing test-check-email-routing check-anchors test-psychrometrics check-drop-lookup check-glossary check-glossary-browser check-person-jsonld check-portable-text-headings check-coa-contract test-coa check-coa-build test-check-coa-build check-glossary-build test-check-glossary-build check-navigation check sanity-history lint format upgrade upgrade-latest
 
 help: ## Show this help message with all available targets
 	@grep -hE '^[a-zA-Z_-]+:.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
@@ -78,6 +78,18 @@ check-person-jsonld: ## Verify author profile structured-data contracts
 check-portable-text-headings: ## Verify collision-safe Portable Text heading preparation
 	@node scripts/check-portable-text-headings.ts
 
+check-coa-contract: ## Verify the public COA runtime contract
+	@node scripts/check-coa-contract.ts
+
+test-coa: ## Test COA destination validation, routing, and real Astro rendering
+	@yarn vitest run src/lib/coa.test.ts src/components/CoaBody.test.ts
+
+check-coa-build: build ## Verify every built public COA page and its certificate link
+	@python3 scripts/check-coa-build.py dist
+
+test-check-coa-build: ## Regression-test malformed public COA page fixtures
+	@python3 scripts/test-check-coa-build.py
+
 check-glossary-build: build ## Verify the built glossary index and entry contracts
 	@./scripts/check-glossary-build.py dist
 
@@ -87,7 +99,7 @@ test-check-glossary-build: build ## Regression-test malformed glossary build fix
 check-navigation: ## Verify the top and footer navigation structure
 	@python3 scripts/check-navigation.py
 
-check: lint check-drop-lookup check-glossary check-glossary-browser check-person-jsonld check-portable-text-headings test-psychrometrics test-check-email-routing build check-analytics check-robots check-content-style check-email-routing check-anchors check-glossary-build test-check-glossary-build check-navigation ## Run the local repository check aggregate
+check: lint check-drop-lookup check-glossary check-glossary-browser check-person-jsonld check-portable-text-headings check-coa-contract test-coa test-psychrometrics test-check-email-routing test-check-coa-build build check-analytics check-robots check-content-style check-email-routing check-anchors check-coa-build check-glossary-build test-check-glossary-build check-navigation ## Run the local repository check aggregate
 	@cd studio && yarn lint && yarn typecheck && yarn format:check
 	@yarn astro check
 
