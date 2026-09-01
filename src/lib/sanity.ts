@@ -63,7 +63,12 @@ const PORTABLE_TEXT_PROJECTION = `{
       }
     }
   },
-  _type == "image" => { asset->, alt, caption }
+  _type == "image" => { asset->, alt, caption },
+  // Dereference the file to a direct CDN url the same way images resolve their
+  // asset: @sanity/image-url only builds image urls, so a raw file ref would
+  // leave the renderer with nothing to point <source> at. poster stays a normal
+  // image projection so urlFor() and the dimension parser work on it unchanged.
+  _type == "videoFile" => { ..., "src": file.asset->url, poster { asset->, alt } }
 }`;
 
 // Shared for the same reason PORTABLE_TEXT_PROJECTION is: getProducts() and the

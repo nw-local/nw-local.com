@@ -72,5 +72,42 @@ export const blockContentType = defineType({
         { name: 'caption', type: 'string', title: 'Caption' },
       ],
     }),
+    // A self-hosted video (an event clip, a grow walkthrough). The frontend
+    // renders a native <video> from the file asset, so the file must be a
+    // web-playable container: upload H.264/AAC MP4, not the .mov/.hevc a phone
+    // records, which most browsers refuse to play. The poster is what shows
+    // before playback and while the print stylesheet freezes the clip, so it is
+    // effectively required for the block to look right on the page and on paper.
+    defineArrayMember({
+      type: 'object',
+      name: 'videoFile',
+      title: 'Video',
+      fields: [
+        {
+          name: 'file',
+          type: 'file',
+          title: 'Video file (MP4)',
+          options: { accept: 'video/mp4' },
+          validation: (rule) => rule.required(),
+        },
+        {
+          name: 'poster',
+          type: 'image',
+          title: 'Poster image',
+          options: { hotspot: true },
+          description: 'Still shown before the clip plays and when the page is printed.',
+        },
+        { name: 'alt', type: 'string', title: 'Alternative Text' },
+        { name: 'caption', type: 'string', title: 'Caption' },
+      ],
+      preview: {
+        select: { title: 'caption', subtitle: 'alt', media: 'poster' },
+        prepare: ({ title, subtitle, media }) => ({
+          title: title || 'Video',
+          subtitle: subtitle || 'Video clip',
+          media,
+        }),
+      },
+    }),
   ],
 })

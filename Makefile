@@ -30,6 +30,9 @@ deploy-studio: ## Deploy Sanity Studio to nw-local.sanity.studio
 upload-image: ## Upload an image asset to Sanity (vars: FILE, LABEL, DESCRIPTION, PORTRAIT_OK)
 	@./scripts/upload-image.sh "$(FILE)" "$(LABEL)" "$(DESCRIPTION)" "$(PORTRAIT_OK)"
 
+upload-file: ## Upload a file asset (e.g. MP4 video) to Sanity (vars: FILE, LABEL, DESCRIPTION)
+	@./scripts/upload-file.sh "$(FILE)" "$(LABEL)" "$(DESCRIPTION)"
+
 prep-images: ## Convert and rename a directory of images for Sanity (vars: DIR, STRAIN, RENAME)
 	@./scripts/prep-images.sh "$(DIR)" "$(STRAIN)" "$(RENAME)"
 
