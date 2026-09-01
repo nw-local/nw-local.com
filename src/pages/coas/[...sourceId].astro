@@ -1,0 +1,145 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { getCoaBySourceId, getCoas } from "../../lib/sanity";
+import type { Coa, CoaReading, CoaStatus } from "../../lib/sanity";
+
+interface Props {
+  coa: Coa
+}
+
+const STATUS_LABELS: Record<CoaStatus, string> = {
+  pass: "Pass",
+  fail: "Fail",
+};
+
+const PAGE_TITLE_PREFIX = "Certificate of analysis";
+const RESULTS_HEADING = "Laboratory result";
+const HEADLINE_READINGS_HEADING = "Headline readings";
+const PANELS_HEADING = "Test panels";
+const LAB_RESULT_LABEL = "Lab result";
+const SAMPLE_LABEL = "Sample";
+const STRAIN_LABEL = "Release strain";
+const CERTIFICATE_HEADING = "Certificate";
+
+export async function getStaticPaths() {
+  const coas = await getCoas();
+  return coas.map( coa => ({
+    params: { sourceId: coa.sourceId },
+    props: { coa },
+  }) );
+}
+
+const { sourceId } = Astro.params;
+if( !sourceId ) throw new Error( "COA route requires a source ID." );
+
+const { coa }: Props = Astro.props;
+const directlyFetchedCoa = await getCoaBySourceId( sourceId );
+if( !directlyFetchedCoa ) return Astro.redirect( "/strains" );
+if( directlyFetchedCoa.sourceId !== coa.sourceId ) {
+  throw new Error( `COA build data drifted for source ID ${sourceId}.` );
+}
+
+const headlineReadings: CoaReading[] = [];
+if( coa.totalThc ) headlineReadings.push( coa.totalThc );
+if( coa.waterActivity ) headlineReadings.push( coa.waterActivity );
+const pageTitle = `${PAGE_TITLE_PREFIX}: ${coa.labResultId}`;
+---
+
+<Layout title={pageTitle} description={`Laboratory result ${coa.labResultId} for Northwest Local Cannabis.`} mainCoaSourceId={coa.sourceId}>
+  <article class="coa-certificate" aria-labelledby="coa-title">
+    <header class="coa-certificate-header">
+      <div>
+        <p class="coa-kicker">Northwest Local Cannabis</p>
+        <h1 id="coa-title">{PAGE_TITLE_PREFIX}</h1>
+        <p class="coa-result-id">{coa.labResultId}</p>
+      </div>
+      <p class:list={[ "coa-result-seal", `coa-result-seal--${coa.status}` ]} data-coa-status={coa.status}>
+        <span>Result</span>
+        <strong>{STATUS_LABELS[coa.status]}</strong>
+      </p>
+    </header>
+
+    <section class="coa-summary" data-coa-summary aria-labelledby="coa-summary-heading">
+      <div class="coa-summary-heading">
+        <h2 id="coa-summary-heading">{RESULTS_HEADING}</h2>
+        <dl class="coa-identifiers">
+          <div>
+            <dt>{LAB_RESULT_LABEL}</dt>
+            <dd>{coa.labResultId}</dd>
+          </div>
+          <div>
+            <dt>{SAMPLE_LABEL}</dt>
+            <dd>{coa.sampleId}</dd>
+          </div>
+          {coa.strain && (
+            <div>
+              <dt>{STRAIN_LABEL}</dt>
+              <dd><a href={coa.strain.url}>{coa.strain.name}</a></dd>
+            </div>
+          )}
+        </dl>
+      </div>
+
+      {headlineReadings.length > 0 && (
+        <div class="coa-headline-readings" aria-labelledby="coa-headline-readings-heading">
+          <h2 id="coa-headline-readings-heading">{HEADLINE_READINGS_HEADING}</h2>
+          <dl>
+            {headlineReadings.map( reading => (
+              <div
+                data-coa-reading
+                data-coa-reading-label={reading.label}
+                data-coa-reading-value={reading.value}
+                data-coa-reading-unit={reading.unit}
+              >
+                <dt>{reading.label}</dt>
+                <dd><data value={reading.value}>{reading.value}</data> <span>{reading.unit}</span></dd>
+              </div>
+            ) )}
+          </dl>
+        </div>
+      )}
+    </section>
+
+    <section class="coa-panels-section" aria-labelledby="coa-panels-heading">
+      <h2 id="coa-panels-heading">{PANELS_HEADING}</h2>
+      <ol class="coa-panels">
+        {coa.panels.map( panel => (
+          <li>
+            <section class="coa-panel" data-coa-panel={panel.status} data-coa-panel-name={panel.name}>
+              <header class="coa-panel-header">
+                <h3>{panel.name}</h3>
+                <span class:list={[ "coa-status-label", `coa-status-label--${panel.status}` ]}>{STATUS_LABELS[panel.status]}</span>
+              </header>
+              <dl class="coa-panel-register">
+                {panel.metrics.map( metric => {
+                  const effectiveStatus = metric.status ?? panel.status;
+                  return (
+                    <div
+                      data-coa-metric={effectiveStatus}
+                      data-coa-metric-name={metric.name}
+                      data-coa-metric-value={metric.value}
+                      data-coa-metric-unit={metric.unit}
+                    >
+                      <dt>{metric.name}</dt>
+                      <dd>
+                        <data value={metric.value}>{metric.value}</data> <span>{metric.unit}</span>
+                        {metric.status && <span class:list={[ "coa-status-label", `coa-status-label--${metric.status}` ]}>{STATUS_LABELS[metric.status]}</span>}
+                      </dd>
+                    </div>
+                  );
+                })}
+              </dl>
+            </section>
+          </li>
+        ) )}
+      </ol>
+    </section>
+
+    <section class="coa-certificate-download" aria-labelledby="coa-certificate-heading">
+      <h2 id="coa-certificate-heading">{CERTIFICATE_HEADING}</h2>
+      <p>Read the signed laboratory certificate for this result.</p>
+      <a data-coa-certificate href={coa.certificate.url}>Download certificate PDF</a>
+      <p class="coa-certificate-filename">{coa.certificate.filename}</p>
+    </section>
+  </article>
+</Layout>

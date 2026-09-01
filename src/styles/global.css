@@ -661,6 +661,266 @@ footer {
   margin-bottom: 3rem;
 }
 
+/* --- Certificate of analysis ---
+ *
+ * A COA is evidence, not product marketing. Its single strong mark is the
+ * result seal; everything else is a ruled register whose order follows the
+ * laboratory payload exactly. The page uses the site's graphite, white, and
+ * electric-green tokens rather than inventing a second visual system. */
+.coa-certificate {
+  max-width: 900px;
+  margin: 1.5rem auto 3rem;
+}
+
+.coa-certificate-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid var(--text-primary);
+}
+
+.coa-kicker,
+.coa-result-id,
+.coa-summary h2,
+.coa-panels-section > h2,
+.coa-certificate-download h2,
+.coa-identifiers dt,
+.coa-headline-readings dt,
+.coa-status-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.coa-kicker {
+  margin-bottom: 0.35rem;
+  color: var(--accent);
+}
+
+.coa-certificate h1 {
+  --heading-base-size: 2.4rem;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.coa-result-id {
+  margin: 0.8rem 0 0;
+  color: var(--text-emphasis);
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  overflow-wrap: anywhere;
+}
+
+.coa-result-seal {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 8rem;
+  min-height: 8rem;
+  margin: 0;
+  padding: 0.75rem;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  color: var(--accent);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 1.25;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.coa-result-seal strong {
+  display: block;
+  font-size: 1.3rem;
+  letter-spacing: 0.08em;
+}
+
+.coa-result-seal--fail,
+.coa-status-label--fail {
+  color: var(--text-primary);
+}
+
+.coa-summary,
+.coa-panels-section,
+.coa-certificate-download {
+  padding: 1.75rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.coa-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 2rem;
+}
+
+.coa-summary h2,
+.coa-panels-section > h2,
+.coa-certificate-download h2 {
+  --heading-base-size: 0.88rem;
+  margin-bottom: 1rem;
+  color: var(--text-emphasis);
+  transform: none;
+  -webkit-text-stroke: 0;
+}
+
+.coa-identifiers,
+.coa-headline-readings dl,
+.coa-panel-register {
+  margin: 0;
+}
+
+.coa-identifiers > div,
+.coa-headline-readings dl > div,
+.coa-panel-register > div {
+  display: grid;
+  grid-template-columns: minmax(8rem, 0.9fr) minmax(0, 1.1fr);
+  gap: 1rem;
+  padding: 0.65rem 0;
+  border-top: 1px solid var(--border);
+}
+
+.coa-identifiers > div:last-child,
+.coa-headline-readings dl > div:last-child,
+.coa-panel-register > div:last-child {
+  border-bottom: 1px solid var(--border);
+}
+
+.coa-identifiers dt,
+.coa-headline-readings dt {
+  color: var(--text-secondary);
+}
+
+.coa-identifiers dd,
+.coa-headline-readings dd,
+.coa-panel-register dd {
+  margin: 0;
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+
+.coa-headline-readings dd data,
+.coa-panel-register dd data {
+  font-variant-numeric: tabular-nums;
+}
+
+.coa-panels {
+  display: grid;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.coa-panel {
+  border: 1px solid var(--border);
+}
+
+.coa-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.coa-panel-header h3 {
+  color: var(--text-primary);
+  font-size: 1rem;
+}
+
+.coa-status-label {
+  flex: 0 0 auto;
+  color: var(--accent);
+}
+
+.coa-panel-register > div {
+  margin: 0 1rem;
+}
+
+.coa-panel-register > div:first-child {
+  border-top: 0;
+}
+
+.coa-panel-register > div:last-child {
+  border-bottom: 0;
+}
+
+.coa-panel-register dt {
+  color: var(--text-secondary);
+}
+
+.coa-panel-register dd {
+  text-align: right;
+}
+
+.coa-panel-register .coa-status-label {
+  margin-left: 0.65rem;
+}
+
+.coa-certificate-download {
+  border-bottom: 0;
+}
+
+.coa-certificate-download > p {
+  max-width: 38rem;
+}
+
+.coa-certificate-download a {
+  display: inline-block;
+  padding: 0.65rem 1rem;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.coa-certificate-download a:hover {
+  color: var(--text-primary);
+  border-color: var(--text-primary);
+}
+
+.coa-certificate-download a:focus-visible {
+  outline: 2px solid var(--text-primary);
+  outline-offset: 3px;
+}
+
+.coa-certificate-filename {
+  margin: 0.75rem 0 0;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.75rem;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+  .coa-certificate-header,
+  .coa-summary {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .coa-result-seal {
+    width: 6.5rem;
+    min-height: 6.5rem;
+  }
+
+  .coa-identifiers > div,
+  .coa-headline-readings dl > div,
+  .coa-panel-register > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.25rem;
+  }
+
+  .coa-panel-register dd {
+    text-align: left;
+  }
+}
+
 @media (min-width: 769px) {
   .detail-grid {
     grid-template-columns: 1fr 1fr;
@@ -2330,5 +2590,38 @@ footer {
   .print-source-site::after {
     content: ": ";
     font-weight: 400;
+  }
+
+  /* The certificate has enough ruled structure to preserve its identity in
+     ink without the dark screen surface. Keep one panel intact whenever the
+     printer can, and make the seal legible as a normal boxed result. */
+  .coa-certificate {
+    max-width: none;
+    margin: 0;
+  }
+
+  .coa-certificate-header {
+    align-items: center;
+  }
+
+  .coa-result-seal {
+    min-height: auto;
+    width: auto;
+    padding: 0.35rem 0.6rem;
+    border-radius: 0;
+  }
+
+  .coa-summary {
+    gap: 0.5in;
+  }
+
+  .coa-panel,
+  .coa-certificate-download {
+    break-inside: avoid;
+  }
+
+  .coa-certificate-download a {
+    border-color: #000000;
+    color: #000000;
   }
 }
