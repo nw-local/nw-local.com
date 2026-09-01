@@ -1677,11 +1677,7 @@ footer {
   border-bottom: 1px solid var(--border);
 }
 
-.glossary-entry-hero--text-only {
-  grid-template-columns: minmax(0, 1fr);
-}
-
-.glossary-entry-hero--text-only .glossary-entry-hero-copy {
+.glossary-entry-hero-copy {
   max-width: 54rem;
 }
 
@@ -1729,10 +1725,6 @@ footer {
   display: grid;
   grid-template-columns: minmax(0, var(--content-width));
   align-items: start;
-}
-
-.glossary-entry-layout--without-contents {
-  grid-template-columns: minmax(0, var(--content-width));
 }
 
 .glossary-support-heading {
@@ -1823,15 +1815,13 @@ footer {
 }
 
 @media (max-width: 700px) {
-  .glossary-entry-hero,
-  .glossary-entry-hero--text-only {
+  .glossary-entry-hero {
     grid-template-columns: minmax(0, 1fr);
     margin-bottom: 2.5rem;
     padding-top: 0.5rem;
   }
 
-  .glossary-entry-layout,
-  .glossary-entry-layout--without-contents {
+  .glossary-entry-layout {
     grid-template-columns: minmax(0, 1fr);
     gap: 2rem;
   }
@@ -2170,8 +2160,7 @@ footer {
 
   /* Glossary entries print as the same compact single-column reference used
      on screen, without adding article-style navigation or media treatment. */
-  .glossary-entry-hero,
-  .glossary-entry-hero--text-only {
+  .glossary-entry-hero {
     grid-template-columns: minmax(0, 1fr);
     margin-bottom: 0.25in;
     padding: 0 0 0.2in;
@@ -2186,8 +2175,7 @@ footer {
     font-size: 11pt;
   }
 
-  .glossary-entry-layout,
-  .glossary-entry-layout--without-contents {
+  .glossary-entry-layout {
     display: block;
   }
 

@@ -400,18 +400,20 @@ def check_index(
         ),
         "glossary index is missing its plain-language introduction",
     )
-    require(
-        failures,
-        INDEX_PAGE,
-        not elements_with_class( elements, "glossary-featured-guides" ),
-        "glossary index must not render a selected-reference-article section",
-    )
-    require(
-        failures,
-        INDEX_PAGE,
-        not elements_with_class( elements, "glossary-featured-card" ),
-        "glossary index must not render featured guide cards",
-    )
+    search_roots = elements_with_class( elements, "glossary-search" )
+    if len( search_roots ) == 1:
+        search_sections = [
+            element
+            for element in descendants( search_roots[ 0 ] )
+            if element.name == "section"
+        ]
+        require(
+            failures,
+            INDEX_PAGE,
+            len( search_sections ) == 1
+            and search_sections[ 0 ].has_class( "glossary-directory-section" ),
+            "glossary search must contain only the directory section",
+        )
     require(
         failures,
         INDEX_PAGE,
@@ -546,24 +548,46 @@ def check_detail_entry(
         has_json_ld_type( elements, "BreadcrumbList", failures, page ),
         "missing BreadcrumbList JSON-LD",
     )
-    require(
-        failures,
-        page,
-        not elements_with_class( elements, "glossary-specimen" ),
-        "glossary entries must not render editorial hero images",
-    )
-    require(
-        failures,
-        page,
-        not elements_with_class( elements, "glossary-entry-meta" ),
-        "glossary entries must not render article reading metadata",
-    )
-    require(
-        failures,
-        page,
-        not elements_with_class( elements, "glossary-entry-contents" ),
-        "glossary entries must not render article contents navigation",
-    )
+    entry_headers = elements_with_class( elements, "glossary-entry-hero" )
+    if len( entry_headers ) == 1:
+        require(
+            failures,
+            page,
+            not any( element.name == "figure" for element in descendants( entry_headers[ 0 ] ) ),
+            "glossary entry header must not contain an editorial figure",
+        )
+
+    reference_roots = elements_with_class( elements, "glossary-reference" )
+    if len( reference_roots ) == 1:
+        reference_elements = list( descendants( reference_roots[ 0 ] ) )
+        reading_time_elements = [
+            element
+            for element in reference_elements
+            if element.name in { "p", "span", "time" }
+            and not ancestor_with_class( element, "portable-text" )
+            and re.search( r"\b\d+\s+min(?:ute)?s?\s+read\b", normalized_text( element ), re.IGNORECASE )
+        ]
+        require(
+            failures,
+            page,
+            not reading_time_elements,
+            "glossary entries must not render reading-time copy",
+        )
+        require(
+            failures,
+            page,
+            not any( element.name == "aside" for element in reference_elements ),
+            "glossary entries must not render aside navigation",
+        )
+        require(
+            failures,
+            page,
+            not any(
+                element.name == "nav" and not element.has_class( "glossary-breadcrumb" )
+                for element in reference_elements
+            ),
+            "glossary entries must not render article navigation",
+        )
 
     body_containers = elements_with_class( elements, "portable-text" )
     require(

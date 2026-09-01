@@ -70,7 +70,7 @@ jobs:
       # Unlike source checks, this contract can be broken by a Sanity publish
       # with no pull request. Fail this build before GitHub Pages receives the
       # artifact, keeping the previous deployment live.
-      - name: Check glossary reference-library build contracts
+      - name: Check glossary build contracts
         run: ./scripts/check-glossary-build.py dist
 
   deploy:

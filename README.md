@@ -147,7 +147,7 @@ Every page emits **JSON-LD structured data** (`Organization` everywhere; `Produc
 
 The site auto-deploys to GitHub Pages on every push to `main`, via [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml). Publishing content in Sanity also triggers a rebuild through a webhook (~1-2 min end-to-end), because the build fetches all content at build time.
 
-Deploys are not unconditional: the build runs the content-style and glossary reference-library checks against the freshly built `dist/`, and a failure skips the deploy job and leaves the previous site live. **If published content does not appear, inspect that deploy run first**: invalid glossary search metadata or page structure, a British spelling, an unpaired temperature, or a Celsius-first pair will fail the build before publication.
+Deploys are not unconditional: the build runs the content-style and glossary output checks against the freshly built `dist/`, and a failure skips the deploy job and leaves the previous site live. **If published content does not appear, inspect that deploy run first**: invalid glossary search metadata or page structure, a British spelling, an unpaired temperature, or a Celsius-first pair will fail the build before publication.
 
 The Studio itself is hosted separately at <https://nw-local.sanity.studio/> and deploys with `make deploy-studio` — **not** with the site. A schema or sidebar change needs that command before editors see it.
 

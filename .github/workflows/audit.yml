@@ -120,10 +120,10 @@ jobs:
         run: ./scripts/check-heading-anchors.py dist
       # The glossary has a code path (this workflow) and a content-only path
       # (deploy.yml below). Reading the rendered pages is the only way to prove
-      # the index filters and long-form reference fields both shipped.
+      # the directory controls and optional term explanations both shipped.
       - name: Regression-test malformed glossary build fixtures
         run: python3 scripts/test-check-glossary-build.py dist
-      - name: Check glossary reference-library build contracts
+      - name: Check glossary build contracts
         run: ./scripts/check-glossary-build.py dist
 
   validate-links:

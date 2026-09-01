@@ -58,7 +58,7 @@ const MENTION_LABELS: Record<GlossaryMentionType, string> = {
 
 <Layout title={term.term} description={term.shortDefinition} structuredData={structuredData}>
   <article class="glossary-reference">
-    <header class="glossary-entry-hero glossary-entry-hero--text-only">
+    <header class="glossary-entry-hero">
       <div class="glossary-entry-hero-copy">
         <nav class="glossary-breadcrumb" aria-label="Breadcrumb">
           <a href={GLOSSARY_BASE_PATH}>Glossary</a>
@@ -70,7 +70,7 @@ const MENTION_LABELS: Record<GlossaryMentionType, string> = {
       </div>
     </header>
 
-    <div class="glossary-entry-layout glossary-entry-layout--without-contents">
+    <div class="glossary-entry-layout">
       <div class="glossary-entry-reading">
         {term.body && <PortableText value={term.body} />}
 

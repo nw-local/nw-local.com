@@ -419,9 +419,9 @@ run_case(
         lambda fixture_dist: replace_once(
             fixture_dist / "glossary/index.html",
             r'(<section class="glossary-directory-section">)',
-            r'<section class="glossary-featured-guides"></section>\1',
+            r'<section class="promoted-terms"></section>\1',
         ),
-        "glossary index must not render a selected-reference-article section",
+        "glossary search must contain only the directory section",
     ),
 )
 run_case(
@@ -430,10 +430,10 @@ run_case(
         "editorial heroes stay removed from term pages",
         lambda fixture_dist: replace_once(
             fixture_dist / "glossary/ec/index.html",
-            r'(</header>)',
-            r'<figure class="glossary-specimen"></figure>\1',
+            r'(<header class="glossary-entry-hero">.*?)(</header>)',
+            r'\1<figure class="term-visual"></figure>\2',
         ),
-        "glossary entries must not render editorial hero images",
+        "glossary entry header must not contain an editorial figure",
         expected_page="glossary/ec/index.html",
     ),
 )
@@ -443,10 +443,10 @@ run_case(
         "article metadata stays removed from term pages",
         lambda fixture_dist: replace_once(
             fixture_dist / "glossary/ec/index.html",
-            r'(</header>)',
-            r'<p class="glossary-entry-meta">2 min read</p>\1',
+            r'(<header class="glossary-entry-hero">.*?)(</header>)',
+            r'\1<p>2 min read</p>\2',
         ),
-        "glossary entries must not render article reading metadata",
+        "glossary entries must not render reading-time copy",
         expected_page="glossary/ec/index.html",
     ),
 )
@@ -457,9 +457,9 @@ run_case(
         lambda fixture_dist: replace_once(
             fixture_dist / "glossary/ec/index.html",
             r'(<div class="glossary-entry-reading">)',
-            r'<aside class="glossary-entry-contents"></aside>\1',
+            r'<aside class="term-navigation"></aside>\1',
         ),
-        "glossary entries must not render article contents navigation",
+        "glossary entries must not render aside navigation",
         expected_page="glossary/ec/index.html",
     ),
 )
