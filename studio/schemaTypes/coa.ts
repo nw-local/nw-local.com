@@ -6,6 +6,12 @@ const STATUS_OPTIONS = [
   { title: 'Fail', value: 'fail' },
 ]
 
+export function certificateAssetValidation<
+  Rule extends { required: () => Rule; assetRequired: () => Rule },
+>(rule: Rule): Rule {
+  return rule.required().assetRequired()
+}
+
 const statusField = (name: string, title: string, required: boolean) =>
   defineField({
     name,
@@ -214,7 +220,7 @@ export const coaType = defineType({
           description: MACHINE_OWNED_DESCRIPTION,
           readOnly: true,
           options: { accept: 'application/pdf' },
-          validation: (rule) => rule.required(),
+          validation: certificateAssetValidation,
         }),
       ],
       validation: (rule) => rule.required(),

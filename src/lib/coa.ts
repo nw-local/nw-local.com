@@ -61,13 +61,46 @@ const METRIC_FIELDS = new Set( [ "name", "value", "unit", "status" ] );
 const PANEL_FIELDS = new Set( [ "name", "status", "metrics" ] );
 const STRAIN_FIELDS = new Set( [ "name", "url" ] );
 const CERTIFICATE_FIELDS = new Set( [ "filename", "sha256", "url" ] );
+const NULLABLE_COA_FIELDS = [ "totalThc", "waterActivity", "strain" ];
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const SHA256_PATTERN = /^[a-f0-9]{64}$/;
+const CANONICAL_DECIMAL_PATTERN = /^(?:0|[1-9]\d*)(?:\.\d*[1-9])?$/;
+
+function isRecord( value: unknown ): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray( value );
+}
 
 function assertRecord( value: unknown, path: string ): asserts value is Record<string, unknown> {
-  if( value === null || typeof value !== "object" || Array.isArray( value ) ) {
+  if( !isRecord( value ) ) {
     throw new Error( `${path} must be an object.` );
   }
+}
+
+function normalizeMetric( value: unknown ): unknown {
+  if( !isRecord( value ) ) return value;
+  const normalizedMetric = { ...value };
+  if( normalizedMetric[ "status" ] === null ) delete normalizedMetric[ "status" ];
+  return normalizedMetric;
+}
+
+function normalizePanel( value: unknown ): unknown {
+  if( !isRecord( value ) ) return value;
+  const normalizedPanel = { ...value };
+  const metrics = normalizedPanel[ "metrics" ];
+  if( Array.isArray( metrics ) ) normalizedPanel[ "metrics" ] = metrics.map( normalizeMetric );
+  return normalizedPanel;
+}
+
+export function normalizeCoa( value: unknown ): unknown {
+  if( !isRecord( value ) ) return value;
+  const normalizedCoa = { ...value };
+  for( const fieldName of NULLABLE_COA_FIELDS ) {
+    if( normalizedCoa[ fieldName ] === null ) delete normalizedCoa[ fieldName ];
+  }
+
+  const panels = normalizedCoa[ "panels" ];
+  if( Array.isArray( panels ) ) normalizedCoa[ "panels" ] = panels.map( normalizePanel );
+  return normalizedCoa;
 }
 
 function assertExactFields(
@@ -108,7 +141,10 @@ function assertStatus( value: unknown, path: string ): asserts value is CoaStatu
 }
 
 function assertMeasurement( value: Record<string, unknown>, path: string ): void {
-  assertRequiredString( value[ "value" ], `${path}.value` );
+  const measurement = value[ "value" ];
+  if( typeof measurement !== "string" || !CANONICAL_DECIMAL_PATTERN.test( measurement ) ) {
+    throw new Error( `${path}.value must be a canonical decimal string.` );
+  }
   assertRequiredString( value[ "unit" ], `${path}.unit` );
 }
 

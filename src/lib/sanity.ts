@@ -1,11 +1,12 @@
 import { createClient } from "@sanity/client";
-import { assertCoa, type Coa } from "./coa.ts";
+import { assertCoa, normalizeCoa, type Coa } from "./coa.ts";
 import type { GlossaryCategory } from "../../shared/glossary-categories";
 import { validateGlossarySummaries, validateGlossaryTerm } from "./glossary";
 import { AUTHOR_BASE_PATH } from "./routes";
 
 export { AUTHOR_BASE_PATH } from "./routes";
 export { assertCoa } from "./coa.ts";
+export { normalizeCoa } from "./coa.ts";
 export type {
   Coa,
   CoaCertificate,
@@ -84,13 +85,16 @@ const GLOSSARY_SUMMARY_PROJECTION = `
 
 const COA_PROJECTION = `{
   _id, sourceId, labResultId, sampleId, status,
-  totalThc { label, value, unit },
-  waterActivity { label, value, unit },
+  defined(totalThc) => { "totalThc": totalThc { label, value, unit } },
+  defined(waterActivity) => { "waterActivity": waterActivity { label, value, unit } },
   panels[] {
     name, status,
-    metrics[] { name, value, unit, status }
+    metrics[] {
+      name, value, unit,
+      defined(status) => { "status": status }
+    }
   },
-  strain { name, url },
+  defined(strain) => { "strain": strain { name, url } },
   certificate { filename, sha256, "url": asset->url }
 }`;
 
@@ -107,8 +111,9 @@ export async function getCoas(): Promise<Coa[]> {
 
   const coas: Coa[] = [];
   for( const value of values ) {
-    assertCoa( value );
-    coas.push( value );
+    const normalizedValue = normalizeCoa( value );
+    assertCoa( normalizedValue );
+    coas.push( normalizedValue );
   }
   return coas;
 }
@@ -119,8 +124,9 @@ export async function getCoaBySourceId( sourceId: string ): Promise<Coa | null> 
     { sourceId },
   );
   if( value === null ) return null;
-  assertCoa( value );
-  return value;
+  const normalizedValue = normalizeCoa( value );
+  assertCoa( normalizedValue );
+  return normalizedValue;
 }
 
 // --- Shared types ---
