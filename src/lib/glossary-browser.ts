@@ -91,6 +91,13 @@ function updatePressedState(
   }
 }
 
+function toggleFilterValue(
+  activeValue: string | undefined,
+  selectedValue: string | undefined,
+): string | undefined {
+  return activeValue === selectedValue ? undefined : selectedValue;
+}
+
 export function initializeGlossaryBrowser(
   searchRoot: GlossarySearchRoot,
   environment: GlossaryBrowserEnvironment,
@@ -186,7 +193,8 @@ export function initializeGlossaryBrowser(
 
   for( const button of letterButtons ) {
     button.addEventListener( "click", () => {
-      const letter = button.dataset.filterValue || undefined;
+      const selectedLetter = button.dataset.filterValue || undefined;
+      const letter = toggleFilterValue( filters.letter, selectedLetter );
       filters = { ...filters, letter };
       render();
       updateUrl( "push" );
@@ -195,7 +203,8 @@ export function initializeGlossaryBrowser(
 
   for( const button of categoryButtons ) {
     button.addEventListener( "click", () => {
-      const category = button.dataset.filterValue || undefined;
+      const selectedCategory = button.dataset.filterValue || undefined;
+      const category = toggleFilterValue( filters.category, selectedCategory );
       filters = { ...filters, category };
       render();
       updateUrl( "push" );

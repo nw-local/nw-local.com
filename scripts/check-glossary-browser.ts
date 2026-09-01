@@ -111,6 +111,7 @@ const clearButton = new TestButtonElement();
 const emptyState = new TestElement();
 const emptyStateMessage = new TestElement();
 const allLettersButton = filterButton( "" );
+const eLetterButton = filterButton( "e" );
 const allCategoriesButton = filterButton( "" );
 const nutritionButton = filterButton( "nutrition" );
 const ecEntry = directoryEntry(
@@ -135,7 +136,10 @@ searchRoot.setQueryResults( "[data-glossary-clear]", [ clearButton ] );
 searchRoot.setQueryResults( "[data-glossary-empty]", [ emptyState ] );
 searchRoot.setQueryResults( "[data-glossary-empty-message]", [ emptyStateMessage ] );
 searchRoot.setQueryResults( "[data-glossary-entry]", [ ecEntry, vaporPressureEntry ] );
-searchControls.setQueryResults( "[data-glossary-letter]", [ allLettersButton ] );
+searchControls.setQueryResults(
+  "[data-glossary-letter]",
+  [ allLettersButton, eLetterButton ],
+);
 searchControls.setQueryResults(
   "[data-glossary-category-filter]",
   [ allCategoriesButton, nutritionButton ],
@@ -195,6 +199,20 @@ browserLocation = { pathname: "/glossary/", search: "?q=conductivity", hash: "" 
 popStateListener();
 expectEqual( "popstate restores the query input", queryInput.value, "conductivity" );
 expectEqual( "popstate restores matching entries", ecEntry.hidden, false );
+
+queryInput.value = "";
+queryInput.dispatch( "input" );
+nutritionButton.dispatch( "click" );
+expectEqual( "category selection hides entries outside the category", vaporPressureEntry.hidden, true );
+nutritionButton.dispatch( "click" );
+expectEqual( "clicking the active category deselects it", vaporPressureEntry.hidden, false );
+expectEqual( "deselecting the category removes it from the URL", browserLocation.search, "" );
+
+eLetterButton.dispatch( "click" );
+expectEqual( "letter selection hides entries with another initial", vaporPressureEntry.hidden, true );
+eLetterButton.dispatch( "click" );
+expectEqual( "clicking the active letter deselects it", vaporPressureEntry.hidden, false );
+expectEqual( "deselecting the letter removes it from the URL", browserLocation.search, "" );
 
 if( failures.length > 0 ) {
   console.error( "Glossary browser controller contract violated:" );
