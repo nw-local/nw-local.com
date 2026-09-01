@@ -95,6 +95,8 @@ describe( "COA publication contract", () => {
     [ "metric", ( destination: ReturnType<typeof makeDestinationDocument> ) => Object.assign( destination.panels[0].metrics[0], { storageKey: "private/key" }) ],
     [ "strain", ( destination: ReturnType<typeof makeDestinationDocument> ) => Object.assign( destination.strain, { internalId: "private" }) ],
     [ "certificate", ( destination: ReturnType<typeof makeDestinationDocument> ) => Object.assign( destination.certificate, { privateUrl: "https://private.example.test" }) ],
+    [ "certificate asset", ( destination: ReturnType<typeof makeDestinationDocument> ) => Object.assign( destination.certificate.asset, { storageKey: "private/uploads/certificate.pdf" }) ],
+    [ "certificate asset reference", ( destination: ReturnType<typeof makeDestinationDocument> ) => Object.assign( destination.certificate.asset.asset, { secretUrl: "https://private.example.test/certificate.pdf" }) ],
   ] )( "rejects an unknown stored %s field before returning the buyer projection", ( _level, mutateDestination ) => {
     const fetchResult = makeFetchResult();
     mutateDestination( fetchResult.destination );

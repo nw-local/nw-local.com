@@ -106,6 +106,8 @@ const DESTINATION_CERTIFICATE_FIELDS = new Set( [
   "sha256",
   "asset",
 ] );
+const DESTINATION_CERTIFICATE_ASSET_FIELDS = new Set( [ ...SANITY_OBJECT_SYSTEM_FIELDS, "asset" ] );
+const DESTINATION_ASSET_REFERENCE_FIELDS = new Set( [ "_type", "_ref" ] );
 const NULLABLE_COA_FIELDS = [ "totalThc", "waterActivity", "strain" ];
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const SHA256_PATTERN = /^[a-f0-9]{64}$/;
@@ -376,10 +378,18 @@ function assertDestinationAudit( value: unknown ): void {
   if( strain !== undefined && strain !== null ) {
     assertDestinationObject( strain, DESTINATION_STRAIN_FIELDS, `${path}.strain` );
   }
+  const certificate = value[ "certificate" ];
+  assertDestinationObject( certificate, DESTINATION_CERTIFICATE_FIELDS, `${path}.certificate` );
+  const certificateAsset = certificate[ "asset" ];
   assertDestinationObject(
-    value[ "certificate" ],
-    DESTINATION_CERTIFICATE_FIELDS,
-    `${path}.certificate`,
+    certificateAsset,
+    DESTINATION_CERTIFICATE_ASSET_FIELDS,
+    `${path}.certificate.asset`,
+  );
+  assertDestinationObject(
+    certificateAsset[ "asset" ],
+    DESTINATION_ASSET_REFERENCE_FIELDS,
+    `${path}.certificate.asset.asset`,
   );
 }
 
