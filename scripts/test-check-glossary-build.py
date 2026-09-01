@@ -464,6 +464,19 @@ run_case(
         "glossary detail links must live inside the directory",
     ),
 )
+for relative_href in ( "ec", "./ec", "//nw-local.com/glossary/ec/", "/glossary/other/../ec" ):
+    run_case(
+        f"browser-resolved promoted link {relative_href} stays inside the directory",
+        lambda relative_href=relative_href: assert_rejected(
+            f"browser-resolved promoted link {relative_href} stays inside the directory",
+            lambda fixture_dist: replace_once(
+                fixture_dist / "glossary/index.html",
+                r'(<section class="glossary-search")',
+                rf'<a href="{relative_href}">EC guide</a>\1',
+            ),
+            "glossary detail links must live inside the directory",
+        ),
+    )
 run_case(
     "filtered glossary index links remain valid outside the directory",
     lambda: assert_accepted(
@@ -502,6 +515,19 @@ run_case(
     ),
 )
 run_case(
+    "review metadata stays out of the hero copy",
+    lambda: assert_rejected(
+        "review metadata stays out of the hero copy",
+        lambda fixture_dist: replace_once(
+            fixture_dist / "glossary/ec/index.html",
+            r'(<div class="glossary-entry-hero-copy">)',
+            r'\1Reviewed August 31, 2026',
+        ),
+        "glossary entry header has unexpected content",
+        expected_page="glossary/ec/index.html",
+    ),
+)
+run_case(
     "definition prose may use the word reviewed",
     lambda: assert_accepted(
         "definition prose may use the word reviewed",
@@ -526,13 +552,26 @@ run_case(
     ),
 )
 run_case(
+    "article metadata stays out of the reading area",
+    lambda: assert_rejected(
+        "article metadata stays out of the reading area",
+        lambda fixture_dist: replace_once(
+            fixture_dist / "glossary/ec/index.html",
+            r'(<div class="glossary-entry-reading">)',
+            r'\1<div>2 min read</div>',
+        ),
+        "glossary entry reading area has unexpected content",
+        expected_page="glossary/ec/index.html",
+    ),
+)
+run_case(
     "article contents stay removed from term pages",
     lambda: assert_rejected(
         "article contents stay removed from term pages",
         lambda fixture_dist: replace_once(
             fixture_dist / "glossary/ec/index.html",
-            r'(<div class="glossary-entry-reading">)',
-            r'<aside class="term-navigation"></aside>\1',
+            r'(<section class="glossary-support-section"[^>]*>)',
+            r'\1<aside class="term-navigation"></aside>',
         ),
         "glossary entries must not render aside navigation",
         expected_page="glossary/ec/index.html",

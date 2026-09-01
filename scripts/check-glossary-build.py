@@ -12,6 +12,7 @@ Usage: check-glossary-build.py [dist-dir]
 import collections
 import json
 import pathlib
+import posixpath
 import re
 import sys
 import unicodedata
@@ -160,15 +161,14 @@ def has_ancestor( element: Element, ancestor: Element ) -> bool:
 
 
 def internal_href_path( href: str ) -> str | None:
-    parsed_href = urllib.parse.urlsplit( href.strip() )
-    if parsed_href.scheme or parsed_href.netloc:
-        if parsed_href.scheme not in { "http", "https" }:
-            return None
-        if parsed_href.netloc.lower() not in EXPECTED_SITE_HOSTS:
-            return None
-    if not parsed_href.path.startswith( "/" ):
+    resolved_href = urllib.parse.urljoin( "https://nw-local.com/glossary/", href.strip() )
+    parsed_href = urllib.parse.urlsplit( resolved_href )
+    if parsed_href.scheme not in { "http", "https" }:
         return None
-    normalized_path = urllib.parse.unquote( parsed_href.path ).rstrip( "/" )
+    if parsed_href.netloc.lower() not in EXPECTED_SITE_HOSTS:
+        return None
+    decoded_path = urllib.parse.unquote( parsed_href.path )
+    normalized_path = posixpath.normpath( decoded_path ).rstrip( "/" )
     return normalized_path or "/"
 
 
@@ -672,17 +672,71 @@ def check_detail_entry(
             and header_child_elements[ 0 ].has_class( "glossary-entry-hero-copy" )
             else []
         )
+        unexpected_header_copy_text = (
+            any(
+                isinstance( child, str ) and child.strip()
+                for child in header_child_elements[ 0 ].children
+            )
+            if len( header_child_elements ) == 1
+            and header_child_elements[ 0 ].has_class( "glossary-entry-hero-copy" )
+            else False
+        )
         if not has_editorial_media:
             require(
                 failures,
                 page,
                 not unexpected_header_text
+                and not unexpected_header_copy_text
                 and len( header_child_elements ) == 1
                 and [ element.name for element in header_copy_children ] == [ "nav", "h1", "p" ]
                 and header_copy_children[ 0 ].has_class( "glossary-breadcrumb" )
                 and header_copy_children[ 2 ].has_class( "glossary-lede" ),
                 "glossary entry header has unexpected content",
             )
+
+    entry_layouts = elements_with_class( elements, "glossary-entry-layout" )
+    if len( entry_layouts ) == 1:
+        layout_child_elements = [
+            child for child in entry_layouts[ 0 ].children if isinstance( child, Element )
+        ]
+        unexpected_layout_text = any(
+            isinstance( child, str ) and child.strip() for child in entry_layouts[ 0 ].children
+        )
+        reading_children = (
+            [
+                child
+                for child in layout_child_elements[ 0 ].children
+                if isinstance( child, Element )
+            ]
+            if len( layout_child_elements ) == 1
+            and layout_child_elements[ 0 ].has_class( "glossary-entry-reading" )
+            else []
+        )
+        unexpected_reading_text = (
+            any(
+                isinstance( child, str ) and child.strip()
+                for child in layout_child_elements[ 0 ].children
+            )
+            if len( layout_child_elements ) == 1
+            and layout_child_elements[ 0 ].has_class( "glossary-entry-reading" )
+            else False
+        )
+        reading_children_are_supported = all(
+            child.has_class( "portable-text" )
+            or ( child.name == "section" and child.has_class( "glossary-support-section" ) )
+            or ( child.name == "p" and child.has_class( "glossary-back" ) )
+            for child in reading_children
+        )
+        require(
+            failures,
+            page,
+            not unexpected_layout_text
+            and not unexpected_reading_text
+            and len( layout_child_elements ) == 1
+            and layout_child_elements[ 0 ].has_class( "glossary-entry-reading" )
+            and reading_children_are_supported,
+            "glossary entry reading area has unexpected content",
+        )
 
     if len( reference_roots ) == 1:
         reference_elements = list( descendants( reference_roots[ 0 ] ) )
