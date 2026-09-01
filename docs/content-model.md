@@ -27,6 +27,7 @@ All content types are defined in `studio/schemaTypes/`. Sanity is the single sou
 | Member | Purpose |
 |---|---|
 | `image` | Inline figure with `alt` and `caption`. Both live **outside** `children`, so a GROQ audit shaped like `body[].children[...]` misses them entirely |
+| `videoFile` | Inline self-hosted video: an MP4 `file`, an optional `poster` image, plus `alt` and `caption`. Renders a native `<video>` from the file asset's CDN url (`PortableTextVideo.astro`); `PORTABLE_TEXT_PROJECTION` dereferences it as `"src": file.asset->url` because `@sanity/image-url` cannot build file urls. Upload H.264/AAC MP4 via `make upload-file`, **never** the phone's `.mov`/HEVC, which most browsers refuse to play. Like `image`, `alt`/`caption` sit **outside** `children` |
 | `tableBlock` | Reference table: optional `caption`, a `headers` array, and `rows` of `cells`. One row may set `highlight` |
 | `glossaryRef` | A mark, not a member. Annotates a span with a reference to a `glossaryTerm` or `terpene` |
 

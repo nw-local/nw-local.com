@@ -80,6 +80,7 @@ Run `make` (no args) to print the full target list with descriptions.
 | Upgrade deps (major)| `make upgrade-latest`| ignores semver — review `yarn outdated` before/after |
 | Prep images         | `make prep-images`   | see [Image workflow](#image-workflow)                |
 | Upload image        | `make upload-image`  | see [Image workflow](#image-workflow)                |
+| Upload file         | `make upload-file`   | non-image assets (MP4 video, PDF) to Sanity's file store |
 | Render figures      | `make render-figures`| rasterizes `figures/**/*.svg` to PNG for upload      |
 | Check nightly cron  | `make check-nightly` | fails if the nightly audit's schedule has stalled    |
 | Check analytics     | `make check-analytics` | asserts `./dist/` ships a GA snippet that records hits |
@@ -171,7 +172,7 @@ Local: put them in `.env` at the repo root. CI: stored as GitHub Actions secrets
 
 The GA4 measurement ID is **not** among them. It is a public identifier that ships in the HTML of every page, so it lives in [`src/lib/analytics.ts`](src/lib/analytics.ts) under version control rather than in `.env` and CI secrets, where it bought no secrecy and quietly broke fresh checkouts.
 
-A separate `SANITY_WRITE_TOKEN` is used **only** by the image-upload helper script (`make upload-image`) when adding new image assets. It is not needed to build or run the site, and it is listed in `.env.example` so that following the setup instructions no longer produces an environment that cannot upload. Create it as an Editor token at [sanity.io/manage](https://sanity.io/manage).
+A separate `SANITY_WRITE_TOKEN` is used **only** by the asset-upload helper scripts (`make upload-image` for images, `make upload-file` for video and other file assets) when adding new assets. It is not needed to build or run the site, and it is listed in `.env.example` so that following the setup instructions no longer produces an environment that cannot upload. Create it as an Editor token at [sanity.io/manage](https://sanity.io/manage).
 
 ---
 
