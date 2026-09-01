@@ -15,13 +15,14 @@ UNBOUND_CERTIFICATE_FIXTURE = (
 FIXTURE_PAGE_NAME = "coa-page.html"
 EXPECTED_FAILURE = "expected one visible COA certificate anchor, found 0"
 EMPTY_BUILD_ROOT_SUCCESS = "COA build contract OK: no generated COA pages to verify."
+EMPTY_FIXTURE_FAILURE = "check-coa-build: no fixture page found under"
 
 
 with tempfile.TemporaryDirectory(prefix="check-coa-build-") as temporary_directory:
     fixture_root = Path(temporary_directory)
     shutil.copy2(UNBOUND_CERTIFICATE_FIXTURE, fixture_root / FIXTURE_PAGE_NAME)
     result = subprocess.run(
-        ["python3", str(CHECKER), str(fixture_root)],
+        ["python3", str(CHECKER), "--fixture", str(fixture_root)],
         check=False,
         capture_output=True,
         text=True,
@@ -52,3 +53,21 @@ if result.returncode != 0 or result.stdout.strip() != EMPTY_BUILD_ROOT_SUCCESS:
     )
 
 print("check-coa-build empty build-root regression holds")
+
+
+with tempfile.TemporaryDirectory(prefix="check-coa-build-empty-fixture-") as temporary_directory:
+    empty_fixture_root = Path(temporary_directory)
+    result = subprocess.run(
+        ["python3", str(CHECKER), "--fixture", str(empty_fixture_root)],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+if result.returncode != 2 or EMPTY_FIXTURE_FAILURE not in result.stderr:
+    raise AssertionError(
+        "empty fixture root: expected a missing-fixture failure, got "
+        f"exit {result.returncode}: {result.stdout!r} {result.stderr!r}"
+    )
+
+print("check-coa-build empty fixture-root regression holds")

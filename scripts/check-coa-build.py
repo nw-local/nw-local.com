@@ -18,6 +18,7 @@ import sys
 
 COA_ROUTE_DIRECTORY = "coas"
 FIXTURE_PAGE_NAME = "coa-page.html"
+FIXTURE_MODE_FLAG = "--fixture"
 COA_PAGE_NAME = "index.html"
 SOURCE_ID_ATTRIBUTE = "data-coa-source-id"
 STATUS_ATTRIBUTE = "data-coa-status"
@@ -50,6 +51,7 @@ EXPECTED_FIXTURE_PANELS = (
     ( "Cannabinoids", "pass", ( ( "D9-THC", "0.12", "%", "pass" ), ) ),
     ( "Microbial", "pass", ( ( "Total yeast and mold", "0", "CFU/g", "pass" ), ) ),
 )
+COMMITTED_FIXTURE_ROOT = Path(__file__).resolve().parent / "fixtures"
 
 
 @dataclass
@@ -281,24 +283,38 @@ def check_fixture(page: Path) -> list[str]:
     return failures
 
 
-def pages_for_root(build_root: Path) -> tuple[bool, list[tuple[Path, str | None]]]:
+def pages_for_root(
+    build_root: Path,
+    fixture_mode: bool,
+) -> list[tuple[Path, str | None]]:
     fixture_page = build_root / FIXTURE_PAGE_NAME
-    if fixture_page.is_file():
-        return True, [(fixture_page, EXPECTED_FIXTURE_SOURCE_ID)]
+    if fixture_mode:
+        if fixture_page.is_file():
+            return [(fixture_page, EXPECTED_FIXTURE_SOURCE_ID)]
+        return []
     pages = [
         (page, page.parent.name)
         for page in sorted((build_root / COA_ROUTE_DIRECTORY).glob(f"*/{COA_PAGE_NAME}"))
     ]
-    return False, pages
+    return pages
 
 
 def main() -> int:
-    build_root = Path(sys.argv[1] if len(sys.argv) > 1 else "dist")
+    arguments = sys.argv[1:]
+    explicit_fixture_mode = arguments[:1] == [FIXTURE_MODE_FLAG]
+    if explicit_fixture_mode:
+        arguments = arguments[1:]
+    if len(arguments) > 1:
+        print("usage: check-coa-build.py [--fixture] [build-root]", file=sys.stderr)
+        return 2
+
+    build_root = Path(arguments[0] if arguments else "dist")
     if not build_root.is_dir():
         print(f"check-coa-build: no such directory: {build_root}", file=sys.stderr)
         return 2
 
-    fixture_mode, pages = pages_for_root(build_root)
+    fixture_mode = explicit_fixture_mode or build_root.resolve() == COMMITTED_FIXTURE_ROOT
+    pages = pages_for_root(build_root, fixture_mode)
     if not pages:
         if fixture_mode:
             print(f"check-coa-build: no fixture page found under {build_root}", file=sys.stderr)
