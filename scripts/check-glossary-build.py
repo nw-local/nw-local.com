@@ -15,6 +15,7 @@ import pathlib
 import re
 import sys
 import unicodedata
+import urllib.parse
 from dataclasses import dataclass, field
 from html.parser import HTMLParser
 from typing import Iterable
@@ -34,6 +35,7 @@ EXPECTED_CATEGORY_LABELS = {
     "business-regulation": "Business & Regulation",
 }
 EXPECTED_CATEGORY_VALUES = frozenset( [ "", *EXPECTED_CATEGORY_LABELS ] )
+EXPECTED_SITE_HOSTS = frozenset( { "nw-local.com", "www.nw-local.com" } )
 # These hooks mirror the selectors consumed by src/lib/glossary-browser.ts.
 GLOSSARY_DIRECTORY_ENTRY_HOOK = "data-glossary-entry"
 GLOSSARY_QUERY_HOOK = "data-glossary-query"
@@ -146,6 +148,28 @@ def ancestor_with_attribute( element: Element, attribute_name: str ) -> Element 
             return candidate
         candidate = candidate.parent
     return None
+
+
+def has_ancestor( element: Element, ancestor: Element ) -> bool:
+    candidate = element.parent
+    while candidate:
+        if candidate is ancestor:
+            return True
+        candidate = candidate.parent
+    return False
+
+
+def internal_href_path( href: str ) -> str | None:
+    parsed_href = urllib.parse.urlsplit( href.strip() )
+    if parsed_href.scheme or parsed_href.netloc:
+        if parsed_href.scheme not in { "http", "https" }:
+            return None
+        if parsed_href.netloc.lower() not in EXPECTED_SITE_HOSTS:
+            return None
+    if not parsed_href.path.startswith( "/" ):
+        return None
+    normalized_path = urllib.parse.unquote( parsed_href.path ).rstrip( "/" )
+    return normalized_path or "/"
 
 
 def page_elements( page: pathlib.Path ) -> list[ Element ]:
@@ -425,19 +449,32 @@ def check_index(
             and search_sections[ 0 ].has_class( "glossary-directory-section" ),
             "glossary search must contain only the directory section",
         )
-    promoted_detail_links = [
+    directory_roots = [
         element
         for element in elements
-        if element.name == "a"
-        and re.fullmatch( r"/glossary/[^/]+", ( element.attribute( "href" ) or "" ).strip() )
-        and not ancestor_with_class( element, "glossary-index" )
+        if element.name == "dl" and element.attribute( "id" ) == "glossary-directory"
     ]
     require(
         failures,
         INDEX_PAGE,
-        not promoted_detail_links,
-        "glossary detail links must live inside the directory",
+        len( directory_roots ) == 1,
+        "glossary index must contain exactly one directory root",
     )
+    if len( directory_roots ) == 1:
+        detail_paths = set( detail_pages )
+        promoted_detail_links = [
+            element
+            for element in elements
+            if element.name == "a"
+            and internal_href_path( element.attribute( "href" ) or "" ) in detail_paths
+            and not has_ancestor( element, directory_roots[ 0 ] )
+        ]
+        require(
+            failures,
+            INDEX_PAGE,
+            not promoted_detail_links,
+            "glossary detail links must live inside the directory",
+        )
     require(
         failures,
         INDEX_PAGE,
@@ -573,6 +610,25 @@ def check_detail_entry(
         has_json_ld_type( elements, "BreadcrumbList", failures, page ),
         "missing BreadcrumbList JSON-LD",
     )
+    if len( reference_roots ) == 1:
+        reference_child_elements = [
+            child
+            for child in reference_roots[ 0 ].children
+            if isinstance( child, Element )
+        ]
+        unexpected_reference_text = any(
+            isinstance( child, str ) and child.strip()
+            for child in reference_roots[ 0 ].children
+        )
+        require(
+            failures,
+            page,
+            not unexpected_reference_text
+            and len( reference_child_elements ) == 2
+            and reference_child_elements[ 0 ].name == "header"
+            and reference_child_elements[ 1 ].has_class( "glossary-entry-layout" ),
+            "glossary entry has unexpected article-level content",
+        )
     entry_headers = [
         child
         for reference_root in reference_roots
@@ -587,41 +643,49 @@ def check_detail_entry(
     )
     if len( entry_headers ) == 1:
         header_elements = list( descendants( entry_headers[ 0 ] ) )
+        has_editorial_media = any(
+            element.name in { "figure", "picture", "img", "video" }
+            for element in header_elements
+        )
         require(
             failures,
             page,
-            not any(
-                element.name in { "figure", "picture", "img", "video" }
-                for element in header_elements
-            ),
+            not has_editorial_media,
             "glossary entry header must not contain editorial media",
         )
-        require(
-            failures,
-            page,
-            not any(
-                element.name in { "p", "span", "time" }
-                and re.search( r"\breviewed\b", normalized_text( element ), re.IGNORECASE )
-                for element in header_elements
-            ),
-            "glossary entries must not render review metadata",
+        header_child_elements = [
+            child
+            for child in entry_headers[ 0 ].children
+            if isinstance( child, Element )
+        ]
+        unexpected_header_text = any(
+            isinstance( child, str ) and child.strip()
+            for child in entry_headers[ 0 ].children
         )
+        header_copy_children = (
+            [
+                child
+                for child in header_child_elements[ 0 ].children
+                if isinstance( child, Element )
+            ]
+            if len( header_child_elements ) == 1
+            and header_child_elements[ 0 ].has_class( "glossary-entry-hero-copy" )
+            else []
+        )
+        if not has_editorial_media:
+            require(
+                failures,
+                page,
+                not unexpected_header_text
+                and len( header_child_elements ) == 1
+                and [ element.name for element in header_copy_children ] == [ "nav", "h1", "p" ]
+                and header_copy_children[ 0 ].has_class( "glossary-breadcrumb" )
+                and header_copy_children[ 2 ].has_class( "glossary-lede" ),
+                "glossary entry header has unexpected content",
+            )
 
     if len( reference_roots ) == 1:
         reference_elements = list( descendants( reference_roots[ 0 ] ) )
-        reading_time_elements = [
-            element
-            for element in reference_elements
-            if element.name in { "p", "span", "time" }
-            and not ancestor_with_class( element, "portable-text" )
-            and re.search( r"\b\d+\s+min(?:ute)?s?\s+read\b", normalized_text( element ), re.IGNORECASE )
-        ]
-        require(
-            failures,
-            page,
-            not reading_time_elements,
-            "glossary entries must not render reading-time copy",
-        )
         require(
             failures,
             page,

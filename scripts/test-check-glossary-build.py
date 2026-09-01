@@ -170,7 +170,12 @@ def add_valid_future_term( fixture_dist: pathlib.Path ) -> pathlib.Path:
         '<!doctype html><html><head>'
         '<script type="application/ld+json">{"@type":"DefinedTerm"}</script>'
         '<script type="application/ld+json">{"@type":"BreadcrumbList"}</script>'
-        '</head><body><article class="glossary-reference"><header></header></article></body></html>',
+        '</head><body><article class="glossary-reference">'
+        '<header><div class="glossary-entry-hero-copy">'
+        '<nav class="glossary-breadcrumb"></nav><h1>Future glossary term</h1>'
+        '<p class="glossary-lede">A synthetic reference entry.</p>'
+        '</div></header><div class="glossary-entry-layout">'
+        '<div class="glossary-entry-reading"></div></div></article></body></html>',
         encoding="utf-8",
     )
     return future_page
@@ -179,7 +184,11 @@ def add_valid_future_term( fixture_dist: pathlib.Path ) -> pathlib.Path:
 def add_valid_body( page: pathlib.Path ) -> None:
     if 'class="portable-text"' in page.read_text( encoding="utf-8" ):
         raise AssertionError( f"{page}: growth fixture requires a concise entry" )
-    replace_once( page, r"</article>", VALID_BODY_MARKUP + "</article>" )
+    replace_once(
+        page,
+        r'(<div class="glossary-entry-reading">)',
+        r"\1" + VALID_BODY_MARKUP,
+    )
 
 
 def add_valid_future_body( fixture_dist: pathlib.Path ) -> None:
@@ -438,9 +447,32 @@ run_case(
         lambda fixture_dist: replace_once(
             fixture_dist / "glossary/index.html",
             r'(<section class="glossary-search")',
-            r'<section class="recommended-term"><a href="/glossary/ec">EC guide</a></section>\1',
+            r'<section class="recommended-term glossary-index"><a href="/glossary/ec/">EC guide</a></section>\1',
         ),
         "glossary detail links must live inside the directory",
+    ),
+)
+run_case(
+    "absolute promoted glossary links stay inside the directory",
+    lambda: assert_rejected(
+        "absolute promoted glossary links stay inside the directory",
+        lambda fixture_dist: replace_once(
+            fixture_dist / "glossary/index.html",
+            r'(<section class="glossary-search")',
+            r'<a href="https://nw-local.com/glossary/ec/">EC guide</a>\1',
+        ),
+        "glossary detail links must live inside the directory",
+    ),
+)
+run_case(
+    "filtered glossary index links remain valid outside the directory",
+    lambda: assert_accepted(
+        "filtered glossary index links remain valid outside the directory",
+        lambda fixture_dist: replace_once(
+            fixture_dist / "glossary/index.html",
+            r'(<section class="glossary-search")',
+            r'<a href="/glossary/?category=nutrition">Nutrition terms</a>\1',
+        ),
     ),
 )
 run_case(
@@ -463,10 +495,21 @@ run_case(
         lambda fixture_dist: replace_once(
             fixture_dist / "glossary/ec/index.html",
             r'(<header class="glossary-entry-hero">.*?)(</header>)',
-            r'\1<p class="term-review">Reviewed August 31, 2026</p>\2',
+            r'\1Reviewed August 31, 2026\2',
         ),
-        "glossary entries must not render review metadata",
+        "glossary entry header has unexpected content",
         expected_page="glossary/ec/index.html",
+    ),
+)
+run_case(
+    "definition prose may use the word reviewed",
+    lambda: assert_accepted(
+        "definition prose may use the word reviewed",
+        lambda fixture_dist: replace_once(
+            fixture_dist / "glossary/ec/index.html",
+            r'(<p class="glossary-lede">)[^<]+(</p>)',
+            r'\1A reviewed measurement definition.\2',
+        ),
     ),
 )
 run_case(
@@ -476,9 +519,9 @@ run_case(
         lambda fixture_dist: replace_once(
             fixture_dist / "glossary/ec/index.html",
             r'(<header class="glossary-entry-hero">.*?)(</header>)',
-            r'\1<p>2 min read</p>\2',
+            r'\1<div>2 min read</div>\2',
         ),
-        "glossary entries must not render reading-time copy",
+        "glossary entry header has unexpected content",
         expected_page="glossary/ec/index.html",
     ),
 )
