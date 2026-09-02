@@ -122,6 +122,35 @@ export const dropType = defineType({
       validation: (rule) => rule.unique(),
     }),
     defineField({
+      name: 'coas',
+      title: 'Certificates of Analysis',
+      type: 'array',
+      of: [{ type: 'reference', to: [{ type: 'coa' }] }],
+      description:
+        'Release certificates for the lots in this drop, one per strain. Set by Northwest Local OPS from the launch snapshot.',
+      validation: (rule) => rule.unique(),
+    }),
+    defineField({
+      name: 'gallery',
+      title: 'Gallery',
+      type: 'array',
+      description: 'Release photography shown below the introduction.',
+      of: [
+        {
+          type: 'image',
+          options: { hotspot: true },
+          fields: [
+            defineField({
+              name: 'alt',
+              title: 'Alternative Text',
+              type: 'string',
+              validation: (rule) => rule.required(),
+            }),
+          ],
+        },
+      ],
+    }),
+    defineField({
       name: 'body',
       title: 'Body',
       type: 'blockContent',
