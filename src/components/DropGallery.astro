@@ -13,15 +13,16 @@ const { images, fallbackAlt } = Astro.props;
 {images.length > 0 && (
   <section class="drop-gallery fade-in" data-drop-gallery aria-label="Release photography">
     {images.map( ( image, index ) => (
-      <img
-        class="drop-gallery-thumb"
-        src={urlFor( image ).width( 600 ).height( 450 ).format( "webp" ).url()}
-        alt={image.alt ?? fallbackAlt}
-        width="600"
-        height="450"
-        data-lightbox-index={index}
-        loading="lazy"
-      />
+      <button type="button" class="drop-gallery-button" data-lightbox-index={index} aria-label={"Open photo " + ( index + 1 )}>
+        <img
+          class="drop-gallery-thumb"
+          src={urlFor( image ).width( 600 ).height( 450 ).format( "webp" ).url()}
+          alt={image.alt ?? fallbackAlt}
+          width="600"
+          height="450"
+          loading="lazy"
+        />
+      </button>
     ) )}
   </section>
 )}
