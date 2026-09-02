@@ -71,6 +71,24 @@ test( "the chapter's own links sit outside the product cards", async () => {
   expect( html.indexOf( `class="drop-chapter-title"` ) ).toBeLessThan( firstCard );
 });
 
+test( "renders an Order on Cultivera buy link on every product card when the strain has a marketplace id", async () => {
+  const chapter = makeChapterFixture();
+  chapter.strain.cultiveraMarketProductId = "14303";
+  const html = await renderChapter( chapter );
+  expect( html ).toContain(
+    `href="https://wa.cultiveramarket.com/bm/market/northwest-local-cannabis-llc/product/14303"`,
+  );
+  expect( html ).toContain( "Order on Cultivera" );
+  // One button per product card; the fixture has two products.
+  expect( html.split( "data-order-cultivera" ).length - 1 ).toBe( 2 );
+});
+
+test( "omits the Order on Cultivera link when the strain has no marketplace id", async () => {
+  const html = await renderChapter( makeChapterFixture() );
+  expect( html ).not.toContain( "data-order-cultivera" );
+  expect( html ).not.toContain( "Order on Cultivera" );
+});
+
 const temporaryDirectories: string[] = [];
 
 afterEach( async () => {

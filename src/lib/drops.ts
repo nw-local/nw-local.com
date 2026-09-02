@@ -19,6 +19,7 @@ import {
   assertStatus,
   type CoaStatus,
 } from "./coa.ts";
+import { stripDropReferences } from "./dropReferences.ts";
 
 export const DROP_BASE_PATH = "/drops";
 
@@ -218,6 +219,10 @@ export interface DropChapterStrain {
   slug?: SanitySlug;
   strainType?: StrainType;
   lineage?: string;
+  // The strain's gated Cultivera marketplace product id. Each product card in
+  // the chapter renders an "Order on Cultivera" button from it; a strain
+  // without one shows no button.
+  cultiveraMarketProductId?: string;
   heroImage?: SanityImage;
   description?: PortableText;
 }
@@ -297,8 +302,11 @@ export function groupDropStrains( drop: DropGroupingInput, baseUrl: string ): Dr
         slug: product.strain.slug,
         strainType: product.strain.strainType,
         lineage: product.strain.lineage,
+        cultiveraMarketProductId: product.strain.cultiveraMarketProductId,
         heroImage: product.strain.heroImage,
-        description: descriptionsByStrainId.get( product.strain._id ),
+        // The drop page strips inline links and the "Learn More" section from
+        // the shared strain description; the strain page keeps them.
+        description: stripDropReferences( descriptionsByStrainId.get( product.strain._id ) ),
       }
       : { key, name: UNASSIGNED_STRAIN_HEADING };
     chaptersByKey.set( key, {

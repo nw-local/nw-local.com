@@ -105,11 +105,44 @@ describe( "groupDropStrains", () => {
     expect( grouping.chapters[0].products.map( product => product.name ) ).toEqual( [ "GB 3.5", "GB 7" ] );
     expect( grouping.chapters[0].coa?.sourceId ).toBe( "00000000-0000-4000-8000-000000000001" );
     expect( grouping.chapters[1].coa?.sourceId ).toBe( "00000000-0000-4000-8000-000000000002" );
-    expect( grouping.chapters[0].strain.description ).toBe( description );
+    expect( grouping.chapters[0].strain.description ).toEqual( description );
     expect( grouping.chapters[0].strain.lineage ).toBe( "Glitter Bomb lineage" );
     expect( grouping.chapters[0].anchorId ).toBe( "strain-glitter-bomb" );
     expect( grouping.chapters.map( chapter => chapter.index ) ).toEqual( [ 1, 2 ] );
     expect( grouping.unmatchedCoas ).toEqual( [] );
+  });
+
+  test( "carries the strain's Cultivera marketplace id onto the chapter and strips drop-page references from the description", () => {
+    const strainWithId: ProductStrainRef = { ...glitterBomb, cultiveraMarketProductId: "14303" };
+    const description = [
+      {
+        _type: "block", _key: "b1", style: "normal",
+        markDefs: [ { _key: "m1", _type: "link", href: "https://breeder.example" } ],
+        children: [ { _type: "span", _key: "s1", text: "Bred by Compound Genetics", marks: [ "m1" ] } ],
+      },
+      { _type: "block", _key: "b2", style: "h4", children: [ { _type: "span", _key: "s2", text: "Learn More", marks: [] } ] },
+      {
+        _type: "block", _key: "b3", style: "normal",
+        markDefs: [ { _key: "m2", _type: "link", href: "https://leafly.example" } ],
+        children: [ { _type: "span", _key: "s3", text: "Leafly", marks: [ "m2" ] } ],
+      },
+    ];
+    const grouping = groupDropStrains({
+      products: [ makeProduct( "GB 3.5", strainWithId, true ) ],
+      coas: [],
+      strainDescriptions: [ { _id: strainWithId._id, description } ],
+    }, BASE_URL );
+
+    const chapterStrain = grouping.chapters[0].strain;
+    expect( chapterStrain.cultiveraMarketProductId ).toBe( "14303" );
+    // The "Learn More" heading and every block after it are gone; the surviving
+    // block keeps its prose but drops its outbound link markDef and span mark.
+    expect( chapterStrain.description ).toEqual( [
+      {
+        _type: "block", _key: "b1", style: "normal", markDefs: [],
+        children: [ { _type: "span", _key: "s1", text: "Bred by Compound Genetics", marks: [] } ],
+      },
+    ] );
   });
 
   test( "availability is any product available; a strain whose products are all unavailable is sold out", () => {

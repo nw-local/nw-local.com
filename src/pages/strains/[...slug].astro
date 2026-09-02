@@ -8,6 +8,7 @@ import SectionHeading from "../../components/SectionHeading.astro";
 import ImageLightbox from "../../components/ImageLightbox.astro";
 import { getStrains, getStrain, getProductsByStrain, getDrops } from "../../lib/sanity";
 import { buildDropLookup, dropHref } from "../../lib/drops";
+import { cultiveraMarketUrlFor } from "../../lib/cultivera";
 import { urlFor } from "../../lib/image";
 import { formatMonthYear } from "../../lib/date";
 import {
@@ -46,6 +47,9 @@ const strain = await getStrain( slug! );
 if( !strain ) return Astro.redirect( "/strains" );
 
 const products = await getProductsByStrain( strain._id ) ?? [];
+// The product cards here carry no strain reference (ProductWithDescription), so
+// the "Order on Cultivera" link is resolved from this strain and passed down.
+const orderUrl = cultiveraMarketUrlFor( strain.cultiveraMarketProductId );
 const ogImage = strain.heroImage?.asset ? urlFor( strain.heroImage ).width( 1200 ).height( 630 ).format( "jpg" ).url() : undefined;
 
 const lightboxImages = ( strain.gallery ?? [] ).map( ( image: { asset: unknown; alt?: string }) => ({
@@ -152,7 +156,7 @@ const structuredData: StructuredData[] = [
       <SectionHeading title="Products" />
       <div class="card-grid">
         {products.map( product => (
-          <ProductCard {...product} drop={dropProductIds.includes( product._id ) ? drop : undefined} />
+          <ProductCard {...product} orderUrl={orderUrl} drop={dropProductIds.includes( product._id ) ? drop : undefined} />
         ) )}
       </div>
     </section>
