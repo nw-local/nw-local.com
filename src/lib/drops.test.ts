@@ -12,7 +12,7 @@ import {
   strainPageUrl,
 } from "./drops.ts";
 import type { DropCoa } from "./drops.ts";
-import type { ProductSummary } from "./sanity";
+import type { ProductStrainRef, ProductSummary } from "./sanity";
 
 export const DROP_COA_SOURCE_ID = "00000000-0000-4000-8000-000000000001";
 
@@ -69,8 +69,8 @@ describe( "assertDropCoa", () => {
 
 const BASE_URL = "https://nw-local.com";
 
-function makeStrain( name: string, slug: string ) {
-  return { _id: `strain-${slug}`, name, slug: { current: slug }, strainType: "hybrid" as const, lineage: `${name} lineage` };
+function makeStrain( name: string, slug: string ): ProductStrainRef {
+  return { _id: `strain-${slug}`, name, slug: { current: slug }, strainType: "hybrid", lineage: `${name} lineage` };
 }
 
 function makeProduct( name: string, strain: ReturnType<typeof makeStrain> | undefined, available: boolean ): ProductSummary {

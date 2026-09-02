@@ -5,7 +5,7 @@ import {
   type Coa,
   type CoaDestinationFetcher,
 } from "./coa.ts";
-import { assertDropCoas, DROP_COA_PROJECTION, type DropCoa } from "./drops";
+import { assertDropCoas, DROP_COA_PROJECTION, type DropCoa } from "./drops.ts";
 import type { GlossaryCategory } from "../../shared/glossary-categories";
 import { validateGlossarySummaries, validateGlossaryTerm } from "./glossary";
 import { AUTHOR_BASE_PATH } from "./routes";
@@ -23,7 +23,7 @@ export type {
   CoaStatus,
   CoaStrain,
 } from "./coa.ts";
-export type { DropCoa } from "./drops";
+export type { DropCoa } from "./drops.ts";
 
 const SANITY_PROJECT_ID = import.meta.env.SANITY_PROJECT_ID;
 const SANITY_DATASET = import.meta.env.SANITY_DATASET;
