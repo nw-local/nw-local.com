@@ -1,0 +1,27 @@
+---
+import type { SanityImage } from "../lib/sanity";
+import { urlFor } from "../lib/image";
+
+interface Props {
+  images: SanityImage[]
+  fallbackAlt: string
+}
+
+const { images, fallbackAlt } = Astro.props;
+---
+
+{images.length > 0 && (
+  <section class="drop-gallery fade-in" data-drop-gallery aria-label="Release photography">
+    {images.map( ( image, index ) => (
+      <img
+        class="drop-gallery-thumb"
+        src={urlFor( image ).width( 600 ).height( 450 ).format( "webp" ).url()}
+        alt={image.alt ?? fallbackAlt}
+        width="600"
+        height="450"
+        data-lightbox-index={index}
+        loading="lazy"
+      />
+    ) )}
+  </section>
+)}

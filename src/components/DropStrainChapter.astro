@@ -1,0 +1,69 @@
+---
+import PortableText from "./PortableText.astro";
+import ProductBadge from "./ProductBadge.astro";
+import ProductCard from "./ProductCard.astro";
+import type { DropChapter } from "../lib/drops";
+import { DROP_CHAPTER_STATE_LABELS, dropCoaHref, formatDropTotalThc } from "../lib/drops";
+import { urlFor } from "../lib/image";
+import type { CoaStatus } from "../lib/coa.ts";
+
+interface Props {
+  chapter: DropChapter
+  chapterCount: number
+}
+
+const COA_LINK_PREFIX = "Release COA";
+const COA_STATUS_LABELS: Record<CoaStatus, string> = { pass: "Pass", fail: "Fail" };
+
+const { chapter, chapterCount } = Astro.props;
+const { strain, products, available, coa } = chapter;
+const stateType = available ? DROP_CHAPTER_STATE_LABELS.available : DROP_CHAPTER_STATE_LABELS.soldOut;
+const pad = ( value: number ) => String( value ).padStart( 2, "0" );
+const strainHref = strain.slug ? `/strains/${strain.slug.current}` : undefined;
+---
+
+<section class="drop-chapter fade-in" id={chapter.anchorId} data-drop-chapter={chapter.anchorId} style={`--drop-color: ${chapter.color};`}>
+  <header class="drop-chapter-header">
+    <p class="drop-chapter-number">{pad( chapter.index )} / {pad( chapterCount )}</p>
+    <div class="drop-chapter-rule"></div>
+    <h2 class="drop-chapter-title">{strainHref ? <a href={strainHref}>{strain.name}</a> : strain.name}</h2>
+    {strain.lineage && (
+      <p class="drop-chapter-lineage" data-drop-lineage={strain.lineage}><em>{strain.lineage}</em></p>
+    )}
+  </header>
+
+  <div class="drop-chapter-body">
+    <aside class="drop-chapter-facts">
+      {coa?.totalThc && (
+        <p class="drop-chapter-thc" data-drop-thc={coa.totalThc.value}>{formatDropTotalThc( coa.totalThc )}</p>
+      )}
+      {coa && (
+        <a class="drop-coa-link" data-drop-coa={coa.sourceId} href={dropCoaHref( coa.sourceId )}>{COA_LINK_PREFIX} · {COA_STATUS_LABELS[coa.status]}</a>
+      )}
+      <p class="drop-chapter-state" data-drop-state={stateType}>
+        <ProductBadge type={stateType} />
+        {strain.strainType && <ProductBadge type={strain.strainType} />}
+      </p>
+    </aside>
+
+    <div class="drop-chapter-editorial">
+      {strain.heroImage?.asset && (
+        <img
+          class="drop-chapter-hero"
+          src={urlFor( strain.heroImage ).width( 1200 ).height( 900 ).format( "webp" ).url()}
+          alt={strain.heroImage.alt ?? strain.name}
+          width="1200"
+          height="900"
+          loading="lazy"
+        />
+      )}
+      {strain.description && <div class="drop-chapter-copy"><PortableText value={strain.description} /></div>}
+    </div>
+  </div>
+
+  <div class="card-grid drop-chapter-products">
+    {products.map( product => (
+      <ProductCard {...product} />
+    ) )}
+  </div>
+</section>

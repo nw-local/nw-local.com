@@ -2236,6 +2236,234 @@ footer {
   margin: 0;
 }
 
+/* --- Drop page ---
+ *
+ * The drop page is the buyer sheet in the site's skin: a cover, a four-colour
+ * index, then one chapter per strain. --drop-color is set per chapter and per
+ * index cell by the component, so the palette lives in drops.ts and not here. */
+
+.drop-cover {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  aspect-ratio: 16 / 9;
+  background: var(--bg-surface);
+}
+
+.drop-cover-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.drop-cover-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(var(--bg-rgb), 0.92) 0%, rgba(var(--bg-rgb), 0.35) 55%, rgba(var(--bg-rgb), 0) 100%);
+}
+
+.drop-cover-content {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 1.5rem;
+}
+
+.drop-kicker {
+  margin: 0 0 0.5rem;
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.drop-cover-title {
+  margin: 0 0 0.75rem;
+  text-transform: uppercase;
+}
+
+.drop-cover-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.drop-index {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 2.5rem;
+}
+
+.drop-index-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem 0 0;
+  border-top: 4px solid var(--drop-color);
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.drop-index-cell:hover .drop-index-name {
+  color: var(--drop-color);
+}
+
+.drop-index-name {
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.drop-index-thc {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.drop-gallery {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 2.5rem 0 3rem;
+}
+
+.drop-gallery-thumb {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.drop-gallery-thumb:hover {
+  transform: scale(1.03);
+  filter: brightness(1.1);
+}
+
+.drop-chapter {
+  margin-bottom: 4rem;
+}
+
+.drop-chapter-header {
+  margin-bottom: 1.5rem;
+}
+
+.drop-chapter-number {
+  margin: 0 0 0.5rem;
+  color: var(--drop-color);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+}
+
+.drop-chapter-rule {
+  width: 60px;
+  height: 4px;
+  margin-bottom: 0.75rem;
+  background: var(--drop-color);
+}
+
+.drop-chapter-title {
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.drop-chapter-title a {
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.drop-chapter-title a:hover {
+  color: var(--drop-color);
+}
+
+.drop-chapter-lineage {
+  margin: 0.5rem 0 0;
+  color: var(--text-emphasis);
+}
+
+.drop-chapter-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.drop-chapter-facts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.drop-chapter-thc {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.drop-coa-link {
+  font-weight: 700;
+  color: var(--drop-color);
+}
+
+.drop-chapter-state {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.drop-chapter-editorial {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.5rem;
+}
+
+.drop-chapter-hero {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.drop-unmatched {
+  margin-bottom: 3rem;
+}
+
+.drop-unmatched ul {
+  padding-left: 1.25rem;
+}
+
+@media (min-width: 720px) {
+  .drop-chapter-body {
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+
+  .drop-chapter-editorial {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    align-items: start;
+  }
+}
+
+@media (max-width: 719px) {
+  .drop-index {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .drop-gallery {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 /* --- Print ---
  *
  * Last in the file deliberately. A media query contributes nothing to

@@ -211,7 +211,7 @@ const TOTAL_THC_SUFFIX = "Total THC";
 // The badge-type keys the drop page's state banner reads, kept as a constant
 // so ProductBadge's own label map and this module cannot drift on the two
 // spellings a chapter can be in.
-export const DROP_CHAPTER_STATE_LABELS = { available: "available", soldOut: "soldOut" } as const;
+export const DROP_CHAPTER_STATE_LABELS: Record<"available" | "soldOut", DropStatus> = { available: "available", soldOut: "soldOut" };
 
 export interface DropChapterStrain {
   key: string;
