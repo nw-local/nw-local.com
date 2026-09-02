@@ -25,6 +25,10 @@ CASES = (
     ("drop-page-unlisted-coa-link.html", 1, "coas.json lists ['00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000002']"),
     ("drop-page-hidden-lineage.html", 1, "lineage is not visible: 'Grape Gas #10 × OGKB Blueberry Headband'"),
     ("drop-page-foreign-image.html", 1, "image is not served from cdn.sanity.io: 'https://example.com/one.webp'"),
+    # The good fixture carries the ImageLightbox scaffold <img class="lightbox-image" src="">;
+    # that it still verifies clean is the regression proving the scaffold is exempt. A content
+    # image with an empty src must still fail, so the exemption cannot be a blanket empty-src pass.
+    ("drop-page-empty-content-image.html", 1, "image is not served from cdn.sanity.io: ''"),
 )
 
 
