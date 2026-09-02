@@ -47,6 +47,9 @@ studio/dist/
 # EnterWorktree creates linked worktrees here. Untracked and unignored, a
 # `git add -A` in the main checkout would commit an entire worktree tree.
 .claude/worktrees/
+# Superpowers' git-worktree fallback creates linked worktrees here for the
+# same reason; same hazard, same rule.
+.worktrees/
 
 # python bytecode
 # scripts/ holds several .py checks that import each other, so running one
