@@ -33,7 +33,17 @@ CHAPTER_ATTRIBUTE = "data-drop-chapter"
 LINEAGE_ATTRIBUTE = "data-drop-lineage"
 COA_ATTRIBUTE = "data-drop-coa"
 SANITY_CDN_HOST = "cdn.sanity.io"
+# The ImageLightbox component renders one scaffold <img class="lightbox-image"
+# src=""> that its script fills in when a photo is opened. It is present on any
+# drop page whose gallery is non-empty, its empty src is by design, and its
+# real source is the gallery thumbnails this checker already verifies. Every
+# other image on the page is content and must resolve to a Sanity CDN URL.
+LIGHTBOX_SCAFFOLD_CLASS = "lightbox-image"
 COMMITTED_FIXTURE_ROOT = Path(__file__).resolve().parent / "fixtures"
+
+
+def is_lightbox_scaffold(image) -> bool:
+    return LIGHTBOX_SCAFFOLD_CLASS in image.attributes.get("class", "").split()
 
 
 def read_manifest(manifest: Path) -> list[str] | str:
@@ -96,6 +106,8 @@ def check_page(page: Path, manifest: Path, build_root: Path, expected_slug: str)
         failures.append(f"page links certificates {sorted(linked_ids)} but {MANIFEST_NAME} lists {listed}")
 
     for image in [element for element in inside if element.name == "img"]:
+        if is_lightbox_scaffold(image):
+            continue
         source = image.attributes.get("src", "")
         if urlsplit(source).netloc != SANITY_CDN_HOST:
             failures.append(f"image is not served from {SANITY_CDN_HOST}: {source!r}")
