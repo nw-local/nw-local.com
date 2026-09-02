@@ -4,6 +4,7 @@ import ProductBadge from "./ProductBadge.astro";
 import ProductCard from "./ProductCard.astro";
 import type { DropChapter } from "../lib/drops";
 import { DROP_CHAPTER_STATE_BADGE_TYPES, dropCoaHref, formatDropTotalThc } from "../lib/drops";
+import { cultiveraMarketUrlFor } from "../lib/cultivera";
 import { urlFor } from "../lib/image";
 import type { CoaStatus } from "../lib/coa.ts";
 
@@ -17,6 +18,9 @@ const COA_STATUS_LABELS: Record<CoaStatus, string> = { pass: "Pass", fail: "Fail
 
 const { chapter, chapterCount } = Astro.props;
 const { strain, products, available, coa } = chapter;
+// The buy link is per strain — one marketplace product groups every package
+// size — so it is resolved once here and handed to each product card.
+const orderUrl = cultiveraMarketUrlFor( strain.cultiveraMarketProductId );
 const stateType = available ? DROP_CHAPTER_STATE_BADGE_TYPES.available : DROP_CHAPTER_STATE_BADGE_TYPES.soldOut;
 const pad = ( value: number ) => String( value ).padStart( 2, "0" );
 const strainHref = strain.slug ? `/strains/${strain.slug.current}` : undefined;
@@ -63,7 +67,7 @@ const strainHref = strain.slug ? `/strains/${strain.slug.current}` : undefined;
 
   <div class="card-grid drop-chapter-products">
     {products.map( product => (
-      <ProductCard {...product} />
+      <ProductCard {...product} orderUrl={orderUrl} />
     ) )}
   </div>
 </section>

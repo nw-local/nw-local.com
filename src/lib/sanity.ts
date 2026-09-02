@@ -81,7 +81,7 @@ const PORTABLE_TEXT_PROJECTION = `{
 const PRODUCT_SUMMARY_PROJECTION = `{
   _id, name, slug, category, weight, available,
   image { asset->, alt, crop, hotspot },
-  "strain": strain->{ _id, name, slug, strainType, lineage, heroImage { asset->, alt, crop, hotspot } }
+  "strain": strain->{ _id, name, slug, strainType, lineage, cultiveraMarketProductId, heroImage { asset->, alt, crop, hotspot } }
 }`;
 
 // logo omits `crop, hotspot` on purpose: a retailer logo renders unconstrained,
@@ -162,6 +162,9 @@ export interface StrainSummary {
 export interface Strain extends StrainSummary {
   description?: PortableText;
   gallery?: SanityImage[];
+  // Per-strain Cultivera marketplace product id, powering the "Order on
+  // Cultivera" button on each of the strain's product cards.
+  cultiveraMarketProductId?: string;
 }
 
 export async function getStrains() {
@@ -178,7 +181,7 @@ export async function getStrains() {
 export async function getStrain( slug: string ) {
   return sanityClient.fetch<Strain | null>(
     `*[_type == "strain" && slug.current == $slug][0] {
-      _id, _createdAt, name, slug, strainType, lineage,
+      _id, _createdAt, name, slug, strainType, lineage, cultiveraMarketProductId,
       description[] ${PORTABLE_TEXT_PROJECTION},
       effects, terpenes, thcRange, cbdRange, nextHarvestDate,
       heroImage { asset->, alt, crop, hotspot },
@@ -248,6 +251,9 @@ export interface ProductStrainRef {
   slug: SanitySlug;
   strainType: StrainType;
   lineage?: string;
+  // The gated Cultivera marketplace product id for the "Order on Cultivera"
+  // buy link. Per strain, one product grouping every package size.
+  cultiveraMarketProductId?: string;
   heroImage?: SanityImage;
 }
 
@@ -321,6 +327,9 @@ export interface DropSummary {
 export interface DropStrainDescription {
   _id: string;
   description?: PortableText;
+  // A short buyer blurb the drop page prefers over the full description. Blank
+  // (or absent) falls back to description in groupDropStrains.
+  dropDescription?: PortableText;
 }
 
 export interface Drop extends DropSummary {
@@ -383,7 +392,9 @@ export async function getDrop( slug: string ) {
       "coas": coalesce(coas[defined(@->)]-> ${DROP_COA_PROJECTION}, []),
       gallery[] { asset->, alt, crop, hotspot },
       "strainDescriptions": *[_type == "strain" && _id in ^.products[defined(@->)]->strain._ref] {
-        _id, description[] ${PORTABLE_TEXT_PROJECTION}
+        _id,
+        description[] ${PORTABLE_TEXT_PROJECTION},
+        dropDescription[] ${PORTABLE_TEXT_PROJECTION}
       }
     }`,
     { slug },

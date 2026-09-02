@@ -218,6 +218,10 @@ export interface DropChapterStrain {
   slug?: SanitySlug;
   strainType?: StrainType;
   lineage?: string;
+  // The strain's gated Cultivera marketplace product id. Each product card in
+  // the chapter renders an "Order on Cultivera" button from it; a strain
+  // without one shows no button.
+  cultiveraMarketProductId?: string;
   heroImage?: SanityImage;
   description?: PortableText;
 }
@@ -277,8 +281,15 @@ function coasByStrainUrl( coas: DropCoa[] ): Map<string, DropCoa> {
 }
 
 export function groupDropStrains( drop: DropGroupingInput, baseUrl: string ): DropStrainGrouping {
+  // The drop page shows a short buyer blurb (dropDescription) authored clean —
+  // no breeder links, no "Learn More" — and falls back to the full description
+  // when the blurb is blank. The strain page always renders the full
+  // description; only this drop-page copy is swapped.
   const descriptionsByStrainId = new Map(
-    drop.strainDescriptions.map( entry => [ entry._id, entry.description ] ),
+    drop.strainDescriptions.map( entry => [
+      entry._id,
+      entry.dropDescription?.length ? entry.dropDescription : entry.description,
+    ] ),
   );
   const chaptersByKey = new Map<string, Omit<DropChapter, "index" | "color">>();
 
@@ -297,6 +308,7 @@ export function groupDropStrains( drop: DropGroupingInput, baseUrl: string ): Dr
         slug: product.strain.slug,
         strainType: product.strain.strainType,
         lineage: product.strain.lineage,
+        cultiveraMarketProductId: product.strain.cultiveraMarketProductId,
         heroImage: product.strain.heroImage,
         description: descriptionsByStrainId.get( product.strain._id ),
       }

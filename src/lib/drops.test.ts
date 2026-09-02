@@ -105,11 +105,46 @@ describe( "groupDropStrains", () => {
     expect( grouping.chapters[0].products.map( product => product.name ) ).toEqual( [ "GB 3.5", "GB 7" ] );
     expect( grouping.chapters[0].coa?.sourceId ).toBe( "00000000-0000-4000-8000-000000000001" );
     expect( grouping.chapters[1].coa?.sourceId ).toBe( "00000000-0000-4000-8000-000000000002" );
-    expect( grouping.chapters[0].strain.description ).toBe( description );
+    expect( grouping.chapters[0].strain.description ).toEqual( description );
     expect( grouping.chapters[0].strain.lineage ).toBe( "Glitter Bomb lineage" );
     expect( grouping.chapters[0].anchorId ).toBe( "strain-glitter-bomb" );
     expect( grouping.chapters.map( chapter => chapter.index ) ).toEqual( [ 1, 2 ] );
     expect( grouping.unmatchedCoas ).toEqual( [] );
+  });
+
+  test( "carries the strain's Cultivera marketplace id and prefers the short drop blurb, falling back to the full description", () => {
+    const strainWithId: ProductStrainRef = { ...glitterBomb, cultiveraMarketProductId: "14303" };
+    const fullDescription = [
+      { _type: "block", _key: "full", children: [ { _type: "span", _key: "s", text: "Long strain-page copy.", marks: [] } ] },
+    ];
+    const dropDescription = [
+      { _type: "block", _key: "blurb", children: [ { _type: "span", _key: "s", text: "Short buyer blurb.", marks: [] } ] },
+    ];
+    // Glitter Bomb sorts first (product order), Super Boof second.
+    const grouping = groupDropStrains({
+      products: [ makeProduct( "GB 3.5", strainWithId, true ), makeProduct( "SB", superBoof, true ) ],
+      coas: [],
+      strainDescriptions: [
+        { _id: strainWithId._id, description: fullDescription, dropDescription },
+        { _id: superBoof._id, description: fullDescription },
+      ],
+    }, BASE_URL );
+
+    expect( grouping.chapters[0].strain.cultiveraMarketProductId ).toBe( "14303" );
+    // Prefers the short blurb when present.
+    expect( grouping.chapters[0].strain.description ).toEqual( dropDescription );
+    // Falls back to the full description when no blurb is authored.
+    expect( grouping.chapters[1].strain.description ).toEqual( fullDescription );
+  });
+
+  test( "an empty drop blurb falls back to the full description", () => {
+    const fullDescription = [ { _type: "block", _key: "full", children: [] } ];
+    const grouping = groupDropStrains({
+      products: [ makeProduct( "GB", glitterBomb, true ) ],
+      coas: [],
+      strainDescriptions: [ { _id: glitterBomb._id, description: fullDescription, dropDescription: [] } ],
+    }, BASE_URL );
+    expect( grouping.chapters[0].strain.description ).toEqual( fullDescription );
   });
 
   test( "availability is any product available; a strain whose products are all unavailable is sold out", () => {

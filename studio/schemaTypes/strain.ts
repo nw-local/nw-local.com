@@ -38,6 +38,16 @@ export const strainType = defineType({
       type: 'blockContent',
     }),
     defineField({
+      name: 'dropDescription',
+      title: 'Drop Description',
+      type: 'blockContent',
+      description:
+        'Short buyer blurb shown on the drop page instead of the full Description (one or two ' +
+        'sentences, no breeder links, no "Learn More" — the drop page sends buyers to purchase). ' +
+        'Leave blank to fall back to the full Description. The strain page always shows the full ' +
+        'Description.',
+    }),
+    defineField({
       name: 'effects',
       title: 'Effects',
       type: 'array',
@@ -69,6 +79,16 @@ export const strainType = defineType({
       type: 'string',
       description:
         'Parent cross as printed on the buyer sheet, for example "Grape Gas #10 × OGKB Blueberry Headband".',
+    }),
+    defineField({
+      name: 'cultiveraMarketProductId',
+      title: 'Cultivera Marketplace Product ID',
+      type: 'string',
+      description:
+        'Numeric product id for the gated "Order on Cultivera" buy link (one marketplace ' +
+        "product groups this strain's package sizes). Per drop — the marketplace mints a new " +
+        'product each release, so re-enter it when the strain drops again. Auto-derivation from ' +
+        'Cultivera data is nw-local-ops#265.',
     }),
     defineField({
       name: 'heroImage',
