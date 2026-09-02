@@ -9,12 +9,12 @@ from the emitted page rather than a fixed content count.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 from datetime import datetime
-from html.parser import HTMLParser
 from pathlib import Path
 import re
 import sys
+
+from html_elements import Element, elements_with_attribute, is_descendant_of, parse_html_file
 
 
 COA_ROUTE_DIRECTORY = "coas"
@@ -61,58 +61,6 @@ EXPECTED_FIXTURE_PANELS = (
 COMMITTED_FIXTURE_ROOT = Path(__file__).resolve().parent / "fixtures"
 
 
-@dataclass
-class Element:
-    name: str
-    attributes: dict[str, str]
-    parent: Element | None = None
-    text_parts: list[str] = field(default_factory=list)
-
-    @property
-    def text(self) -> str:
-        return " ".join("".join(self.text_parts).split())
-
-
-class CoaPageParser(HTMLParser):
-    def __init__(self) -> None:
-        super().__init__()
-        self.elements: list[Element] = []
-        self.stack: list[Element] = []
-
-    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
-        attributes = { key: value or "" for key, value in attrs }
-        element = Element(tag, attributes, self.stack[-1] if self.stack else None)
-        self.elements.append(element)
-        self.stack.append(element)
-
-    def handle_startendtag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
-        self.handle_starttag(tag, attrs)
-        self.handle_endtag(tag)
-
-    def handle_endtag(self, tag: str) -> None:
-        for stack_index in range(len(self.stack) - 1, -1, -1):
-            if self.stack[stack_index].name == tag:
-                del self.stack[stack_index:]
-                return
-
-    def handle_data(self, data: str) -> None:
-        for element in self.stack:
-            element.text_parts.append(data)
-
-
-def elements_with_attribute(parser: CoaPageParser, attribute: str) -> list[Element]:
-    return [element for element in parser.elements if attribute in element.attributes]
-
-
-def is_descendant_of(element: Element, ancestor: Element) -> bool:
-    parent = element.parent
-    while parent:
-        if parent is ancestor:
-            return True
-        parent = parent.parent
-    return False
-
-
 def expect_exactly_one(
     elements: list[Element],
     description: str,
@@ -143,9 +91,7 @@ def is_rfc3339_timestamp(value: str) -> bool:
 
 
 def check_page(page: Path, expected_source_id: str | None = None) -> list[str]:
-    parser = CoaPageParser()
-    parser.feed(page.read_text(encoding="utf-8"))
-    parser.close()
+    parser = parse_html_file(page)
     failures: list[str] = []
 
     main = expect_exactly_one(
@@ -283,9 +229,7 @@ def check_page(page: Path, expected_source_id: str | None = None) -> list[str]:
 
 
 def check_fixture(page: Path) -> list[str]:
-    parser = CoaPageParser()
-    parser.feed(page.read_text(encoding="utf-8"))
-    parser.close()
+    parser = parse_html_file(page)
     failures = check_page(page, EXPECTED_FIXTURE_SOURCE_ID)
 
     status_elements = elements_with_attribute(parser, STATUS_ATTRIBUTE)

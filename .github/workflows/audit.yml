@@ -129,6 +129,13 @@ jobs:
         run: python3 scripts/test-check-glossary-build.py dist
       - name: Check glossary build contracts
         run: ./scripts/check-glossary-build.py dist
+      # A drop page can lose a certificate link, a lineage, or a Sanity-hosted
+      # image through a content publish alone. The build emits its own
+      # manifest, so the checker needs no secrets.
+      - name: Regression-test malformed drop build fixtures
+        run: python3 scripts/test-check-drop-build.py
+      - name: Check drop build contracts
+        run: ./scripts/check-drop-build.py dist
 
   validate-links:
     name: Check links

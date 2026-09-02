@@ -55,24 +55,25 @@ const hasHeroImage = Boolean( heroImage?.asset );
     </div>
   </a>
 ) : (
-  <a href={dropHref( slug )} class="card">
-    <div class="card-image">
+  <a href={dropHref( slug )} class="card drop-card">
+    <div class="card-image drop-card-cover">
       {hasHeroImage && (
         <img
-          src={urlFor( heroImage! ).width( 600 ).height( 375 ).format( "webp" ).url()}
+          src={urlFor( heroImage! ).width( 600 ).height( 338 ).format( "webp" ).url()}
           alt={heroImage!.alt ?? name}
           width="600"
-          height="375"
+          height="338"
           loading="lazy"
         />
       )}
+      <div class="drop-card-scrim"></div>
+      <h3 class="card-title drop-card-title">{name}</h3>
     </div>
     <div class="card-body">
       <div class="drop-card-badges">
         <ProductBadge type={status} />
         <span class="product-badge">{productCountLabel}</span>
       </div>
-      <h3 class="card-title">{name}</h3>
       <p>{description}</p>
       <p class="drop-card-date"><time datetime={dropDate}>{formatPostDate( dropDate )}</time></p>
     </div>

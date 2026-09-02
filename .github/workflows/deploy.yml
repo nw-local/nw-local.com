@@ -79,6 +79,11 @@ jobs:
       - name: Check glossary build contracts
         run: ./scripts/check-glossary-build.py dist
 
+      # Same reasoning as the glossary check above: drop.coas, strain.lineage
+      # and drop.gallery all change through Sanity with no pull request.
+      - name: Check drop build contracts
+        run: ./scripts/check-drop-build.py dist
+
   deploy:
     needs: build
     runs-on: ubuntu-latest

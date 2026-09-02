@@ -1,0 +1,19 @@
+---
+import type { DropChapter } from "../lib/drops";
+import { formatDropTotalThc } from "../lib/drops";
+
+interface Props {
+  chapters: DropChapter[]
+}
+
+const { chapters } = Astro.props;
+---
+
+<nav class="drop-index" aria-label="Strains in this drop">
+  {chapters.map( chapter => (
+    <a class="drop-index-cell" href={`#${chapter.anchorId}`} style={`--drop-color: ${chapter.color};`}>
+      <span class="drop-index-name">{chapter.strain.name}</span>
+      {chapter.coa?.totalThc && <span class="drop-index-thc">{formatDropTotalThc( chapter.coa.totalThc )}</span>}
+    </a>
+  ) )}
+</nav>

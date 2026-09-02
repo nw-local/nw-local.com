@@ -67,6 +67,10 @@ And the break is a `<br>` rather than `white-space: pre-line` on the cells. Both
 
 Strain, product, blog post, author, terpene, and glossary pages are statically generated via `getStaticPaths()`.
 
+### Drops carry explicit certificates, lineage, and gallery photography
+
+A `drop` document's `coas` field is an explicit array of `coa` references, one per strain in the drop, set by Ops from the launch snapshot. The drop page never looks a certificate up by strain name: it matches each referenced `coa` to a chapter by exact `strain.url === ${siteUrl}/strains/${slug}/`, so a mismatched or stale reference renders as an unmatched certificate instead of attaching to the wrong strain. `strain.lineage`, a free-text field on `strain`, renders as the chapter's parentage line whenever it is present. `drop.gallery` is an array of release photography images, rendered as a keyboard-accessible thumbnail grid that opens `ImageLightbox.astro` — independent of the per-product images on `product.image`.
+
 ### Public COAs are an exact machine-owned contract
 
 `coa` documents are written by Northwest Local OPS, not authored in Studio. Their stable identity is `coa.<sourceId>`, where `sourceId` is the immutable OPS laboratory-result UUID, and their required `publishedAt` records the publication act rather than a laboratory test time. The site fetch boundary audits the complete stored object at every public contract level before returning the separate buyer-safe projection, so unknown destination fields, duplicate routes, malformed timestamps, or non-deterministic IDs fail the build instead of producing a plausible partial certificate.

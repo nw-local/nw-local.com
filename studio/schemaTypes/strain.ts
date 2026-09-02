@@ -64,6 +64,13 @@ export const strainType = defineType({
       description: 'e.g. "<1%"',
     }),
     defineField({
+      name: 'lineage',
+      title: 'Lineage',
+      type: 'string',
+      description:
+        'Parent cross as printed on the buyer sheet, for example "Grape Gas #10 × OGKB Blueberry Headband".',
+    }),
+    defineField({
       name: 'heroImage',
       title: 'Hero Image',
       type: 'image',

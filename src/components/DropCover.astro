@@ -1,0 +1,44 @@
+---
+import ProductBadge from "./ProductBadge.astro";
+import type { Drop, DropStatus } from "../lib/sanity";
+import { urlFor } from "../lib/image";
+import { formatPostDate } from "../lib/date";
+
+interface Props {
+  drop: Pick<Drop, "name" | "status" | "dropDate" | "heroImage">
+}
+
+const KICKER = "NW LOCAL · Licensed Washington flower";
+
+// An upcoming drop has not dropped yet, so its label is future tense; available
+// and sold out drops already happened, so both read the same past tense label.
+const DATE_LABELS: Record<DropStatus, string> = {
+  upcoming: "Dropping",
+  available: "Dropped",
+  soldOut: "Dropped",
+};
+
+const { drop } = Astro.props;
+---
+
+<header class="drop-cover" data-drop-cover>
+  {drop.heroImage?.asset && (
+    <img
+      class="drop-cover-image"
+      src={urlFor( drop.heroImage ).width( 1600 ).height( 900 ).format( "webp" ).url()}
+      alt={drop.heroImage.alt ?? drop.name}
+      width="1600"
+      height="900"
+      fetchpriority="high"
+    />
+  )}
+  <div class="drop-cover-scrim"></div>
+  <div class="drop-cover-content">
+    <p class="drop-kicker">{KICKER}</p>
+    <h1 class="drop-cover-title">{drop.name}</h1>
+    <p class="drop-cover-meta">
+      <span class="product-badge">{DATE_LABELS[drop.status]} <time datetime={drop.dropDate}>{formatPostDate( drop.dropDate )}</time></span>
+      <ProductBadge type={drop.status} />
+    </p>
+  </div>
+</header>
