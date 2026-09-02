@@ -1,4 +1,13 @@
-import type { DropStatus, DropSummary, SanitySlug } from "./sanity";
+import type {
+  DropStatus,
+  DropStrainDescription,
+  DropSummary,
+  PortableText,
+  ProductSummary,
+  SanityImage,
+  SanitySlug,
+  StrainType,
+} from "./sanity";
 import {
   UUID_PATTERN,
   assertExactFields,
@@ -182,4 +191,148 @@ export function assertDropCoas( value: unknown ): asserts value is DropCoa[] {
     }
     seenSourceIds.add( candidate.sourceId );
   });
+}
+
+// --- Drop chapters ---
+//
+// The drop page is built like the buyer sheet: one chapter per strain, each
+// with a fixed label colour, its certificate, and its state. Grouping is pure
+// so the page, the coas.json manifest and the tests all derive from the same
+// function and cannot disagree about which certificate belongs to which strain.
+
+export const DROP_CHAPTER_COLORS: readonly string[] = [ "#00ff88", "#ff5fa2", "#ffb000", "#5ac8ff" ];
+export const UNASSIGNED_STRAIN_KEY = "unassigned";
+export const UNASSIGNED_STRAIN_HEADING = "More in this drop";
+const STRAIN_BASE_PATH = "/strains";
+const COA_BASE_PATH = "/coas";
+const PERCENT_UNIT = "%";
+const TOTAL_THC_SUFFIX = "Total THC";
+
+// The badge-type keys the drop page's state banner reads, kept as a constant
+// so ProductBadge's own label map and this module cannot drift on the two
+// spellings a chapter can be in.
+export const DROP_CHAPTER_STATE_LABELS = { available: "available", soldOut: "soldOut" } as const;
+
+export interface DropChapterStrain {
+  key: string;
+  name: string;
+  slug?: SanitySlug;
+  strainType?: StrainType;
+  lineage?: string;
+  heroImage?: SanityImage;
+  description?: PortableText;
+}
+
+export interface DropChapter {
+  index: number;
+  color: string;
+  anchorId: string;
+  strain: DropChapterStrain;
+  products: ProductSummary[];
+  available: boolean;
+  coa?: DropCoa;
+}
+
+export interface DropStrainGrouping {
+  chapters: DropChapter[];
+  unmatchedCoas: DropCoa[];
+}
+
+export interface DropGroupingInput {
+  products: ProductSummary[];
+  coas: DropCoa[];
+  strainDescriptions: DropStrainDescription[];
+}
+
+// The COA publisher in OPS writes strain.url with a trailing slash; the match
+// in groupDropStrains is exact, so this is the one place that shape is spelled.
+export function strainPageUrl( baseUrl: string, slug: SanitySlug ): string {
+  return `${baseUrl}${STRAIN_BASE_PATH}/${slug.current}/`;
+}
+
+export function dropCoaHref( sourceId: string ): string {
+  return `${COA_BASE_PATH}/${sourceId}/`;
+}
+
+export function dropCoaManifest( coas: DropCoa[] ): string[] {
+  return coas.map( coa => coa.sourceId ).sort();
+}
+
+export function formatDropTotalThc( reading: DropCoaReading ): string {
+  const measurement = reading.unit === PERCENT_UNIT
+    ? `${reading.value}${PERCENT_UNIT}`
+    : `${reading.value} ${reading.unit}`;
+  return `${measurement} ${TOTAL_THC_SUFFIX}`;
+}
+
+function coasByStrainUrl( coas: DropCoa[] ): Map<string, DropCoa> {
+  const byUrl = new Map<string, DropCoa>();
+  for( const coa of coas ) {
+    if( !coa.strain ) continue;
+    if( byUrl.has( coa.strain.url ) ) {
+      throw new Error( `two certificates claim ${coa.strain.url}: ${byUrl.get( coa.strain.url )!.sourceId} and ${coa.sourceId}.` );
+    }
+    byUrl.set( coa.strain.url, coa );
+  }
+  return byUrl;
+}
+
+export function groupDropStrains( drop: DropGroupingInput, baseUrl: string ): DropStrainGrouping {
+  const descriptionsByStrainId = new Map(
+    drop.strainDescriptions.map( entry => [ entry._id, entry.description ] ),
+  );
+  const chaptersByKey = new Map<string, Omit<DropChapter, "index" | "color">>();
+
+  for( const product of drop.products ) {
+    const key = product.strain?._id ?? UNASSIGNED_STRAIN_KEY;
+    const existing = chaptersByKey.get( key );
+    if( existing ) {
+      existing.products.push( product );
+      existing.available = existing.available || product.available === true;
+      continue;
+    }
+    const strain: DropChapterStrain = product.strain
+      ? {
+        key,
+        name: product.strain.name,
+        slug: product.strain.slug,
+        strainType: product.strain.strainType,
+        lineage: product.strain.lineage,
+        heroImage: product.strain.heroImage,
+        description: descriptionsByStrainId.get( product.strain._id ),
+      }
+      : { key, name: UNASSIGNED_STRAIN_HEADING };
+    chaptersByKey.set( key, {
+      anchorId: `strain-${product.strain?.slug.current ?? UNASSIGNED_STRAIN_KEY}`,
+      strain,
+      products: [ product ],
+      available: product.available === true,
+    });
+  }
+
+  // "unassigned" sorts last so the fallback chapter cannot land between two
+  // real strains; the sort is stable, so every other chapter keeps product order.
+  const orderedChapters = [ ...chaptersByKey.values() ].sort( ( left, right ) => {
+    if( left.strain.key === UNASSIGNED_STRAIN_KEY ) return 1;
+    if( right.strain.key === UNASSIGNED_STRAIN_KEY ) return -1;
+    return 0;
+  });
+
+  const byUrl = coasByStrainUrl( drop.coas );
+  const matchedSourceIds = new Set<string>();
+  const chapters = orderedChapters.map( ( chapter, position ) => {
+    const coa = chapter.strain.slug ? byUrl.get( strainPageUrl( baseUrl, chapter.strain.slug ) ) : undefined;
+    if( coa ) matchedSourceIds.add( coa.sourceId );
+    return {
+      ...chapter,
+      index: position + 1,
+      color: DROP_CHAPTER_COLORS[ position % DROP_CHAPTER_COLORS.length ],
+      coa,
+    };
+  });
+
+  return {
+    chapters,
+    unmatchedCoas: drop.coas.filter( coa => !matchedSourceIds.has( coa.sourceId ) ),
+  };
 }

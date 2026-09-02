@@ -247,6 +247,7 @@ export interface ProductStrainRef {
   name: string;
   slug: SanitySlug;
   strainType: StrainType;
+  lineage?: string;
   heroImage?: SanityImage;
 }
 
