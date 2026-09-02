@@ -1,4 +1,15 @@
 import type { DropStatus, DropSummary, SanitySlug } from "./sanity";
+import {
+  UUID_PATTERN,
+  assertExactFields,
+  assertHttpsUrl,
+  assertMeasurement,
+  assertRecord,
+  assertRequiredString,
+  assertRfc3339Timestamp,
+  assertStatus,
+  type CoaStatus,
+} from "./coa.ts";
 
 export const DROP_BASE_PATH = "/drops";
 
@@ -86,4 +97,89 @@ export function buildDropLookup( drops: DropSummary[] ): DropLookup {
       [ ...strongestByStrainId ].map( ( [ key, drop ] ) => [ key, toDropRef( drop ) ] ),
     ),
   };
+}
+
+// --- Drop certificates ---
+//
+// A drop names its release certificates explicitly (drop.coas) rather than
+// looking them up by strain name: the certificate's strain.url is the join key,
+// and it is matched exactly in groupDropStrains. This is the buyer-facing
+// subset of a COA document: enough to say "Pass, 29.39% Total THC, here is the
+// certificate", and nothing a drop page should not restate (panels, sample ids,
+// the PDF).
+
+export interface DropCoaReading {
+  value: string;
+  unit: string;
+}
+
+export interface DropCoaStrain {
+  name: string;
+  url: string;
+}
+
+export interface DropCoa {
+  sourceId: string;
+  labResultId: string;
+  status: CoaStatus;
+  publishedAt: string;
+  totalThc?: DropCoaReading;
+  strain?: DropCoaStrain;
+}
+
+export const DROP_COA_PROJECTION = `{
+  sourceId, labResultId, status, publishedAt,
+  defined(totalThc) => { "totalThc": totalThc { value, unit } },
+  defined(strain) => { "strain": strain { name, url } }
+}`;
+
+const DROP_COA_FIELDS: ReadonlySet<string> = new Set( [
+  "sourceId",
+  "labResultId",
+  "status",
+  "publishedAt",
+  "totalThc",
+  "strain",
+] );
+const DROP_COA_READING_FIELDS: ReadonlySet<string> = new Set( [ "value", "unit" ] );
+const DROP_COA_STRAIN_FIELDS: ReadonlySet<string> = new Set( [ "name", "url" ] );
+
+function assertDropCoaReading( value: unknown, path: string ): asserts value is DropCoaReading {
+  assertRecord( value, path );
+  assertExactFields( value, DROP_COA_READING_FIELDS, path );
+  assertMeasurement( value, path );
+}
+
+function assertDropCoaStrain( value: unknown, path: string ): asserts value is DropCoaStrain {
+  assertRecord( value, path );
+  assertExactFields( value, DROP_COA_STRAIN_FIELDS, path );
+  assertRequiredString( value[ "name" ], `${path}.name` );
+  assertHttpsUrl( value[ "url" ], `${path}.url` );
+}
+
+export function assertDropCoa( value: unknown, path = "drop COA" ): asserts value is DropCoa {
+  assertRecord( value, path );
+  assertExactFields( value, DROP_COA_FIELDS, path );
+
+  const sourceId = value[ "sourceId" ];
+  assertRequiredString( sourceId, `${path}.sourceId` );
+  if( !UUID_PATTERN.test( sourceId ) ) throw new Error( `${path}.sourceId must be a UUID.` );
+
+  assertRequiredString( value[ "labResultId" ], `${path}.labResultId` );
+  assertStatus( value[ "status" ], `${path}.status` );
+  assertRfc3339Timestamp( value[ "publishedAt" ], `${path}.publishedAt` );
+  if( value[ "totalThc" ] !== undefined ) assertDropCoaReading( value[ "totalThc" ], `${path}.totalThc` );
+  if( value[ "strain" ] !== undefined ) assertDropCoaStrain( value[ "strain" ], `${path}.strain` );
+}
+
+export function assertDropCoas( value: unknown ): asserts value is DropCoa[] {
+  if( !Array.isArray( value ) ) throw new Error( "drop COAs must be an array." );
+  const seenSourceIds = new Set<string>();
+  value.forEach( ( candidate, index ) => {
+    assertDropCoa( candidate, `drop COA [${index}]` );
+    if( seenSourceIds.has( candidate.sourceId ) ) {
+      throw new Error( `duplicate drop COA for source ID ${candidate.sourceId}.` );
+    }
+    seenSourceIds.add( candidate.sourceId );
+  });
 }

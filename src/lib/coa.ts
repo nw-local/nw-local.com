@@ -109,7 +109,7 @@ const DESTINATION_CERTIFICATE_FIELDS = new Set( [
 const DESTINATION_CERTIFICATE_ASSET_FIELDS = new Set( [ ...SANITY_OBJECT_SYSTEM_FIELDS, "asset" ] );
 const DESTINATION_ASSET_REFERENCE_FIELDS = new Set( [ "_type", "_ref" ] );
 const NULLABLE_COA_FIELDS = [ "totalThc", "waterActivity", "strain" ];
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+export const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const SHA256_PATTERN = /^[a-f0-9]{64}$/;
 const CANONICAL_DECIMAL_PATTERN = /^(?:0|[1-9]\d*)(?:\.\d*[1-9])?$/;
 const RFC3339_PATTERN = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d{1,9})?(?:Z|[+-](\d{2}):(\d{2}))$/;
@@ -144,11 +144,11 @@ export type CoaDestinationFetcher = (
   parameters?: Record<string, string>,
 ) => Promise<unknown>;
 
-function isRecord( value: unknown ): value is Record<string, unknown> {
+export function isRecord( value: unknown ): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray( value );
 }
 
-function assertRecord( value: unknown, path: string ): asserts value is Record<string, unknown> {
+export function assertRecord( value: unknown, path: string ): asserts value is Record<string, unknown> {
   if( !isRecord( value ) ) {
     throw new Error( `${path} must be an object.` );
   }
@@ -181,7 +181,7 @@ export function normalizeCoa( value: unknown ): unknown {
   return normalizedCoa;
 }
 
-function assertExactFields(
+export function assertExactFields(
   value: Record<string, unknown>,
   fields: ReadonlySet<string>,
   path: string,
@@ -193,13 +193,13 @@ function assertExactFields(
   }
 }
 
-function assertRequiredString( value: unknown, path: string ): asserts value is string {
+export function assertRequiredString( value: unknown, path: string ): asserts value is string {
   if( typeof value !== "string" || !value.trim() ) {
     throw new Error( `${path} must be a non-empty string.` );
   }
 }
 
-function assertHttpsUrl( value: unknown, path: string ): asserts value is string {
+export function assertHttpsUrl( value: unknown, path: string ): asserts value is string {
   assertRequiredString( value, path );
   try {
     const parsedUrl = new URL( value );
@@ -212,13 +212,13 @@ function assertHttpsUrl( value: unknown, path: string ): asserts value is string
   }
 }
 
-function assertStatus( value: unknown, path: string ): asserts value is CoaStatus {
+export function assertStatus( value: unknown, path: string ): asserts value is CoaStatus {
   if( typeof value !== "string" || !COA_STATUSES.has( value ) ) {
     throw new Error( `${path} must be "pass" or "fail".` );
   }
 }
 
-function assertRfc3339Timestamp( value: unknown, path: string ): asserts value is string {
+export function assertRfc3339Timestamp( value: unknown, path: string ): asserts value is string {
   assertRequiredString( value, path );
   const match = RFC3339_PATTERN.exec( value );
   if( !match ) throw new Error( `${path} must be a strict RFC3339 timestamp.` );
@@ -247,7 +247,7 @@ function assertRfc3339Timestamp( value: unknown, path: string ): asserts value i
   }
 }
 
-function assertMeasurement( value: Record<string, unknown>, path: string ): void {
+export function assertMeasurement( value: Record<string, unknown>, path: string ): void {
   const measurement = value[ "value" ];
   if( typeof measurement !== "string" || !CANONICAL_DECIMAL_PATTERN.test( measurement ) ) {
     throw new Error( `${path}.value must be a canonical decimal string.` );

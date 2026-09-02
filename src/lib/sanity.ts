@@ -5,6 +5,7 @@ import {
   type Coa,
   type CoaDestinationFetcher,
 } from "./coa.ts";
+import { assertDropCoas, DROP_COA_PROJECTION, type DropCoa } from "./drops";
 import type { GlossaryCategory } from "../../shared/glossary-categories";
 import { validateGlossarySummaries, validateGlossaryTerm } from "./glossary";
 import { AUTHOR_BASE_PATH } from "./routes";
@@ -22,6 +23,7 @@ export type {
   CoaStatus,
   CoaStrain,
 } from "./coa.ts";
+export type { DropCoa } from "./drops";
 
 const SANITY_PROJECT_ID = import.meta.env.SANITY_PROJECT_ID;
 const SANITY_DATASET = import.meta.env.SANITY_DATASET;
@@ -79,7 +81,7 @@ const PORTABLE_TEXT_PROJECTION = `{
 const PRODUCT_SUMMARY_PROJECTION = `{
   _id, name, slug, category, weight, available,
   image { asset->, alt, crop, hotspot },
-  "strain": strain->{ _id, name, slug, strainType, heroImage { asset->, alt, crop, hotspot } }
+  "strain": strain->{ _id, name, slug, strainType, lineage, heroImage { asset->, alt, crop, hotspot } }
 }`;
 
 // logo omits `crop, hotspot` on purpose: a retailer logo renders unconstrained,
@@ -146,6 +148,7 @@ export interface StrainSummary {
   name: string;
   slug: SanitySlug;
   strainType: StrainType;
+  lineage?: string;
   effects?: string[];
   terpenes?: string[];
   thcRange?: string;
@@ -164,7 +167,7 @@ export interface Strain extends StrainSummary {
 export async function getStrains() {
   return sanityClient.fetch<StrainSummary[]>(
     `*[_type == "strain"] | order(_createdAt desc) {
-      _id, _createdAt, name, slug, strainType, effects, terpenes,
+      _id, _createdAt, name, slug, strainType, lineage, effects, terpenes,
       thcRange, cbdRange, nextHarvestDate,
       heroImage { asset->, alt, crop, hotspot },
       featured, available
@@ -175,7 +178,7 @@ export async function getStrains() {
 export async function getStrain( slug: string ) {
   return sanityClient.fetch<Strain | null>(
     `*[_type == "strain" && slug.current == $slug][0] {
-      _id, _createdAt, name, slug, strainType,
+      _id, _createdAt, name, slug, strainType, lineage,
       description[] ${PORTABLE_TEXT_PROJECTION},
       effects, terpenes, thcRange, cbdRange, nextHarvestDate,
       heroImage { asset->, alt, crop, hotspot },
@@ -314,6 +317,11 @@ export interface DropSummary {
   strainIds: ( string | null )[];
 }
 
+export interface DropStrainDescription {
+  _id: string;
+  description?: PortableText;
+}
+
 export interface Drop extends DropSummary {
   lotIdentifier?: string;
   lotPortal?: DropPortal;
@@ -321,6 +329,12 @@ export interface Drop extends DropSummary {
   body?: PortableText;
   products: ProductSummary[];
   retailers?: Retailer[];
+  coas: DropCoa[];
+  gallery?: SanityImage[];
+  // The strain description is needed once per chapter, not once per product,
+  // so it is fetched by strain here rather than widened onto
+  // PRODUCT_SUMMARY_PROJECTION where every product list would carry it.
+  strainDescriptions: DropStrainDescription[];
 }
 
 const DROP_SUMMARY_PROJECTION = `{
@@ -364,7 +378,12 @@ export async function getDrop( slug: string ) {
       "strainIds": coalesce(products[defined(@->)]->strain._ref, []),
       body[] ${PORTABLE_TEXT_PROJECTION},
       "products": products[defined(@->)]-> ${PRODUCT_SUMMARY_PROJECTION},
-      "retailers": retailers[defined(@->)]-> ${RETAILER_PROJECTION}
+      "retailers": retailers[defined(@->)]-> ${RETAILER_PROJECTION},
+      "coas": coalesce(coas[defined(@->)]-> ${DROP_COA_PROJECTION}, []),
+      gallery[] { asset->, alt, crop, hotspot },
+      "strainDescriptions": *[_type == "strain" && _id in ^.products[defined(@->)]->strain._ref] {
+        _id, description[] ${PORTABLE_TEXT_PROJECTION}
+      }
     }`,
     { slug },
   );
@@ -377,6 +396,13 @@ export async function getDrop( slug: string ) {
   // getDrops(), which counts raw refs and so also catches a drop whose every
   // product was deleted after publish.
   assertDropHasProducts( drop.name, drop._id, drop.products.length );
+
+  // Studio's reference validation does not reach API writes, and a COA
+  // document can be edited by the OPS publisher after the drop referenced
+  // it. Validate every referenced certificate on every build so a drop page
+  // cannot render a half-shaped one.
+  assertDropCoas( drop.coas );
+
   return drop;
 }
 
