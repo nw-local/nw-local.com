@@ -5,34 +5,76 @@ import { dropHref } from "../lib/drops";
 import { formatPostDate } from "../lib/date";
 import type { DropSummary } from "../lib/sanity";
 
-type Props = DropSummary;
+// `featured` switches from the compact grid card used on /drops to the
+// full-width .card-featured layout shared with FeaturedPost. The homepage
+// highlights exactly one drop, and a single grid cell left two thirds of the
+// row empty beside it.
+type Props = DropSummary & { featured?: boolean };
 
 // liveProductCount, not productIds.length: an unpublished SKU keeps its _ref
 // in productIds, which is what makes the empty-drop guard in getDrops() work,
 // but the detail page renders only the products that still resolve. Counting
 // refs here would make this card claim 6 products against a page showing 5.
-const { name, slug, description, status, dropDate, heroImage, liveProductCount } = Astro.props;
+const {
+  name,
+  slug,
+  description,
+  status,
+  dropDate,
+  heroImage,
+  liveProductCount,
+  featured = false,
+} = Astro.props;
+
+const productCountLabel = liveProductCount === 1 ? "1 product" : `${liveProductCount} products`;
+const hasHeroImage = Boolean( heroImage?.asset );
 ---
 
-<a href={dropHref( slug )} class="card">
-  <div class="card-image">
-    {heroImage?.asset && (
-      <img
-        src={urlFor( heroImage ).width( 600 ).height( 375 ).format( "webp" ).url()}
-        alt={heroImage.alt ?? name}
-        width="600"
-        height="375"
-        loading="lazy"
-      />
+{featured ? (
+  <a href={dropHref( slug )} class="card card-featured">
+    {hasHeroImage && (
+      <div class="card-featured-image">
+        <img
+          src={urlFor( heroImage! ).width( 800 ).height( 500 ).format( "webp" ).url()}
+          alt={heroImage!.alt ?? name}
+          width="800"
+          height="500"
+          loading="lazy"
+        />
+      </div>
     )}
-  </div>
-  <div class="card-body">
-    <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
-      <ProductBadge type={status} />
-      <span class="product-badge">{liveProductCount === 1 ? "1 product" : `${liveProductCount} products`}</span>
+    <div class="card-featured-body">
+      <div class="drop-card-badges">
+        <ProductBadge type={status} />
+        <span class="product-badge">{productCountLabel}</span>
+      </div>
+      <h3>{name}</h3>
+      <p>{description}</p>
+      <p class="drop-card-date"><time datetime={dropDate}>{formatPostDate( dropDate )}</time></p>
+      <span class="card-featured-cta">View drop →</span>
     </div>
-    <h3 class="card-title">{name}</h3>
-    <p>{description}</p>
-    <p class="drop-card-date"><time datetime={dropDate}>{formatPostDate( dropDate )}</time></p>
-  </div>
-</a>
+  </a>
+) : (
+  <a href={dropHref( slug )} class="card">
+    <div class="card-image">
+      {hasHeroImage && (
+        <img
+          src={urlFor( heroImage! ).width( 600 ).height( 375 ).format( "webp" ).url()}
+          alt={heroImage!.alt ?? name}
+          width="600"
+          height="375"
+          loading="lazy"
+        />
+      )}
+    </div>
+    <div class="card-body">
+      <div class="drop-card-badges">
+        <ProductBadge type={status} />
+        <span class="product-badge">{productCountLabel}</span>
+      </div>
+      <h3 class="card-title">{name}</h3>
+      <p>{description}</p>
+      <p class="drop-card-date"><time datetime={dropDate}>{formatPostDate( dropDate )}</time></p>
+    </div>
+  </a>
+)}
