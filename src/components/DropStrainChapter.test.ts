@@ -1,5 +1,9 @@
 import { experimental_AstroContainer as AstroContainer } from "astro/container";
-import { expect, test } from "vitest";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { spawnSync } from "node:child_process";
+import { afterEach, expect, test } from "vitest";
 import type { DropChapter } from "../lib/drops.ts";
 import DropStrainChapter from "./DropStrainChapter.astro";
 
@@ -65,4 +69,33 @@ test( "the chapter's own links sit outside the product cards", async () => {
   const firstCard = html.indexOf( `class="card"` );
   expect( html.indexOf( "data-drop-coa" ) ).toBeLessThan( firstCard );
   expect( html.indexOf( `class="drop-chapter-title"` ) ).toBeLessThan( firstCard );
+});
+
+const temporaryDirectories: string[] = [];
+
+afterEach( async () => {
+  await Promise.all( temporaryDirectories.splice( 0 ).map( directory => rm( directory, { recursive: true }) ) );
+});
+
+test( "the rendered chapter passes the built-page contract", async () => {
+  const chapter = makeChapterFixture();
+  const body = await renderChapter( chapter );
+  const fixtureRoot = await mkdtemp( join( tmpdir(), "drop-chapter-" ) );
+  temporaryDirectories.push( fixtureRoot );
+  await mkdir( join( fixtureRoot, "coas", CHAPTER_COA_SOURCE_ID ), { recursive: true });
+  await writeFile( join( fixtureRoot, "coas", CHAPTER_COA_SOURCE_ID, "index.html" ), "<main></main>", "utf8" );
+  await writeFile( join( fixtureRoot, "drop-coas.json" ), JSON.stringify( [ CHAPTER_COA_SOURCE_ID ] ), "utf8" );
+  await writeFile(
+    join( fixtureRoot, "drop-page.html" ),
+    `<main><article class="drop-page" data-drop-page="september-fixture">${body}</article></main>`,
+    "utf8",
+  );
+
+  const result = spawnSync(
+    "python3",
+    [ "scripts/check-drop-build.py", "--fixture", fixtureRoot ],
+    { cwd: process.cwd(), encoding: "utf8" },
+  );
+
+  expect( result.status, result.stderr ).toBe( 0 );
 });
