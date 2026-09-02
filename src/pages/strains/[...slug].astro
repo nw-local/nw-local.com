@@ -74,6 +74,7 @@ const structuredData: StructuredData[] = [
       {strain.thcRange && <span style="color:var(--text-secondary);font-size:0.9rem;">THC: {strain.thcRange}</span>}
       {strain.cbdRange && <span style="color:var(--text-secondary);font-size:0.9rem;">CBD: {strain.cbdRange}</span>}
     </div>
+    {strain.lineage && <p class="strain-lineage" data-drop-lineage={strain.lineage}><em>{strain.lineage}</em></p>}
   </Hero>
 
   <div class="detail-grid">
