@@ -11,11 +11,12 @@ import {
   groupDropStrains,
   strainPageUrl,
 } from "./drops.ts";
+import type { DropCoa } from "./drops.ts";
 import type { ProductSummary } from "./sanity";
 
 export const DROP_COA_SOURCE_ID = "00000000-0000-4000-8000-000000000001";
 
-export function makeDropCoaFixture() {
+export function makeDropCoaFixture(): DropCoa {
   return {
     sourceId: DROP_COA_SOURCE_ID,
     labResultId: "2155470281845367208-18-2026",
@@ -33,8 +34,8 @@ describe( "assertDropCoa", () => {
 
   test( "accepts a COA without a reading or a strain", () => {
     const bare = makeDropCoaFixture();
-    delete ( bare as Record<string, unknown> )[ "totalThc" ];
-    delete ( bare as Record<string, unknown> )[ "strain" ];
+    delete bare.totalThc;
+    delete bare.strain;
     expect( () => assertDropCoa( bare ) ).not.toThrow();
   });
 
@@ -76,7 +77,7 @@ function makeProduct( name: string, strain: ReturnType<typeof makeStrain> | unde
   return { _id: `product-${name}`, name, slug: { current: name }, category: "flower", available, strain };
 }
 
-function makeCoaFor( slug: string, sourceIdSuffix: string ) {
+function makeCoaFor( slug: string, sourceIdSuffix: string ): DropCoa {
   return {
     ...makeDropCoaFixture(),
     sourceId: `00000000-0000-4000-8000-00000000000${sourceIdSuffix}`,
