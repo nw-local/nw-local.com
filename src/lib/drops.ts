@@ -19,7 +19,6 @@ import {
   assertStatus,
   type CoaStatus,
 } from "./coa.ts";
-import { stripDropReferences } from "./dropReferences.ts";
 
 export const DROP_BASE_PATH = "/drops";
 
@@ -282,8 +281,15 @@ function coasByStrainUrl( coas: DropCoa[] ): Map<string, DropCoa> {
 }
 
 export function groupDropStrains( drop: DropGroupingInput, baseUrl: string ): DropStrainGrouping {
+  // The drop page shows a short buyer blurb (dropDescription) authored clean —
+  // no breeder links, no "Learn More" — and falls back to the full description
+  // when the blurb is blank. The strain page always renders the full
+  // description; only this drop-page copy is swapped.
   const descriptionsByStrainId = new Map(
-    drop.strainDescriptions.map( entry => [ entry._id, entry.description ] ),
+    drop.strainDescriptions.map( entry => [
+      entry._id,
+      entry.dropDescription?.length ? entry.dropDescription : entry.description,
+    ] ),
   );
   const chaptersByKey = new Map<string, Omit<DropChapter, "index" | "color">>();
 
@@ -304,9 +310,7 @@ export function groupDropStrains( drop: DropGroupingInput, baseUrl: string ): Dr
         lineage: product.strain.lineage,
         cultiveraMarketProductId: product.strain.cultiveraMarketProductId,
         heroImage: product.strain.heroImage,
-        // The drop page strips inline links and the "Learn More" section from
-        // the shared strain description; the strain page keeps them.
-        description: stripDropReferences( descriptionsByStrainId.get( product.strain._id ) ),
+        description: descriptionsByStrainId.get( product.strain._id ),
       }
       : { key, name: UNASSIGNED_STRAIN_HEADING };
     chaptersByKey.set( key, {

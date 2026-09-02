@@ -327,6 +327,9 @@ export interface DropSummary {
 export interface DropStrainDescription {
   _id: string;
   description?: PortableText;
+  // A short buyer blurb the drop page prefers over the full description. Blank
+  // (or absent) falls back to description in groupDropStrains.
+  dropDescription?: PortableText;
 }
 
 export interface Drop extends DropSummary {
@@ -389,7 +392,9 @@ export async function getDrop( slug: string ) {
       "coas": coalesce(coas[defined(@->)]-> ${DROP_COA_PROJECTION}, []),
       gallery[] { asset->, alt, crop, hotspot },
       "strainDescriptions": *[_type == "strain" && _id in ^.products[defined(@->)]->strain._ref] {
-        _id, description[] ${PORTABLE_TEXT_PROJECTION}
+        _id,
+        description[] ${PORTABLE_TEXT_PROJECTION},
+        dropDescription[] ${PORTABLE_TEXT_PROJECTION}
       }
     }`,
     { slug },

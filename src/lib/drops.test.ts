@@ -112,37 +112,39 @@ describe( "groupDropStrains", () => {
     expect( grouping.unmatchedCoas ).toEqual( [] );
   });
 
-  test( "carries the strain's Cultivera marketplace id onto the chapter and strips drop-page references from the description", () => {
+  test( "carries the strain's Cultivera marketplace id and prefers the short drop blurb, falling back to the full description", () => {
     const strainWithId: ProductStrainRef = { ...glitterBomb, cultiveraMarketProductId: "14303" };
-    const description = [
-      {
-        _type: "block", _key: "b1", style: "normal",
-        markDefs: [ { _key: "m1", _type: "link", href: "https://breeder.example" } ],
-        children: [ { _type: "span", _key: "s1", text: "Bred by Compound Genetics", marks: [ "m1" ] } ],
-      },
-      { _type: "block", _key: "b2", style: "h4", children: [ { _type: "span", _key: "s2", text: "Learn More", marks: [] } ] },
-      {
-        _type: "block", _key: "b3", style: "normal",
-        markDefs: [ { _key: "m2", _type: "link", href: "https://leafly.example" } ],
-        children: [ { _type: "span", _key: "s3", text: "Leafly", marks: [ "m2" ] } ],
-      },
+    const fullDescription = [
+      { _type: "block", _key: "full", children: [ { _type: "span", _key: "s", text: "Long strain-page copy.", marks: [] } ] },
     ];
+    const dropDescription = [
+      { _type: "block", _key: "blurb", children: [ { _type: "span", _key: "s", text: "Short buyer blurb.", marks: [] } ] },
+    ];
+    // Glitter Bomb sorts first (product order), Super Boof second.
     const grouping = groupDropStrains({
-      products: [ makeProduct( "GB 3.5", strainWithId, true ) ],
+      products: [ makeProduct( "GB 3.5", strainWithId, true ), makeProduct( "SB", superBoof, true ) ],
       coas: [],
-      strainDescriptions: [ { _id: strainWithId._id, description } ],
+      strainDescriptions: [
+        { _id: strainWithId._id, description: fullDescription, dropDescription },
+        { _id: superBoof._id, description: fullDescription },
+      ],
     }, BASE_URL );
 
-    const chapterStrain = grouping.chapters[0].strain;
-    expect( chapterStrain.cultiveraMarketProductId ).toBe( "14303" );
-    // The "Learn More" heading and every block after it are gone; the surviving
-    // block keeps its prose but drops its outbound link markDef and span mark.
-    expect( chapterStrain.description ).toEqual( [
-      {
-        _type: "block", _key: "b1", style: "normal", markDefs: [],
-        children: [ { _type: "span", _key: "s1", text: "Bred by Compound Genetics", marks: [] } ],
-      },
-    ] );
+    expect( grouping.chapters[0].strain.cultiveraMarketProductId ).toBe( "14303" );
+    // Prefers the short blurb when present.
+    expect( grouping.chapters[0].strain.description ).toEqual( dropDescription );
+    // Falls back to the full description when no blurb is authored.
+    expect( grouping.chapters[1].strain.description ).toEqual( fullDescription );
+  });
+
+  test( "an empty drop blurb falls back to the full description", () => {
+    const fullDescription = [ { _type: "block", _key: "full", children: [] } ];
+    const grouping = groupDropStrains({
+      products: [ makeProduct( "GB", glitterBomb, true ) ],
+      coas: [],
+      strainDescriptions: [ { _id: glitterBomb._id, description: fullDescription, dropDescription: [] } ],
+    }, BASE_URL );
+    expect( grouping.chapters[0].strain.description ).toEqual( fullDescription );
   });
 
   test( "availability is any product available; a strain whose products are all unavailable is sold out", () => {

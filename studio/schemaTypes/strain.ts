@@ -38,6 +38,16 @@ export const strainType = defineType({
       type: 'blockContent',
     }),
     defineField({
+      name: 'dropDescription',
+      title: 'Drop Description',
+      type: 'blockContent',
+      description:
+        'Short buyer blurb shown on the drop page instead of the full Description (one or two ' +
+        'sentences, no breeder links, no "Learn More" — the drop page sends buyers to purchase). ' +
+        'Leave blank to fall back to the full Description. The strain page always shows the full ' +
+        'Description.',
+    }),
+    defineField({
       name: 'effects',
       title: 'Effects',
       type: 'array',
