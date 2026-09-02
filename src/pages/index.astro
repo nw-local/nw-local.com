@@ -77,9 +77,7 @@ const DROP_SECTION_HEADINGS: Record<DropStatus, string> = {
   {featuredDrop && (
     <section class="fade-in" style="margin-top:3rem;">
       <SectionHeading title={DROP_SECTION_HEADINGS[featuredDrop.status]} />
-      <div class="card-grid">
-        <DropCard {...featuredDrop} />
-      </div>
+      <DropCard {...featuredDrop} featured />
     </section>
   )}
 

@@ -10,9 +10,9 @@ const formattedDate = formatPostDate( publishedAt );
 const hasHeroImage = Boolean( heroImage?.asset );
 ---
 
-<a href={`/blog/${slug.current}`} class="card featured-post">
+<a href={`/blog/${slug.current}`} class="card card-featured">
   {hasHeroImage && (
-    <div class="featured-post-image">
+    <div class="card-featured-image">
       <img
         src={urlFor( heroImage! ).width( 800 ).height( 400 ).format( "webp" ).url()}
         alt={heroImage!.alt ?? title}
@@ -22,61 +22,10 @@ const hasHeroImage = Boolean( heroImage?.asset );
       />
     </div>
   )}
-  <div class="featured-post-body">
-    <p class="featured-post-date">{formattedDate}{author && ` · ${author.name}`}</p>
+  <div class="card-featured-body">
+    <p class="card-featured-eyebrow">{formattedDate}{author && ` · ${author.name}`}</p>
     <h3>{title}</h3>
     {description && <p>{description}</p>}
-    <span class="featured-post-cta">Read post →</span>
+    <span class="card-featured-cta">Read post →</span>
   </div>
 </a>
-
-<style>
-  .featured-post {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 0;
-    text-decoration: none;
-  }
-
-  @media (min-width: 769px) {
-    /* Falls back to a single column when the post has no hero image, so the
-       body never sits in a half-width column beside empty space. */
-    .featured-post:has(.featured-post-image) {
-      grid-template-columns: 1fr 1fr;
-    }
-  }
-
-  .featured-post-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.5s ease;
-  }
-
-  .featured-post:hover .featured-post-image img {
-    transform: scale(1.05);
-  }
-
-  .featured-post-body {
-    padding: 2rem;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-  }
-
-  .featured-post-date {
-    font-size: 0.75rem;
-    color: var(--accent);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 0.5rem;
-  }
-
-  .featured-post-cta {
-    margin-top: 1rem;
-    font-size: 0.85rem;
-    color: var(--accent);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-  }
-</style>
