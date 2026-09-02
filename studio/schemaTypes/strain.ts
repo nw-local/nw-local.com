@@ -86,7 +86,7 @@ export const strainType = defineType({
       type: 'string',
       description:
         'Numeric product id for the gated "Order on Cultivera" buy link (one marketplace ' +
-        'product groups this strain\'s package sizes). Per drop — the marketplace mints a new ' +
+        "product groups this strain's package sizes). Per drop — the marketplace mints a new " +
         'product each release, so re-enter it when the strain drops again. Auto-derivation from ' +
         'Cultivera data is nw-local-ops#265.',
     }),
