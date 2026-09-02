@@ -2687,6 +2687,17 @@ footer {
     color: #000000;
   }
 
+  /* The drop cover and index-card titles sit in white ink over a dark scrim on
+     screen. The scrim is a background gradient, which the printer omits, so the
+     white title would print as nothing on white paper. Restore ink and drop the
+     glow the same way the badges above restore their outline. */
+  .drop-cover-title,
+  .drop-card-title,
+  .drop-cover-meta {
+    color: #000000;
+    text-shadow: none;
+  }
+
   /* A <video> prints its poster frame, so an embedded clip still carries an
      image onto paper. Keep it inside the page box, drop the dark on-screen
      plate (backgrounds do not print anyway), and keep the figure and its
