@@ -2429,26 +2429,36 @@ footer {
 }
 
 .drop-chapter {
-  margin-bottom: 4rem;
+  margin-bottom: 4.5rem;
 }
 
+/* A full-width color band opens each strain section: the strongest sectioning
+   device on the page, and the drop's per-strain color carried as a through-line
+   from the index ribbon. */
+.drop-chapter-band {
+  height: 3px;
+  margin-bottom: 1.25rem;
+  background: var(--drop-color);
+}
+
+/* Header is one justified row on desktop (identity left, stats right) sharing a
+   bottom divider, so the block has one clean top edge and one clean bottom edge
+   for the columns below to hang from. */
 .drop-chapter-header {
-  margin-bottom: 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem 2rem;
+  padding-bottom: 1.25rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--border);
 }
 
 .drop-chapter-number {
-  margin: 0 0 0.5rem;
+  margin: 0 0 0.4rem;
   color: var(--drop-color);
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.13em;
-}
-
-.drop-chapter-rule {
-  width: 60px;
-  height: 4px;
-  margin-bottom: 0.75rem;
-  background: var(--drop-color);
 }
 
 .drop-chapter-title {
@@ -2466,61 +2476,46 @@ footer {
 }
 
 .drop-chapter-lineage {
-  margin: 0.5rem 0 0;
+  margin: 0.4rem 0 0;
   color: var(--text-emphasis);
 }
 
-.drop-chapter-body {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 2rem;
-  margin-bottom: 2rem;
-}
-
-.drop-chapter-facts {
+.drop-chapter-stats {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
   align-items: flex-start;
+  gap: 0.6rem;
 }
 
 .drop-chapter-thc {
   margin: 0;
-  font-size: 1.4rem;
+  font-size: 1.5rem;
   font-weight: 800;
   color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
 }
 
-.drop-coa-link {
-  font-weight: 700;
-  color: var(--drop-color);
-}
-
-.drop-chapter-state {
+.drop-chapter-badges {
   display: flex;
   gap: 0.5rem;
-  margin: 0;
 }
 
-.drop-chapter-editorial {
+/* Two-column body: photo left, copy right, both starting at the section's
+   edges so the package table below re-uses the same left and right alignment. */
+.drop-chapter-body {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 1.5rem;
+  margin-bottom: 2rem;
 }
 
-/* The frame owns the rounding and clipping so the hero can be wrapped in an
-   anchor (the buy link, see CultiveraImageLink) without the corner radius or the
-   caption spilling out. It renders as a plain <div> when the strain has no
-   marketplace link. */
-.drop-chapter-hero-frame {
+.drop-chapter-media-frame {
   display: block;
-  position: relative;
   border-radius: 8px;
   overflow: hidden;
 }
 
-a.drop-chapter-hero-frame {
-  text-decoration: none;
+a.drop-chapter-media-frame {
   cursor: pointer;
 }
 
@@ -2529,134 +2524,91 @@ a.drop-chapter-hero-frame {
   width: 100%;
   aspect-ratio: 4 / 3;
   object-fit: cover;
-  transition: transform 0.4s ease;
+  transition: transform 0.4s ease, filter 0.4s ease;
 }
 
-a.drop-chapter-hero-frame:hover .drop-chapter-hero {
+/* The only cue that the photo links out is a quiet lift on hover: no label, so
+   the image sells the strain and the brand, not the marketplace. */
+a.drop-chapter-media-frame:hover .drop-chapter-hero {
   transform: scale(1.03);
+  filter: brightness(1.05);
 }
 
-/* --- Cultivera "photo is the buy link" (shared: drop hero + product card) --- */
+.drop-chapter-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+}
 
-/* A quiet, always-visible cue that the photo is shoppable: no hover needed, so
-   it reads on touch devices too. rgba(17, 17, 17, …) is literal, not
-   var(--bg-rgb): the wash must stay dark under the print/light-theme palette,
-   which redefines --bg-rgb to white, the same reason .drop-card-scrim spells it
-   out. pointer-events stay off the chip so the whole frame is one click target.
-   Accent by default; a drop chapter overrides it to the chapter color below. */
-.cultivera-photo-cta {
-  position: absolute;
-  left: 0.75rem;
-  bottom: 0.75rem;
-  padding: 0.35rem 0.7rem;
-  border-radius: 4px;
-  background: rgba(17, 17, 17, 0.82);
-  color: var(--accent);
-  font-size: 0.72rem;
+.drop-coa-link {
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  pointer-events: none;
-}
-
-.drop-chapter-hero-frame .cultivera-photo-cta {
   color: var(--drop-color);
 }
 
-a.drop-chapter-hero-frame:hover .cultivera-photo-cta,
-.card:hover .cultivera-photo-cta {
-  background: rgba(17, 17, 17, 0.95);
+/* Package availability as an aligned table: real columns give the section the
+   shared vertical edges the earlier floating list lacked. */
+.drop-packages {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
 }
 
-/* The product card image is the buy link too. .card-image already sets the
-   aspect ratio and clips; the frame just fills it and anchors the caption. */
-.card-image-frame {
-  display: block;
-  position: relative;
-  height: 100%;
-  text-decoration: none;
+.drop-packages th {
+  padding: 0 0 0.6rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: left;
 }
 
-/* The products in a chapter are one strain in several package sizes, already
-   pictured by the chapter hero above, so they render as a compact size list
-   rather than reusing the image-heavy ProductCard: no repeated photo, no
-   per-size order button. The single buy link groups every size on Cultivera,
-   so one button serves the whole list. */
-.drop-chapter-order {
-  max-width: 32rem;
+.drop-packages td {
+  padding: 0.8rem 0;
+  border-bottom: 1px solid var(--border);
 }
 
-.drop-size-list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  overflow: hidden;
-  background: var(--bg-surface);
+.drop-packages-end {
+  text-align: right;
 }
 
-.drop-size-row {
-  display: flex;
-  align-items: baseline;
-  gap: 0.75rem;
-  padding: 0.85rem 1.1rem;
-}
-
-.drop-size-row + .drop-size-row {
-  border-top: 1px solid var(--border);
-}
-
-.drop-size-name {
-  flex: 1;
-  min-width: 0;
+.drop-package-name {
   font-weight: 700;
   color: var(--text-emphasis);
 }
 
-.drop-size-weight {
+.drop-package-weight {
   color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
 }
 
-.drop-size-state {
-  font-size: 0.78rem;
+.drop-package-state {
+  font-size: 0.8rem;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   color: var(--drop-color);
 }
 
-/* A sold-out size stays legible but recedes: the whole row dims and its state
-   drops to the muted text color rather than the chapter's accent. */
-.drop-size-row[data-available="false"] {
-  opacity: 0.55;
+/* A sold-out package stays legible but recedes: the row dims and its state drops
+   to the muted text color rather than the chapter's accent. */
+.drop-package-row[data-available="false"] {
+  opacity: 0.5;
 }
 
-.drop-size-row[data-available="false"] .drop-size-state {
+.drop-package-row[data-available="false"] .drop-package-state {
   color: var(--text-secondary);
 }
 
-/* The buy affordance normally lives on the photo; this understated text link is
-   the fallback for a product or strain with no photo, so the buy path survives
-   without reintroducing a heavy filled button. Accent by default; a drop chapter
-   overrides it to the chapter color below. */
-.cultivera-textlink {
-  display: inline-block;
-  margin-top: 1rem;
-  color: var(--accent);
-  font-size: 0.8rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+/* --- Shared: a product-card image that quietly links to the marketplace --- */
+
+/* .card-image already sets the aspect ratio and clips; the frame just fills it
+   and becomes the link. No label: the photo promotes the product, not Cultivera. */
+.card-image-frame {
+  display: block;
+  height: 100%;
   text-decoration: none;
-}
-
-.cultivera-textlink:hover {
-  text-decoration: underline;
-}
-
-.drop-chapter-order .cultivera-textlink {
-  color: var(--drop-color);
 }
 
 .drop-unmatched {
@@ -2699,12 +2651,21 @@ a.drop-chapter-hero-frame:hover .cultivera-photo-cta,
 }
 
 @media (min-width: 720px) {
-  .drop-chapter-body {
-    grid-template-columns: 220px minmax(0, 1fr);
+  /* Identity left, stats right, aligned to the divider's baseline. */
+  .drop-chapter-header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
   }
 
-  .drop-chapter-editorial {
-    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  .drop-chapter-stats {
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  /* Fixed photo column so its left and right edges are shared by the header
+     above and the package table below. */
+  .drop-chapter-body {
+    grid-template-columns: minmax(0, 340px) minmax(0, 1fr);
     align-items: start;
   }
 }
