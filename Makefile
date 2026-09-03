@@ -63,6 +63,9 @@ check-anchors: build ## Verify ./dist/ heading anchor ids are unique per page
 test-psychrometrics: ## Run the psychrometrics unit tests (no build required)
 	@./scripts/test-psychrometrics.py
 
+test-psychrometrics-ts: ## Test the browser calculator's psychrometrics port against the same fixtures
+	@yarn vitest run src/lib/psychrometrics.test.ts
+
 check-drop-lookup: ## Verify the drop collision rule: strongest status wins, whatever the row order
 	@node scripts/check-drop-lookup.ts
 
@@ -108,7 +111,7 @@ test-check-glossary-build: build ## Regression-test malformed glossary build fix
 check-navigation: ## Verify the top and footer navigation structure
 	@python3 scripts/check-navigation.py
 
-check: lint check-drop-lookup check-glossary check-glossary-browser check-person-jsonld check-portable-text-headings check-coa-contract test-coa test-drops test-psychrometrics test-check-email-routing test-check-coa-build test-check-drop-build build check-analytics check-robots check-content-style check-email-routing check-anchors check-coa-build check-drop-build check-glossary-build test-check-glossary-build check-navigation ## Run the local repository check aggregate
+check: lint check-drop-lookup check-glossary check-glossary-browser check-person-jsonld check-portable-text-headings check-coa-contract test-coa test-drops test-psychrometrics test-psychrometrics-ts test-check-email-routing test-check-coa-build test-check-drop-build build check-analytics check-robots check-content-style check-email-routing check-anchors check-coa-build check-drop-build check-glossary-build test-check-glossary-build check-navigation ## Run the local repository check aggregate
 	@cd studio && yarn lint && yarn typecheck && yarn format:check
 	@yarn astro check
 
