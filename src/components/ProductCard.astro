@@ -1,5 +1,6 @@
 ---
 import { urlFor } from "../lib/image";
+import CultiveraImageLink from "./CultiveraImageLink.astro";
 import ProductBadge from "./ProductBadge.astro";
 import { dropHref } from "../lib/drops";
 import type { DropRef } from "../lib/drops";
@@ -20,13 +21,15 @@ const orderUrl = Astro.props.orderUrl ?? cultiveraMarketUrlFor( strain?.cultiver
 <div class="card">
   <div class="card-image">
     {displayImage?.asset && (
-      <img
-        src={urlFor( displayImage ).width( 600 ).height( 375 ).format( "webp" ).url()}
-        alt={displayImage.alt ?? name}
-        width="600"
-        height="375"
-        loading="lazy"
-      />
+      <CultiveraImageLink orderUrl={orderUrl} ariaName={name} frameClass="card-image-frame">
+        <img
+          src={urlFor( displayImage ).width( 600 ).height( 375 ).format( "webp" ).url()}
+          alt={displayImage.alt ?? name}
+          width="600"
+          height="375"
+          loading="lazy"
+        />
+      </CultiveraImageLink>
     )}
   </div>
   <div class="card-body">
@@ -51,27 +54,8 @@ const orderUrl = Astro.props.orderUrl ?? cultiveraMarketUrlFor( strain?.cultiver
         <a href={dropHref( drop.slug )}>{drop.name}</a>
       </p>
     )}
-    {orderUrl && (
-      <a class="product-order-link" data-order-cultivera href={orderUrl} target="_blank" rel="noopener">
-        {ORDER_ON_CULTIVERA_LABEL}
-      </a>
+    {orderUrl && !displayImage?.asset && (
+      <a class="cultivera-textlink" data-order-cultivera href={orderUrl} target="_blank" rel="noopener">{ORDER_ON_CULTIVERA_LABEL}<span aria-hidden="true"> ↗</span></a>
     )}
   </div>
 </div>
-
-<style>
-  .product-order-link {
-    display: inline-block;
-    margin-top: 0.75rem;
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
-    background: var(--accent);
-    color: #000;
-    font-weight: 600;
-    text-decoration: none;
-  }
-
-  .product-order-link:hover {
-    filter: brightness(1.08);
-  }
-</style>

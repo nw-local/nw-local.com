@@ -7,6 +7,7 @@ import {
   assertDropCoas,
   dropCoaHref,
   dropCoaManifest,
+  dropProductSizeLabel,
   formatDropTotalThc,
   groupDropStrains,
   strainPageUrl,
@@ -214,8 +215,29 @@ describe( "drop helpers", () => {
     expect( dropCoaHref( DROP_COA_SOURCE_ID ) ).toBe( `/coas/${DROP_COA_SOURCE_ID}/` );
   });
 
-  test( "formatDropTotalThc hugs a percent sign and spaces any other unit", () => {
-    expect( formatDropTotalThc({ value: "29.39", unit: "%" }) ).toBe( "29.39% Total THC" );
+  test( "formatDropTotalThc rounds a percent to one decimal, hugs the sign, and spaces any other unit", () => {
+    expect( formatDropTotalThc({ value: "25.823", unit: "%" }) ).toBe( "25.8% Total THC" );
+    // Rounds to nearest (never up), and pads a trailing zero.
+    expect( formatDropTotalThc({ value: "18.977", unit: "%" }) ).toBe( "19.0% Total THC" );
+    expect( formatDropTotalThc({ value: "22.715", unit: "%" }) ).toBe( "22.7% Total THC" );
+    // A non-percent unit keeps the lab value as written.
     expect( formatDropTotalThc({ value: "293.9", unit: "mg/g" }) ).toBe( "293.9 mg/g Total THC" );
+  });
+
+  test( "dropProductSizeLabel strips the strain name prefix down to the package size", () => {
+    expect( dropProductSizeLabel( "Glitter Bomb Eighth", "Glitter Bomb" ) ).toBe( "Eighth" );
+    expect( dropProductSizeLabel( "Super Boof Ounce", "Super Boof" ) ).toBe( "Ounce" );
+  });
+
+  test( "dropProductSizeLabel matches the prefix case-insensitively but keeps the tail's casing", () => {
+    expect( dropProductSizeLabel( "glitter bomb Pre-Roll", "Glitter Bomb" ) ).toBe( "Pre-Roll" );
+  });
+
+  test( "dropProductSizeLabel falls back to the full name when the strain name is not a prefix", () => {
+    expect( dropProductSizeLabel( "Mystery Eighth", "Glitter Bomb" ) ).toBe( "Mystery Eighth" );
+  });
+
+  test( "dropProductSizeLabel falls back to the full name when nothing follows the strain name", () => {
+    expect( dropProductSizeLabel( "Glitter Bomb", "Glitter Bomb" ) ).toBe( "Glitter Bomb" );
   });
 });
