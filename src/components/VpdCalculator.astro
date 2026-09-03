@@ -1,0 +1,320 @@
+---
+// Three live calculators that mirror the "Build your own" formula table in the
+// VPD-by-day, dew-point-by-night post: day humidity from a VPD target, night
+// humidity from a dew point margin, and the dew point (plus surface margin) of
+// a room you already have. All arithmetic is the shared Magnus port in
+// src/lib/psychrometrics.ts, pinned against published figures by its test.
+//
+// Inputs are Fahrenheit, because the audience works in Fahrenheit; every result
+// is shown °F first with °C alongside. Results are written client-side, so they
+// never reach dist/ and are outside the paired-units content check, but they
+// keep the °F-first house format anyway.
+---
+
+<div class="calc" data-vpd-calculator>
+  <section class="calc-panel">
+    <h3 class="calc-panel-title">Day: humidity from a VPD target</h3>
+    <p class="calc-panel-note">Pick a canopy temperature and a leaf VPD. The humidity that hits it comes out below.</p>
+    <div class="calc-fields">
+      <label class="calc-field">
+        <span>Canopy temperature (°F)</span>
+        <input type="number" inputmode="decimal" step="1" value="82" data-day-temp />
+      </label>
+      <label class="calc-field">
+        <span>Target leaf VPD (kPa)</span>
+        <input type="number" inputmode="decimal" step="0.05" value="1.40" data-day-vpd />
+      </label>
+    </div>
+    <p class="calc-result">
+      <span class="calc-result-label">Relative humidity</span>
+      <span class="calc-result-value" aria-live="polite" data-day-rh></span>
+    </p>
+  </section>
+
+  <section class="calc-panel">
+    <h3 class="calc-panel-title">Night: humidity from a dew point margin</h3>
+    <p class="calc-panel-note">Pick a night temperature and how far below it you want to hold the dew point. We run 15 °F (8 °C).</p>
+    <div class="calc-fields">
+      <label class="calc-field">
+        <span>Night temperature (°F)</span>
+        <input type="number" inputmode="decimal" step="1" value="76" data-night-temp />
+      </label>
+      <label class="calc-field">
+        <span>Dew point margin (°F below the air)</span>
+        <input type="number" inputmode="decimal" step="1" value="15" data-night-margin />
+      </label>
+    </div>
+    <p class="calc-result">
+      <span class="calc-result-label">Dew point setpoint</span>
+      <span class="calc-result-value" aria-live="polite" data-night-dew></span>
+    </p>
+    <p class="calc-result">
+      <span class="calc-result-label">Implied relative humidity</span>
+      <span class="calc-result-value" aria-live="polite" data-night-rh></span>
+    </p>
+  </section>
+
+  <section class="calc-panel">
+    <h3 class="calc-panel-title">Surface check: dew point of a room you have</h3>
+    <p class="calc-panel-note">Enter what your meter reads, then the coldest surface you can measure. Condensation forms wherever a surface sits at or below the dew point.</p>
+    <div class="calc-fields">
+      <label class="calc-field">
+        <span>Room temperature (°F)</span>
+        <input type="number" inputmode="decimal" step="1" value="76" data-surface-room />
+      </label>
+      <label class="calc-field">
+        <span>Relative humidity (%)</span>
+        <input type="number" inputmode="decimal" step="1" value="59" data-surface-rh />
+      </label>
+      <label class="calc-field">
+        <span>Coldest surface (°F, optional)</span>
+        <input type="number" inputmode="decimal" step="1" placeholder="e.g. a cold wall" data-surface-temp />
+      </label>
+    </div>
+    <p class="calc-result">
+      <span class="calc-result-label">Dew point</span>
+      <span class="calc-result-value" aria-live="polite" data-surface-dew></span>
+    </p>
+    <p class="calc-verdict" aria-live="polite" data-surface-verdict hidden></p>
+  </section>
+</div>
+
+<script>
+  import {
+    celsiusToFahrenheit,
+    dewPointCelsius,
+    fahrenheitToCelsius,
+    relativeHumidityAtDewPoint,
+    relativeHumidityFromVpd,
+  } from "../lib/psychrometrics";
+
+  const root = document.querySelector( "[data-vpd-calculator]" );
+  if( root instanceof HTMLElement ) {
+    setupCalculator( root );
+  }
+
+  function requireInput( scope: HTMLElement, selector: string ): HTMLInputElement {
+    const element = scope.querySelector( selector );
+    if( !( element instanceof HTMLInputElement ) ) {
+      throw new Error( `VPD calculator input missing: ${selector}` );
+    }
+    return element;
+  }
+
+  function requireTarget( scope: HTMLElement, selector: string ): HTMLElement {
+    const element = scope.querySelector( selector );
+    if( !( element instanceof HTMLElement ) ) {
+      throw new Error( `VPD calculator output missing: ${selector}` );
+    }
+    return element;
+  }
+
+  function reading( input: HTMLInputElement ): number | null {
+    if( input.value.trim() === "" ) return null;
+    const value = Number( input.value );
+    return Number.isFinite( value ) ? value : null;
+  }
+
+  function tidy( value: number ): string {
+    const rounded = Math.round( value * 10 ) / 10;
+    return Number.isInteger( rounded ) ? String( rounded ) : rounded.toFixed( 1 );
+  }
+
+  function fahrenheitPair( fahrenheit: number ): string {
+    return `${tidy( fahrenheit )} °F (${tidy( fahrenheitToCelsius( fahrenheit ) )} °C)`;
+  }
+
+  function differencePair( fahrenheitDelta: number ): string {
+    // A temperature difference of D °F is D × 5/9 °C, not a converted reading.
+    return `${tidy( fahrenheitDelta )} °F (${tidy( fahrenheitDelta * 5 / 9 )} °C)`;
+  }
+
+  function setupCalculator( scope: HTMLElement ): void {
+    const dayTemp = requireInput( scope, "[data-day-temp]" );
+    const dayVpd = requireInput( scope, "[data-day-vpd]" );
+    const dayRh = requireTarget( scope, "[data-day-rh]" );
+
+    const nightTemp = requireInput( scope, "[data-night-temp]" );
+    const nightMargin = requireInput( scope, "[data-night-margin]" );
+    const nightDew = requireTarget( scope, "[data-night-dew]" );
+    const nightRh = requireTarget( scope, "[data-night-rh]" );
+
+    const surfaceRoom = requireInput( scope, "[data-surface-room]" );
+    const surfaceRh = requireInput( scope, "[data-surface-rh]" );
+    const surfaceTemp = requireInput( scope, "[data-surface-temp]" );
+    const surfaceDew = requireTarget( scope, "[data-surface-dew]" );
+    const surfaceVerdict = requireTarget( scope, "[data-surface-verdict]" );
+
+    function computeDay(): void {
+      const temperature = reading( dayTemp );
+      const vpd = reading( dayVpd );
+      if( temperature === null || vpd === null ) {
+        dayRh.textContent = "Enter a temperature and a VPD.";
+        return;
+      }
+      const percent = relativeHumidityFromVpd( fahrenheitToCelsius( temperature ), vpd ) * 100;
+      if( percent < 0 ) {
+        dayRh.textContent = "0% (that VPD is higher than this temperature can reach)";
+      } else if( percent > 100 ) {
+        dayRh.textContent = "100% (that VPD is below what this temperature allows)";
+      } else {
+        dayRh.textContent = `${Math.round( percent )}%`;
+      }
+    }
+
+    function computeNight(): void {
+      const temperature = reading( nightTemp );
+      const margin = reading( nightMargin );
+      if( temperature === null || margin === null ) {
+        nightDew.textContent = "Enter a temperature and a margin.";
+        nightRh.textContent = "";
+        return;
+      }
+      const dewFahrenheit = temperature - margin;
+      const percent = relativeHumidityAtDewPoint( dewFahrenheit, temperature ) * 100;
+      nightDew.textContent = fahrenheitPair( dewFahrenheit );
+      nightRh.textContent = `${Math.round( percent )}%`;
+    }
+
+    function computeSurface(): void {
+      const room = reading( surfaceRoom );
+      const percent = reading( surfaceRh );
+      if( room === null || percent === null || percent <= 0 || percent > 100 ) {
+        surfaceDew.textContent = "Enter a room temperature and a humidity between 1 and 100.";
+        surfaceVerdict.hidden = true;
+        return;
+      }
+      const dewFahrenheit = celsiusToFahrenheit(
+        dewPointCelsius( fahrenheitToCelsius( room ), percent / 100 ),
+      );
+      surfaceDew.textContent = fahrenheitPair( dewFahrenheit );
+
+      const surface = reading( surfaceTemp );
+      if( surface === null ) {
+        surfaceVerdict.hidden = true;
+        return;
+      }
+      const margin = surface - dewFahrenheit;
+      surfaceVerdict.hidden = false;
+      if( margin > 0 ) {
+        surfaceVerdict.dataset.state = "dry";
+        surfaceVerdict.textContent = `Dry: that surface sits ${differencePair( margin )} above the dew point.`;
+      } else {
+        surfaceVerdict.dataset.state = "wet";
+        surfaceVerdict.textContent = `Condensing: that surface sits ${differencePair( -margin )} below the dew point.`;
+      }
+    }
+
+    for( const input of [ dayTemp, dayVpd ] ) input.addEventListener( "input", computeDay );
+    for( const input of [ nightTemp, nightMargin ] ) input.addEventListener( "input", computeNight );
+    for( const input of [ surfaceRoom, surfaceRh, surfaceTemp ] ) input.addEventListener( "input", computeSurface );
+
+    computeDay();
+    computeNight();
+    computeSurface();
+  }
+</script>
+
+<style>
+  .calc {
+    display: grid;
+    gap: 1.5rem;
+    margin: 2rem 0;
+  }
+
+  .calc-panel {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+  }
+
+  .calc-panel-title {
+    margin: 0 0 0.35rem;
+    font-size: 1.15rem;
+    color: var(--text-primary);
+  }
+
+  .calc-panel-note {
+    margin: 0 0 1.25rem;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+  .calc-fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .calc-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .calc-field span {
+    font-size: 0.85rem;
+    color: var(--text-emphasis);
+  }
+
+  .calc-field input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.6rem 0.75rem;
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .calc-field input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+    border-color: var(--accent);
+  }
+
+  .calc-result {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem 0.75rem;
+    margin: 0.5rem 0 0;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .calc-result-label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+  }
+
+  .calc-result-value {
+    color: var(--accent);
+    font-size: 1.05rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .calc-verdict {
+    margin: 1rem 0 0;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    border: 1px solid var(--border);
+  }
+
+  .calc-verdict[data-state="dry"] {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .calc-verdict[data-state="wet"] {
+    color: var(--text-primary);
+    border-color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.04);
+  }
+</style>

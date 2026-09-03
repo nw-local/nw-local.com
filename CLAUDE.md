@@ -18,8 +18,9 @@ Use `make` targets — they load `.env` automatically via `-include .env` + `exp
 | Sanity Studio | `make studio` (localhost:3333) |
 | Deploy Studio | `make deploy-studio` |
 | Type check | `yarn astro check` |
+| Run all repo checks | `make check` (lint, unit tests, build, and every `dist/` validator) |
 
-No test framework is configured.
+Tests use **vitest**, run through named `make` targets rather than a blanket `yarn test`: each CI job invokes the specific targets it needs (for example `make test-drops`, `make test-coa`, `make test-psychrometrics-ts`). Pure-arithmetic and content contracts additionally have dependency-free `node scripts/check-*.ts` and Python (`scripts/test-*.py`) checks. `make check` runs the whole aggregate locally and mirrors CI.
 
 ## Architecture
 

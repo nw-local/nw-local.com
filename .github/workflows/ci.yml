@@ -26,6 +26,11 @@ jobs:
           SANITY_PROJECT_ID: ${{ secrets.SANITY_PROJECT_ID }}
           SANITY_DATASET: ${{ secrets.SANITY_DATASET }}
           SANITY_API_TOKEN: ${{ secrets.SANITY_API_TOKEN }}
+      # Pure arithmetic, no Sanity access needed. Mirrors the Python
+      # test-psychrometrics against the same published fixtures, so the
+      # browser calculator's port cannot drift from the canonical module.
+      - name: Test the browser calculator's psychrometrics port
+        run: make test-psychrometrics-ts
       - run: yarn astro check
         env:
           SANITY_PROJECT_ID: ${{ secrets.SANITY_PROJECT_ID }}
