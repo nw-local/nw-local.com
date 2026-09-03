@@ -5,7 +5,7 @@ import ProductBadge from "./ProductBadge.astro";
 import { dropHref } from "../lib/drops";
 import type { DropRef } from "../lib/drops";
 import type { ProductSummary, ProductWithDescription } from "../lib/sanity";
-import { ORDER_ON_CULTIVERA_LABEL, cultiveraMarketUrlFor } from "../lib/cultivera";
+import { cultiveraMarketUrlFor } from "../lib/cultivera";
 
 // orderUrl is passed explicitly where the caller holds the strain but the card
 // does not (the strain page renders ProductWithDescription, which carries no
@@ -53,9 +53,6 @@ const orderUrl = Astro.props.orderUrl ?? cultiveraMarketUrlFor( strain?.cultiver
         <ProductBadge type={drop.status} />
         <a href={dropHref( drop.slug )}>{drop.name}</a>
       </p>
-    )}
-    {orderUrl && !displayImage?.asset && (
-      <a class="cultivera-textlink" data-order-cultivera href={orderUrl} target="_blank" rel="noopener">{ORDER_ON_CULTIVERA_LABEL}<span aria-hidden="true"> ↗</span></a>
     )}
   </div>
 </div>

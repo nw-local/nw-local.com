@@ -64,15 +64,15 @@ test( "omits the THC line and COA link when the chapter has no certificate, and 
   expect( html ).toContain( `data-drop-state="soldOut"` );
 });
 
-test( "the chapter's own links sit before the size list", async () => {
+test( "the chapter's own links sit before the package table", async () => {
   const html = await renderChapter( makeChapterFixture() );
-  const sizeList = html.indexOf( `class="drop-size-list"` );
-  expect( sizeList ).toBeGreaterThan( -1 );
-  expect( html.indexOf( "data-drop-coa" ) ).toBeLessThan( sizeList );
-  expect( html.indexOf( `class="drop-chapter-title"` ) ).toBeLessThan( sizeList );
+  const packages = html.indexOf( `class="drop-packages"` );
+  expect( packages ).toBeGreaterThan( -1 );
+  expect( html.indexOf( "data-drop-coa" ) ).toBeLessThan( packages );
+  expect( html.indexOf( `class="drop-chapter-title"` ) ).toBeLessThan( packages );
 });
 
-test( "renders each package as a compact size row: label, weight and availability, without a repeated photo", async () => {
+test( "renders each package as an aligned table row: size, weight and availability, no repeated photo", async () => {
   const html = await renderChapter( makeChapterFixture() );
   // The size label is the product name with its strain-name prefix stripped.
   expect( html ).toContain( ">Eighth<" );
@@ -87,21 +87,18 @@ test( "renders each package as a compact size row: label, weight and availabilit
   expect( html ).not.toContain( `class="card"` );
 });
 
-test( "a strain with no hero image gets a single subtle text buy link, not one per package size", async () => {
+test( "a strain with no hero image has no buy link, since the photo is the only one", async () => {
   const chapter = makeChapterFixture();
   chapter.strain.cultiveraMarketProductId = "14303";
   const html = await renderChapter( chapter );
-  expect( html ).toContain(
-    `href="https://wa.cultiveramarket.com/bm/market/northwest-local-cannabis-llc/product/14303"`,
-  );
-  expect( html ).toContain( "Order on Cultivera" );
-  expect( html ).toContain( `class="cultivera-textlink"` );
-  // No filled button, and no per-size buttons: one buy link for the chapter.
+  // The buy link lives on the photo alone; with no photo there is nothing to
+  // attach it to, and we do not fall back to a button or a text link.
+  expect( html ).not.toContain( "data-order-cultivera" );
+  expect( html ).not.toContain( "cultivera-textlink" );
   expect( html ).not.toContain( "btn-accent" );
-  expect( html.split( "data-order-cultivera" ).length - 1 ).toBe( 1 );
 });
 
-test( "the hero photo itself is the buy link when the strain has one, with no separate button", async () => {
+test( "the hero photo is the buy link, wrapping the image with an accessible name and no visible marketplace label", async () => {
   const chapter = makeChapterFixture();
   chapter.strain.cultiveraMarketProductId = "14303";
   chapter.strain.heroImage = {
@@ -110,21 +107,27 @@ test( "the hero photo itself is the buy link when the strain has one, with no se
   };
   const html = await renderChapter( chapter );
   const marketUrl = "https://wa.cultiveramarket.com/bm/market/northwest-local-cannabis-llc/product/14303";
-  // The anchor wraps the hero image and carries the buy URL and an accessible name.
-  expect( html ).toContain( `class="drop-chapter-hero-frame"` );
-  expect( html ).toMatch( new RegExp( `<a[^>]*class="drop-chapter-hero-frame"[^>]*href="${marketUrl.replace( /[/]/g, "\\/" )}"` ) );
-  expect( html ).toContain( `aria-label="Glitter Bomb: Order on Cultivera"` );
-  expect( html ).toContain( `class="cultivera-photo-cta"` );
-  // The image lives inside that one link; no fallback text link and no button.
-  expect( html ).not.toContain( `class="cultivera-textlink"` );
+  expect( html ).toContain( `class="drop-chapter-media-frame"` );
+  expect( html ).toMatch( new RegExp( `<a[^>]*class="drop-chapter-media-frame"[^>]*href="${marketUrl.replace( /[/]/g, "\\/" )}"` ) );
+  // Accessible name promotes the strain, not the marketplace, and there is no
+  // visible caption/label on the photo.
+  expect( html ).toContain( `aria-label="Order Glitter Bomb"` );
+  expect( html ).not.toContain( "Cultivera" );
+  expect( html ).not.toContain( "cultivera-textlink" );
   expect( html ).not.toContain( "btn-accent" );
   expect( html.split( "data-order-cultivera" ).length - 1 ).toBe( 1 );
 });
 
-test( "omits the Order on Cultivera link when the strain has no marketplace id", async () => {
-  const html = await renderChapter( makeChapterFixture() );
+test( "omits the buy link entirely when the strain has no marketplace id", async () => {
+  const chapter = makeChapterFixture();
+  chapter.strain.heroImage = {
+    asset: { _ref: "image-abc123-1200x900-jpg" },
+    alt: "Glitter Bomb flower under grow lights",
+  };
+  const html = await renderChapter( chapter );
+  // Photo renders, but as a plain frame, not an anchor.
   expect( html ).not.toContain( "data-order-cultivera" );
-  expect( html ).not.toContain( "Order on Cultivera" );
+  expect( html ).not.toMatch( /<a[^>]*class="drop-chapter-media-frame"/ );
 });
 
 const temporaryDirectories: string[] = [];

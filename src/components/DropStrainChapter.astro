@@ -4,7 +4,7 @@ import PortableText from "./PortableText.astro";
 import ProductBadge from "./ProductBadge.astro";
 import type { DropChapter } from "../lib/drops";
 import { DROP_CHAPTER_STATE_BADGE_TYPES, dropCoaHref, dropProductSizeLabel, formatDropTotalThc } from "../lib/drops";
-import { ORDER_ON_CULTIVERA_LABEL, cultiveraMarketUrlFor } from "../lib/cultivera";
+import { cultiveraMarketUrlFor } from "../lib/cultivera";
 import { urlFor } from "../lib/image";
 import type { CoaStatus } from "../lib/coa.ts";
 
@@ -19,46 +19,41 @@ const COA_STATUS_LABELS: Record<CoaStatus, string> = { pass: "Pass", fail: "Fail
 const { chapter, chapterCount } = Astro.props;
 const { strain, products, available, coa } = chapter;
 // The buy link is per strain — one marketplace product groups every package
-// size — so it is resolved once here for the whole chapter.
+// size — so it is resolved once here. The strain photo carries it (see
+// CultiveraImageLink): the photo links out quietly, with no marketplace label.
 const orderUrl = cultiveraMarketUrlFor( strain.cultiveraMarketProductId );
 const stateType = available ? DROP_CHAPTER_STATE_BADGE_TYPES.available : DROP_CHAPTER_STATE_BADGE_TYPES.soldOut;
 const pad = ( value: number ) => String( value ).padStart( 2, "0" );
 const strainHref = strain.slug ? `/strains/${strain.slug.current}` : undefined;
-
-// The chapter hero doubles as the buy link (see CultiveraImageLink): clicking
-// the photo opens the Cultivera marketplace. A subtle text link below the size
-// list carries the same URL when the strain has no photo, so the buy path never
-// depends on an image being present.
 const heroImage = strain.heroImage?.asset ? strain.heroImage : undefined;
 ---
 
 <section class="drop-chapter fade-in" id={chapter.anchorId} data-drop-chapter={chapter.anchorId} style={`--drop-color: ${chapter.color};`}>
-  <header class="drop-chapter-header">
-    <p class="drop-chapter-number">{pad( chapter.index )} / {pad( chapterCount )}</p>
-    <div class="drop-chapter-rule"></div>
-    <h2 class="drop-chapter-title">{strainHref ? <a href={strainHref}>{strain.name}</a> : strain.name}</h2>
-    {strain.lineage && (
-      <p class="drop-chapter-lineage" data-drop-lineage={strain.lineage}><em>{strain.lineage}</em></p>
-    )}
-  </header>
+  <div class="drop-chapter-band"></div>
 
-  <div class="drop-chapter-body">
-    <aside class="drop-chapter-facts">
+  <header class="drop-chapter-header">
+    <div class="drop-chapter-heading">
+      <p class="drop-chapter-number">{pad( chapter.index )} / {pad( chapterCount )}</p>
+      <h2 class="drop-chapter-title">{strainHref ? <a href={strainHref}>{strain.name}</a> : strain.name}</h2>
+      {strain.lineage && (
+        <p class="drop-chapter-lineage" data-drop-lineage={strain.lineage}><em>{strain.lineage}</em></p>
+      )}
+    </div>
+    <div class="drop-chapter-stats">
       {coa?.totalThc && (
         <p class="drop-chapter-thc" data-drop-thc={coa.totalThc.value}>{formatDropTotalThc( coa.totalThc )}</p>
       )}
-      {coa && (
-        <a class="drop-coa-link" data-drop-coa={coa.sourceId} href={dropCoaHref( coa.sourceId )}>{COA_LINK_PREFIX} · {COA_STATUS_LABELS[coa.status]}</a>
-      )}
-      <p class="drop-chapter-state" data-drop-state={stateType}>
+      <div class="drop-chapter-badges" data-drop-state={stateType}>
         <ProductBadge type={stateType} />
         {strain.strainType && <ProductBadge type={strain.strainType} />}
-      </p>
-    </aside>
+      </div>
+    </div>
+  </header>
 
-    <div class="drop-chapter-editorial">
+  <div class="drop-chapter-body">
+    <div class="drop-chapter-media">
       {heroImage && (
-        <CultiveraImageLink orderUrl={orderUrl} ariaName={strain.name} frameClass="drop-chapter-hero-frame">
+        <CultiveraImageLink orderUrl={orderUrl} ariaName={strain.name} frameClass="drop-chapter-media-frame">
           <img
             class="drop-chapter-hero"
             src={urlFor( heroImage ).width( 1200 ).height( 900 ).format( "webp" ).url()}
@@ -69,24 +64,34 @@ const heroImage = strain.heroImage?.asset ? strain.heroImage : undefined;
           />
         </CultiveraImageLink>
       )}
+    </div>
+
+    <div class="drop-chapter-text">
       {strain.description && <div class="drop-chapter-copy"><PortableText value={strain.description} /></div>}
+      {coa && (
+        <a class="drop-coa-link" data-drop-coa={coa.sourceId} href={dropCoaHref( coa.sourceId )}>{COA_LINK_PREFIX} · {COA_STATUS_LABELS[coa.status]}</a>
+      )}
     </div>
   </div>
 
   {products.length > 0 && (
-    <div class="drop-chapter-order">
-      <ul class="drop-size-list" data-drop-products>
+    <table class="drop-packages" data-drop-products>
+      <thead>
+        <tr>
+          <th scope="col">Size</th>
+          <th scope="col">Weight</th>
+          <th scope="col" class="drop-packages-end">Availability</th>
+        </tr>
+      </thead>
+      <tbody>
         {products.map( product => (
-          <li class="drop-size-row" data-drop-product={product._id} data-available={product.available === true ? "true" : "false"}>
-            <span class="drop-size-name">{dropProductSizeLabel( product.name, strain.name )}</span>
-            {product.weight && <span class="drop-size-weight">{product.weight}</span>}
-            <span class="drop-size-state">{product.available === true ? "In stock" : "Sold out"}</span>
-          </li>
+          <tr class="drop-package-row" data-drop-product={product._id} data-available={product.available === true ? "true" : "false"}>
+            <td class="drop-package-name">{dropProductSizeLabel( product.name, strain.name )}</td>
+            <td class="drop-package-weight">{product.weight}</td>
+            <td class="drop-package-state drop-packages-end">{product.available === true ? "In stock" : "Sold out"}</td>
+          </tr>
         ) )}
-      </ul>
-      {orderUrl && !heroImage && (
-        <a class="cultivera-textlink" data-order-cultivera href={orderUrl} target="_blank" rel="noopener">{ORDER_ON_CULTIVERA_LABEL}<span aria-hidden="true"> ↗</span></a>
-      )}
-    </div>
+      </tbody>
+    </table>
   )}
 </section>
