@@ -207,6 +207,9 @@ const STRAIN_BASE_PATH = "/strains";
 const COA_BASE_PATH = "/coas";
 const PERCENT_UNIT = "%";
 const TOTAL_THC_SUFFIX = "Total THC";
+// The certificate carries the lab's full precision (e.g. "25.823"); the
+// buyer-facing summary shows one decimal.
+const THC_PERCENT_DECIMALS = 1;
 
 // The two ProductBadge `type` values a chapter's availability maps to:
 // "available" when at least one product is in stock, "soldOut" otherwise.
@@ -262,10 +265,31 @@ export function dropCoaManifest( coas: DropCoa[] ): string[] {
 }
 
 export function formatDropTotalThc( reading: DropCoaReading ): string {
+  // Round the percent to one decimal, nearest, so the summary never overstates
+  // potency relative to the COA; toFixed pads trailing zeros (18.977 -> "19.0").
+  // The value is a canonical decimal string (assertMeasurement), so Number() is
+  // finite. The exact lab value stays on data-drop-thc for any consumer that
+  // needs it. Non-percent units keep the lab value as written.
   const measurement = reading.unit === PERCENT_UNIT
-    ? `${reading.value}${PERCENT_UNIT}`
+    ? `${Number( reading.value ).toFixed( THC_PERCENT_DECIMALS )}${PERCENT_UNIT}`
     : `${reading.value} ${reading.unit}`;
   return `${measurement} ${TOTAL_THC_SUFFIX}`;
+}
+
+// A drop chapter groups every package size of one strain under a single header,
+// so a product name like "Glitter Bomb Eighth" restates the chapter title. The
+// compact size list shows only the distinguishing tail ("Eighth"): strip the
+// strain name when the SKU is prefixed with it, and fall back to the full name
+// when it is not, since a differently-named SKU still needs a label. Matching is
+// case-insensitive on the strain-name prefix only; the returned tail keeps its
+// original casing.
+export function dropProductSizeLabel( productName: string, strainName: string ): string {
+  const prefix = `${strainName} `;
+  if( productName.toLowerCase().startsWith( prefix.toLowerCase() ) ) {
+    const tail = productName.slice( prefix.length ).trim();
+    if( tail ) return tail;
+  }
+  return productName;
 }
 
 function coasByStrainUrl( coas: DropCoa[] ): Map<string, DropCoa> {

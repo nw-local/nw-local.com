@@ -2508,11 +2508,155 @@ footer {
   gap: 1.5rem;
 }
 
+/* The frame owns the rounding and clipping so the hero can be wrapped in an
+   anchor (the buy link, see CultiveraImageLink) without the corner radius or the
+   caption spilling out. It renders as a plain <div> when the strain has no
+   marketplace link. */
+.drop-chapter-hero-frame {
+  display: block;
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+a.drop-chapter-hero-frame {
+  text-decoration: none;
+  cursor: pointer;
+}
+
 .drop-chapter-hero {
+  display: block;
   width: 100%;
   aspect-ratio: 4 / 3;
   object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+a.drop-chapter-hero-frame:hover .drop-chapter-hero {
+  transform: scale(1.03);
+}
+
+/* --- Cultivera "photo is the buy link" (shared: drop hero + product card) --- */
+
+/* A quiet, always-visible cue that the photo is shoppable: no hover needed, so
+   it reads on touch devices too. rgba(17, 17, 17, …) is literal, not
+   var(--bg-rgb): the wash must stay dark under the print/light-theme palette,
+   which redefines --bg-rgb to white, the same reason .drop-card-scrim spells it
+   out. pointer-events stay off the chip so the whole frame is one click target.
+   Accent by default; a drop chapter overrides it to the chapter color below. */
+.cultivera-photo-cta {
+  position: absolute;
+  left: 0.75rem;
+  bottom: 0.75rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 4px;
+  background: rgba(17, 17, 17, 0.82);
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  pointer-events: none;
+}
+
+.drop-chapter-hero-frame .cultivera-photo-cta {
+  color: var(--drop-color);
+}
+
+a.drop-chapter-hero-frame:hover .cultivera-photo-cta,
+.card:hover .cultivera-photo-cta {
+  background: rgba(17, 17, 17, 0.95);
+}
+
+/* The product card image is the buy link too. .card-image already sets the
+   aspect ratio and clips; the frame just fills it and anchors the caption. */
+.card-image-frame {
+  display: block;
+  position: relative;
+  height: 100%;
+  text-decoration: none;
+}
+
+/* The products in a chapter are one strain in several package sizes, already
+   pictured by the chapter hero above, so they render as a compact size list
+   rather than reusing the image-heavy ProductCard: no repeated photo, no
+   per-size order button. The single buy link groups every size on Cultivera,
+   so one button serves the whole list. */
+.drop-chapter-order {
+  max-width: 32rem;
+}
+
+.drop-size-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--border);
   border-radius: 8px;
+  overflow: hidden;
+  background: var(--bg-surface);
+}
+
+.drop-size-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.85rem 1.1rem;
+}
+
+.drop-size-row + .drop-size-row {
+  border-top: 1px solid var(--border);
+}
+
+.drop-size-name {
+  flex: 1;
+  min-width: 0;
+  font-weight: 700;
+  color: var(--text-emphasis);
+}
+
+.drop-size-weight {
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.drop-size-state {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--drop-color);
+}
+
+/* A sold-out size stays legible but recedes: the whole row dims and its state
+   drops to the muted text color rather than the chapter's accent. */
+.drop-size-row[data-available="false"] {
+  opacity: 0.55;
+}
+
+.drop-size-row[data-available="false"] .drop-size-state {
+  color: var(--text-secondary);
+}
+
+/* The buy affordance normally lives on the photo; this understated text link is
+   the fallback for a product or strain with no photo, so the buy path survives
+   without reintroducing a heavy filled button. Accent by default; a drop chapter
+   overrides it to the chapter color below. */
+.cultivera-textlink {
+  display: inline-block;
+  margin-top: 1rem;
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+}
+
+.cultivera-textlink:hover {
+  text-decoration: underline;
+}
+
+.drop-chapter-order .cultivera-textlink {
+  color: var(--drop-color);
 }
 
 .drop-unmatched {

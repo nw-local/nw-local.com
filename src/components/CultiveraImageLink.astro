@@ -1,0 +1,29 @@
+---
+import { ORDER_ON_CULTIVERA_LABEL } from "../lib/cultivera";
+
+// The shared mechanic for "this photo is the buy link": wrap an image in an
+// anchor to the Cultivera marketplace with an always-visible caption chip and
+// an accessible name. Callers pass the <img> as the default slot, so each
+// context keeps its own image sizing and src building. The frame is an <a> only
+// when there is an orderUrl; otherwise it is a plain <div> so the surrounding
+// markup and layout stay identical. The caption color and frame shape are left
+// to each caller's CSS (see .drop-chapter-hero-frame vs .card-image-frame).
+interface Props {
+  orderUrl?: string;
+  // Used only for the anchor's aria-label, e.g. "Glitter Bomb: Order on Cultivera",
+  // so a screen reader announces a buy link rather than the photo's alt text.
+  ariaName: string;
+  frameClass: string;
+}
+
+const { orderUrl, ariaName, frameClass } = Astro.props;
+const Frame = orderUrl ? "a" : "div";
+const frameProps = orderUrl
+  ? { href: orderUrl, target: "_blank", rel: "noopener", "data-order-cultivera": true, "aria-label": `${ariaName}: ${ORDER_ON_CULTIVERA_LABEL}` }
+  : {};
+---
+
+<Frame class={frameClass} {...frameProps}>
+  <slot />
+  {orderUrl && <span class="cultivera-photo-cta">{ORDER_ON_CULTIVERA_LABEL}<span aria-hidden="true"> ↗</span></span>}
+</Frame>

@@ -1,10 +1,10 @@
 ---
+import CultiveraImageLink from "./CultiveraImageLink.astro";
 import PortableText from "./PortableText.astro";
 import ProductBadge from "./ProductBadge.astro";
-import ProductCard from "./ProductCard.astro";
 import type { DropChapter } from "../lib/drops";
-import { DROP_CHAPTER_STATE_BADGE_TYPES, dropCoaHref, formatDropTotalThc } from "../lib/drops";
-import { cultiveraMarketUrlFor } from "../lib/cultivera";
+import { DROP_CHAPTER_STATE_BADGE_TYPES, dropCoaHref, dropProductSizeLabel, formatDropTotalThc } from "../lib/drops";
+import { ORDER_ON_CULTIVERA_LABEL, cultiveraMarketUrlFor } from "../lib/cultivera";
 import { urlFor } from "../lib/image";
 import type { CoaStatus } from "../lib/coa.ts";
 
@@ -19,11 +19,17 @@ const COA_STATUS_LABELS: Record<CoaStatus, string> = { pass: "Pass", fail: "Fail
 const { chapter, chapterCount } = Astro.props;
 const { strain, products, available, coa } = chapter;
 // The buy link is per strain — one marketplace product groups every package
-// size — so it is resolved once here and handed to each product card.
+// size — so it is resolved once here for the whole chapter.
 const orderUrl = cultiveraMarketUrlFor( strain.cultiveraMarketProductId );
 const stateType = available ? DROP_CHAPTER_STATE_BADGE_TYPES.available : DROP_CHAPTER_STATE_BADGE_TYPES.soldOut;
 const pad = ( value: number ) => String( value ).padStart( 2, "0" );
 const strainHref = strain.slug ? `/strains/${strain.slug.current}` : undefined;
+
+// The chapter hero doubles as the buy link (see CultiveraImageLink): clicking
+// the photo opens the Cultivera marketplace. A subtle text link below the size
+// list carries the same URL when the strain has no photo, so the buy path never
+// depends on an image being present.
+const heroImage = strain.heroImage?.asset ? strain.heroImage : undefined;
 ---
 
 <section class="drop-chapter fade-in" id={chapter.anchorId} data-drop-chapter={chapter.anchorId} style={`--drop-color: ${chapter.color};`}>
@@ -51,23 +57,36 @@ const strainHref = strain.slug ? `/strains/${strain.slug.current}` : undefined;
     </aside>
 
     <div class="drop-chapter-editorial">
-      {strain.heroImage?.asset && (
-        <img
-          class="drop-chapter-hero"
-          src={urlFor( strain.heroImage ).width( 1200 ).height( 900 ).format( "webp" ).url()}
-          alt={strain.heroImage.alt ?? strain.name}
-          width="1200"
-          height="900"
-          loading="lazy"
-        />
+      {heroImage && (
+        <CultiveraImageLink orderUrl={orderUrl} ariaName={strain.name} frameClass="drop-chapter-hero-frame">
+          <img
+            class="drop-chapter-hero"
+            src={urlFor( heroImage ).width( 1200 ).height( 900 ).format( "webp" ).url()}
+            alt={heroImage.alt ?? strain.name}
+            width="1200"
+            height="900"
+            loading="lazy"
+          />
+        </CultiveraImageLink>
       )}
       {strain.description && <div class="drop-chapter-copy"><PortableText value={strain.description} /></div>}
     </div>
   </div>
 
-  <div class="card-grid drop-chapter-products">
-    {products.map( product => (
-      <ProductCard {...product} orderUrl={orderUrl} />
-    ) )}
-  </div>
+  {products.length > 0 && (
+    <div class="drop-chapter-order">
+      <ul class="drop-size-list" data-drop-products>
+        {products.map( product => (
+          <li class="drop-size-row" data-drop-product={product._id} data-available={product.available === true ? "true" : "false"}>
+            <span class="drop-size-name">{dropProductSizeLabel( product.name, strain.name )}</span>
+            {product.weight && <span class="drop-size-weight">{product.weight}</span>}
+            <span class="drop-size-state">{product.available === true ? "In stock" : "Sold out"}</span>
+          </li>
+        ) )}
+      </ul>
+      {orderUrl && !heroImage && (
+        <a class="cultivera-textlink" data-order-cultivera href={orderUrl} target="_blank" rel="noopener">{ORDER_ON_CULTIVERA_LABEL}<span aria-hidden="true"> ↗</span></a>
+      )}
+    </div>
+  )}
 </section>
