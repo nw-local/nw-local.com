@@ -62,7 +62,7 @@ expected_footer_groups = [
             ('"/blog"', "Blog"),
             ('"/glossary"', "Glossary"),
             ('"/terpenes"', "Terpenes"),
-            ('"/tools/vpd-calculator"', "Calculator"),
+            ('"/tools"', "Tools"),
         ],
     ),
     (

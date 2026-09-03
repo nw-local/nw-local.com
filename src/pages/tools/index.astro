@@ -1,0 +1,84 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Hero from "../../components/Hero.astro";
+
+// One entry per tool. Adding a tool is a single line here plus its page.
+const tools = [
+  {
+    href: "/tools/vpd-calculator/",
+    title: "VPD and Dew Point Calculator",
+    description:
+      "Leaf VPD from a target, night dew point setpoints from a margin, and the dew point of a room you already have. Fahrenheit in, both units out, computed in your browser.",
+  },
+];
+---
+
+<Layout
+  title="Tools"
+  description="Grower tools from Northwest Local Cannabis, starting with an in-browser VPD and dew point calculator."
+>
+  <Hero title="Tools" />
+
+  <div style="max-width:var(--content-width);">
+    <p class="tools-intro">
+      Small calculators and references for dialing in a room. More to come.
+    </p>
+
+    <ul class="tools-list">
+      {tools.map( tool => (
+        <li>
+          <a class="tool-card" href={tool.href}>
+            <span class="tool-card-title">{tool.title}</span>
+            <span class="tool-card-description">{tool.description}</span>
+          </a>
+        </li>
+      ) )}
+    </ul>
+  </div>
+</Layout>
+
+<style>
+  .tools-intro {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+  }
+
+  .tools-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 1rem;
+  }
+
+  .tool-card {
+    display: block;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-decoration: none;
+    transition: border-color 0.2s ease;
+  }
+
+  .tool-card:hover,
+  .tool-card:focus-visible {
+    border-color: var(--accent);
+    outline: none;
+  }
+
+  .tool-card-title {
+    display: block;
+    color: var(--accent);
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+  }
+
+  .tool-card-description {
+    display: block;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+</style>

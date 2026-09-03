@@ -14,15 +14,18 @@ import VpdCalculator from "../../components/VpdCalculator.astro";
     <p class="calc-intro">
       Every figure in a day or night setpoint table comes from one equation and two choices.
       Enter your own numbers to build the same tables for your room. For why the day is steered by
-      VPD and the night by dew point, read
+      <a href="/glossary/vapor-pressure-deficit/">VPD</a> and the night by
+      <a href="/glossary/dew-point/">dew point</a>, read
       <a href="/blog/vpd-by-day-dew-point-by-night/">VPD by day, dew point by night</a>.
     </p>
 
     <VpdCalculator />
 
     <p class="calc-footnote">
-      The math is the Magnus equation for saturation vapor pressure, run entirely in your browser.
-      Temperatures are entered in Fahrenheit and shown in both units. Nothing you type leaves the page.
+      The math is the <a href="/glossary/magnus-equation/">Magnus equation</a> for
+      <a href="/glossary/saturation-vapor-pressure/">saturation vapor pressure</a>, run entirely in
+      your browser. Temperatures are entered in Fahrenheit and shown in both units. Nothing you type
+      leaves the page.
     </p>
   </div>
 </Layout>
@@ -43,5 +46,9 @@ import VpdCalculator from "../../components/VpdCalculator.astro";
     font-size: 0.9rem;
     line-height: 1.6;
     margin-top: 1.5rem;
+  }
+
+  .calc-footnote a {
+    color: var(--accent);
   }
 </style>
