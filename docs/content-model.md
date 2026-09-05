@@ -18,6 +18,7 @@ All content types are defined in `studio/schemaTypes/`. Sanity is the single sou
 | `terpene` | Terpene reference documents — aroma, effects, foundIn, hero image |
 | `glossaryTerm` | Glossary definitions, backlinked from the content that mentions them |
 | `coa` | Machine-owned public laboratory-result projection and paired certificate PDF |
+| `pesticideDisclosure` | Machine-owned public per-lot pesticide application record |
 
 `blockContent` is also registered, but it is an object type used for rich text bodies, not a document. `tableBlock` is likewise an object type, available inside any `blockContent` body.
 
@@ -76,6 +77,12 @@ A `drop` document's `coas` field is an explicit array of `coa` references, one p
 `coa` documents are written by Northwest Local OPS, not authored in Studio. Their stable identity is `coa.<sourceId>`, where `sourceId` is the immutable OPS laboratory-result UUID, and their required `publishedAt` records the publication act rather than a laboratory test time. The site fetch boundary audits the complete stored object at every public contract level before returning the separate buyer-safe projection, so unknown destination fields, duplicate routes, malformed timestamps, or non-deterministic IDs fail the build instead of producing a plausible partial certificate.
 
 The public route is `/coas/<sourceId>/`. It renders the validated direct fetch, ordered panels and metrics, explicit metric statuses, publication time, and the Sanity-hosted certificate link. Raw WCIA payloads, operator provenance, storage keys, and private URLs are never part of the public `Coa` interface or page.
+
+### Public pesticide disclosures are a second machine-owned contract
+
+`pesticideDisclosure` documents are written by Northwest Local OPS (SP2), not authored in Studio, mirroring `coa`. They key on `lotCultiveraId` — the number printed on the jar — rather than an internal id, because that is the only identifier a buyer holding the physical package can read off it. The public route is `/pesticides/<lotCultiveraId>/`, alongside a browsable `/pesticides` index with client-side search.
+
+Like `coa`, the type is registered but intentionally absent from the Studio sidebar in `structure.ts` — it is machine-owned, and `sanity.config.ts` auto-appends any unlisted document type under its raw type name rather than leaving it unreachable. And like the glossary and drop checks above, its content can change through a Sanity publish with no pull request, so `check-pesticide-disclosure-build.py` runs against the built `dist/` and gates `deploy.yml` before GitHub Pages receives the artifact.
 
 ## Gotchas
 
