@@ -3,7 +3,7 @@ export
 
 .DEFAULT_GOAL := help
 
-.PHONY: help install dev build preview studio deploy-studio upload-image prep-images render-figures check-nightly check-analytics check-robots check-content-style check-email-routing test-check-email-routing check-anchors test-psychrometrics check-drop-lookup check-glossary check-glossary-browser check-person-jsonld check-portable-text-headings check-coa-contract test-coa check-coa-build test-check-coa-build check-glossary-build test-check-glossary-build check-navigation test-drops check-drop-build test-check-drop-build check sanity-history lint format upgrade upgrade-latest
+.PHONY: help install dev build preview studio deploy-studio upload-image prep-images render-figures check-nightly check-analytics check-robots check-content-style check-email-routing test-check-email-routing check-anchors test-psychrometrics check-drop-lookup check-glossary check-glossary-browser check-person-jsonld check-portable-text-headings check-coa-contract test-coa check-coa-build test-check-coa-build check-glossary-build test-check-glossary-build check-navigation test-drops check-drop-build test-check-drop-build check-pesticide-disclosure-contract test-pesticide-disclosure check-pesticide-disclosure-build test-check-pesticide-disclosure-build check sanity-history lint format upgrade upgrade-latest
 
 help: ## Show this help message with all available targets
 	@grep -hE '^[a-zA-Z_-]+:.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
@@ -111,7 +111,19 @@ test-check-glossary-build: build ## Regression-test malformed glossary build fix
 check-navigation: ## Verify the top and footer navigation structure
 	@python3 scripts/check-navigation.py
 
-check: lint check-drop-lookup check-glossary check-glossary-browser check-person-jsonld check-portable-text-headings check-coa-contract test-coa test-drops test-psychrometrics test-psychrometrics-ts test-check-email-routing test-check-coa-build test-check-drop-build build check-analytics check-robots check-content-style check-email-routing check-anchors check-coa-build check-drop-build check-glossary-build test-check-glossary-build check-navigation ## Run the local repository check aggregate
+check-pesticide-disclosure-contract: ## Verify the public pesticide-disclosure runtime contract
+	@node scripts/check-pesticide-disclosure-contract.ts
+
+test-pesticide-disclosure: ## Test pesticide-disclosure validation, routing, search, and rendering
+	@yarn vitest run src/lib/pesticide-disclosure.test.ts src/lib/pesticide-search.test.ts src/components/PesticideDisclosureBody.test.ts
+
+check-pesticide-disclosure-build: build ## Verify every built public pesticide-disclosure page
+	@python3 scripts/check-pesticide-disclosure-build.py dist
+
+test-check-pesticide-disclosure-build: ## Regression-test malformed pesticide-disclosure page fixtures
+	@python3 scripts/test-check-pesticide-disclosure-build.py
+
+check: lint check-drop-lookup check-glossary check-glossary-browser check-person-jsonld check-portable-text-headings check-coa-contract test-coa test-drops test-psychrometrics test-psychrometrics-ts test-check-email-routing test-check-coa-build test-check-drop-build check-pesticide-disclosure-contract test-pesticide-disclosure test-check-pesticide-disclosure-build build check-analytics check-robots check-content-style check-email-routing check-anchors check-coa-build check-drop-build check-pesticide-disclosure-build check-glossary-build test-check-glossary-build check-navigation ## Run the local repository check aggregate
 	@cd studio && yarn lint && yarn typecheck && yarn format:check
 	@yarn astro check
 

@@ -136,6 +136,10 @@ jobs:
         run: python3 scripts/test-check-drop-build.py
       - name: Check drop build contracts
         run: ./scripts/check-drop-build.py dist
+      - name: Regression-test malformed pesticide-disclosure build fixtures
+        run: python3 scripts/test-check-pesticide-disclosure-build.py
+      - name: Check pesticide disclosure build contracts
+        run: ./scripts/check-pesticide-disclosure-build.py dist
 
   validate-links:
     name: Check links

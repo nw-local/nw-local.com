@@ -84,6 +84,13 @@ jobs:
       - name: Check drop build contracts
         run: ./scripts/check-drop-build.py dist
 
+      # A pesticide disclosure is published to Sanity by nw-local-ops with no
+      # pull request, so its per-lot pages can change without CI. Fail the build
+      # before GitHub Pages receives the artifact, keeping the previous
+      # deployment live.
+      - name: Check pesticide disclosure build contracts
+        run: ./scripts/check-pesticide-disclosure-build.py dist
+
   deploy:
     needs: build
     runs-on: ubuntu-latest

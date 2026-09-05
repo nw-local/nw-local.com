@@ -1,0 +1,28 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import PesticideDisclosureBody from "../../components/PesticideDisclosureBody.astro";
+import {
+  getPesticideDisclosureByCultiveraId,
+  getPesticideDisclosures,
+  preparePesticideDisclosureStaticPaths,
+  resolvePesticideDisclosureRouteDocument,
+} from "../../lib/sanity";
+
+export async function getStaticPaths() {
+  return preparePesticideDisclosureStaticPaths( await getPesticideDisclosures() );
+}
+
+const { cultiveraId } = Astro.params;
+if( !cultiveraId ) throw new Error( "Pesticide disclosure route requires a Cultivera id." );
+
+const directlyFetched = await getPesticideDisclosureByCultiveraId( cultiveraId );
+if( !directlyFetched ) return Astro.redirect( "/pesticides" );
+const disclosure = resolvePesticideDisclosureRouteDocument( cultiveraId, directlyFetched );
+
+const pageTitle = `Pesticide disclosure: lot ${disclosure.lotCultiveraId}`;
+const description = `Pesticides applied to lot ${disclosure.lotCultiveraId} (${disclosure.strain}) from Northwest Local Cannabis.`;
+---
+
+<Layout title={pageTitle} description={description}>
+  <PesticideDisclosureBody {disclosure} />
+</Layout>

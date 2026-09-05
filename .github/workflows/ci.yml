@@ -21,7 +21,7 @@ jobs:
           cache: yarn
       - run: yarn install --frozen-lockfile
       - name: Test public COA and drop contracts and Astro rendering
-        run: make check-coa-contract test-coa test-drops test-check-drop-build
+        run: make check-coa-contract test-coa test-drops test-check-drop-build check-pesticide-disclosure-contract test-pesticide-disclosure test-check-pesticide-disclosure-build
         env:
           SANITY_PROJECT_ID: ${{ secrets.SANITY_PROJECT_ID }}
           SANITY_DATASET: ${{ secrets.SANITY_DATASET }}

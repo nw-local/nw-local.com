@@ -5,6 +5,7 @@ import { coaType } from './coa'
 import { dropType } from './drop'
 import { glossaryTermType } from './glossaryTerm'
 import { pageType } from './page'
+import { pesticideDisclosureType } from './pesticideDisclosure'
 import { productType } from './product'
 import { retailerPageType } from './retailerPage'
 import { retailerType } from './retailer'
@@ -21,6 +22,7 @@ export const schemaTypes = [
   dropType,
   glossaryTermType,
   pageType,
+  pesticideDisclosureType,
   productType,
   retailerPageType,
   retailerType,
