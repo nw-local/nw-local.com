@@ -1,0 +1,86 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Hero from "../../components/Hero.astro";
+import { getPesticideDisclosures } from "../../lib/sanity";
+
+const PAGE_TITLE = "Pesticide disclosures";
+const PAGE_SUBTITLE =
+  "Look up the pesticides applied to any Northwest Local Cannabis lot by its Cultivera inventory number.";
+const EMPTY_STATE_MESSAGE = "No lots match that search. Try another Cultivera number, strain, or grade.";
+
+const disclosures = ( await getPesticideDisclosures() )
+  .slice()
+  .sort( ( first, second ) => first.lotCultiveraId.localeCompare( second.lotCultiveraId ) );
+---
+
+<Layout
+  title={PAGE_TITLE}
+  description={PAGE_SUBTITLE}
+>
+  <Hero title={PAGE_TITLE} subtitle={PAGE_SUBTITLE} />
+
+  <section class="glossary-search" data-disclosure-search>
+    <div
+      class="glossary-search-controls"
+      aria-label="Pesticide disclosure search"
+      data-disclosure-controls
+      hidden
+    >
+      <div class="glossary-search-row">
+        <div class="glossary-search-field">
+          <label for="disclosure-query">Search by lot number, strain, or grade</label>
+          <input
+            id="disclosure-query"
+            type="search"
+            placeholder="Try 2043117 or Blue Dream"
+            autocomplete="off"
+            aria-controls="disclosure-directory"
+            data-disclosure-query
+          />
+        </div>
+        <p class="glossary-result-count" aria-live="polite" data-disclosure-result-count>
+          {disclosures.length} {disclosures.length === 1 ? "lot" : "lots"}
+        </p>
+      </div>
+    </div>
+
+    <section class="glossary-directory-section">
+      <div class="glossary-directory-heading">
+        <p class="glossary-directory-kicker">Public records</p>
+        <h2>All disclosed lots</h2>
+      </div>
+
+      <div class="glossary-directory-columns" aria-hidden="true">
+        <span>Lot (Cultivera no.)</span>
+        <span>Strain</span>
+        <span>Grade</span>
+      </div>
+
+      <dl class="glossary-index" id="disclosure-directory">
+        {disclosures.map( disclosure => (
+          <div
+            class="glossary-index-entry"
+            data-disclosure-row
+            data-disclosure-row-id={disclosure.lotCultiveraId}
+            data-disclosure-row-strain={disclosure.strain}
+            data-disclosure-row-grade={disclosure.grade}
+          >
+            <dt><a href={`/pesticides/${disclosure.lotCultiveraId}/`}>{disclosure.lotCultiveraId}</a></dt>
+            <dd class="glossary-index-definition">{disclosure.strain}</dd>
+            <dd class="glossary-index-category">{disclosure.grade ?? "—"}</dd>
+          </div>
+        ) )}
+      </dl>
+
+      <div class="glossary-empty" data-disclosure-empty hidden>
+        <p>{EMPTY_STATE_MESSAGE}</p>
+      </div>
+    </section>
+  </section>
+</Layout>
+
+<script>
+  import { initializePesticideBrowser } from "../../lib/pesticide-browser";
+
+  initializePesticideBrowser();
+</script>
