@@ -1,0 +1,80 @@
+---
+import type { PesticideDisclosure } from "../lib/pesticide-disclosure.ts";
+
+interface Props {
+  disclosure: PesticideDisclosure
+}
+
+const KICKER = "Northwest Local Cannabis";
+const PAGE_TITLE = "Pesticide disclosure";
+const NONE_APPLIED_STATEMENT = "No pesticides were applied to this lot.";
+const APPLICATIONS_HEADING = "Pesticides applied";
+const PRODUCT_LABEL = "Product";
+const ACTIVE_INGREDIENT_LABEL = "Active ingredient";
+const EPA_LABEL = "EPA registration no.";
+const APPLIED_ON_LABEL = "Date applied";
+const TARGET_PEST_LABEL = "Target pest";
+const FOOTER_NOTE =
+  "Washington rules (WAC 314-55-105) require producers to disclose the pesticides applied to cannabis. This lists what was applied to the lot identified by its Cultivera inventory number.";
+
+const { disclosure }: Props = Astro.props;
+const appliedSummary = disclosure.noneApplied
+  ? NONE_APPLIED_STATEMENT
+  : `${disclosure.applications.length} pesticide application${disclosure.applications.length === 1 ? "" : "s"} disclosed for this lot.`;
+---
+
+<article
+  class="disclosure"
+  aria-labelledby="disclosure-title"
+  data-disclosure-lot-cultivera-id={disclosure.lotCultiveraId}
+  data-disclosure-strain={disclosure.strain}
+  data-disclosure-grade={disclosure.grade}
+>
+  <header class="disclosure-header">
+    <p class="disclosure-kicker">{KICKER}</p>
+    <h1 id="disclosure-title">{PAGE_TITLE}</h1>
+    <dl class="disclosure-identifiers">
+      <div>
+        <dt>Strain</dt>
+        <dd>{disclosure.grade ? `${disclosure.strain} · ${disclosure.grade}` : disclosure.strain}</dd>
+      </div>
+      <div>
+        <dt>Lot (Cultivera no.)</dt>
+        <dd>{disclosure.lotCultiveraId}</dd>
+      </div>
+    </dl>
+  </header>
+
+  <p class="disclosure-summary" data-disclosure-none-applied={String( disclosure.noneApplied )}>
+    {appliedSummary}
+  </p>
+
+  {!disclosure.noneApplied && (
+    <section class="disclosure-applications-section" aria-labelledby="disclosure-applications-heading">
+      <h2 id="disclosure-applications-heading">{APPLICATIONS_HEADING}</h2>
+      <ol class="disclosure-applications">
+        {disclosure.applications.map( application => (
+          <li>
+            <dl
+              class="disclosure-application"
+              data-disclosure-application
+              data-disclosure-application-product={application.productName}
+              data-disclosure-application-active-ingredient={application.activeIngredient}
+              data-disclosure-application-epa={application.epaRegistrationNumber}
+              data-disclosure-application-applied-on={application.appliedOn}
+              data-disclosure-application-target-pest={application.targetPest}
+            >
+              <div><dt>{PRODUCT_LABEL}</dt><dd>{application.productName}</dd></div>
+              <div><dt>{ACTIVE_INGREDIENT_LABEL}</dt><dd>{application.activeIngredient}</dd></div>
+              <div><dt>{EPA_LABEL}</dt><dd>{application.epaRegistrationNumber}</dd></div>
+              <div><dt>{APPLIED_ON_LABEL}</dt><dd><time datetime={application.appliedOn}>{application.appliedOn}</time></dd></div>
+              <div><dt>{TARGET_PEST_LABEL}</dt><dd>{application.targetPest}</dd></div>
+            </dl>
+          </li>
+        ) )}
+      </ol>
+    </section>
+  )}
+
+  <p class="disclosure-footnote">{FOOTER_NOTE}</p>
+</article>

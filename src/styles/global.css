@@ -921,6 +921,153 @@ footer {
   }
 }
 
+/* --- Pesticide disclosure ---
+ *
+ * A mirror of the COA register: a ruled register of identifiers and, where
+ * pesticides were applied, one register per application. The one thing this
+ * page needs to say loudly is whether anything was applied at all, so the
+ * summary line carries an accent rule rather than sitting as plain text. */
+.disclosure {
+  max-width: 900px;
+  margin: 1.5rem auto 3rem;
+}
+
+.disclosure-header {
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid var(--text-primary);
+}
+
+.disclosure-kicker,
+.disclosure-applications-section > h2,
+.disclosure-identifiers dt,
+.disclosure-application dt {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.disclosure-kicker {
+  margin-bottom: 0.35rem;
+  color: var(--accent);
+}
+
+.disclosure-header h1 {
+  --heading-base-size: 2.4rem;
+  margin: 0 0 1rem;
+  text-transform: uppercase;
+}
+
+.disclosure-identifiers {
+  margin: 0;
+}
+
+.disclosure-identifiers > div {
+  display: grid;
+  grid-template-columns: minmax(8rem, 0.9fr) minmax(0, 1.1fr);
+  gap: 1rem;
+  padding: 0.65rem 0;
+  border-top: 1px solid var(--border);
+}
+
+.disclosure-identifiers > div:last-child {
+  border-bottom: 1px solid var(--border);
+}
+
+.disclosure-identifiers dt {
+  color: var(--text-secondary);
+}
+
+.disclosure-identifiers dd {
+  margin: 0;
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+
+.disclosure-summary {
+  margin: 1.75rem 0;
+  padding: 1rem 1.25rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--border);
+  color: var(--text-primary);
+  font-size: 1rem;
+}
+
+.disclosure-summary[data-disclosure-none-applied="true"] {
+  border-left-color: var(--accent);
+  color: var(--text-emphasis);
+  font-weight: 700;
+}
+
+.disclosure-applications-section {
+  padding: 1.75rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.disclosure-applications-section > h2 {
+  --heading-base-size: 0.88rem;
+  margin-bottom: 1rem;
+  color: var(--text-emphasis);
+  transform: none;
+  -webkit-text-stroke: 0;
+}
+
+.disclosure-applications {
+  display: grid;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.disclosure-application {
+  margin: 0;
+  padding: 0 1rem;
+  border: 1px solid var(--border);
+}
+
+.disclosure-application > div {
+  display: grid;
+  grid-template-columns: minmax(8rem, 0.9fr) minmax(0, 1.1fr);
+  gap: 1rem;
+  padding: 0.65rem 0;
+  border-top: 1px solid var(--border);
+}
+
+.disclosure-application > div:first-child {
+  border-top: 0;
+}
+
+.disclosure-application dt {
+  color: var(--text-secondary);
+}
+
+.disclosure-application dd {
+  margin: 0;
+  color: var(--text-primary);
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.disclosure-footnote {
+  margin: 1.75rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 600px) {
+  .disclosure-identifiers > div,
+  .disclosure-application > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.25rem;
+  }
+
+  .disclosure-application dd {
+    text-align: left;
+  }
+}
+
 @media (min-width: 769px) {
   .detail-grid {
     grid-template-columns: 1fr 1fr;
