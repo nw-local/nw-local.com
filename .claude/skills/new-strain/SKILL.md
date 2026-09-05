@@ -36,7 +36,7 @@ Add a new cannabis strain to the Northwest Local Cannabis catalog via Sanity MCP
 
 4. **Present a readable markdown preview** — before any Sanity mutations, show the user a formatted preview:
    - Full description text rendered as markdown with inline links visible
-   - A summary table of all fields (effects, terpenes, THC/CBD, featured, available, etc.)
+   - A summary table of all fields (effects, terpenes, THC/CBD, available, etc.)
    - Image file names and proposed alt text
    - List of all links with validation status (✓ / ✗)
    - Wait for explicit user approval before proceeding
@@ -70,7 +70,7 @@ Add a new cannabis strain to the Northwest Local Cannabis catalog via Sanity MCP
    - Attach uploaded image asset references to `heroImage` and `gallery` fields
    - Create as draft first
 
-8. **Ask if featured** — before publishing, ask the user if this strain should be marked as **featured** (appears prominently on the site). Default to `false` if the user declines.
+8. **Homepage placement is automatic** — the homepage shows the six newest strains by creation date. Do not ask about or write a `featured` field.
 
 9. **Show final preview** — render the draft content as readable markdown one more time for confirmation before publishing
 

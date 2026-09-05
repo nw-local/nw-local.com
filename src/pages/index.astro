@@ -11,6 +11,8 @@ import { getSiteSettings, getStrains, getPage, getBlogPosts, getDrops } from "..
 import { compareDropStrength } from "../lib/drops";
 import type { DropStatus } from "../lib/sanity";
 
+const LATEST_STRAIN_COUNT = 6;
+
 // The homepage blog section runs the newest posts as full-width FeaturedPost
 // lockups, then the next few as ordinary cards. Both counts are ceilings, not
 // quotas: with fewer posts published the section simply renders what exists, so
@@ -21,7 +23,8 @@ const CARD_POST_COUNT = 2;
 const settings = await getSiteSettings();
 const page = await getPage( "home" );
 const allStrains = await getStrains() ?? [];
-const featuredStrains = allStrains.filter( strain => strain.featured );
+// getStrains() already orders by creation date, newest first.
+const latestStrains = allStrains.slice( 0, LATEST_STRAIN_COUNT );
 // getBlogPosts() already orders by publishedAt desc.
 const recentPosts = await getBlogPosts() ?? [];
 const featuredPosts = recentPosts.slice( 0, FEATURED_POST_COUNT );
@@ -81,14 +84,17 @@ const DROP_SECTION_HEADINGS: Record<DropStatus, string> = {
     </section>
   )}
 
-  {featuredStrains.length > 0 && (
+  {latestStrains.length > 0 && (
     <section class="fade-in" style="margin-top:3rem;">
-      <SectionHeading title="Featured Strains" />
+      <SectionHeading title="Latest Strains" />
       <div class="card-grid">
-        {featuredStrains.map( strain => (
+        {latestStrains.map( strain => (
           <StrainCard {...strain} />
         ) )}
       </div>
+      <p style="margin-top:1.5rem;text-align:center;">
+        <a href="/strains">See all strains <span aria-hidden="true">&rarr;</span></a>
+      </p>
     </section>
   )}
 

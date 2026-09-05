@@ -125,6 +125,8 @@ The age-gate overlay (`src/components/AgeGate.astro`) is client-side and uses `l
 
 Twelve document types live in `studio/schemaTypes/`: `strain`, `product`, `drop`, `blogPost`, `author`, `retailer`, `page`, `siteSettings`, `retailerPage`, `terpene`, `glossaryTerm`, and machine-owned `coa` publications. Detail pages are statically generated via `getStaticPaths()`. Two further entries there are object types rather than documents: `blockContent`, the shared rich-text body, and `tableBlock`, a reference table usable inside it.
 
+The homepage automatically shows the six newest strains by creation date, with a link to the full strain index. There is no featured toggle to maintain.
+
 Full table, plus the gotchas worth knowing before you add content or write against the schema: [docs/content-model.md](docs/content-model.md).
 
 ---
