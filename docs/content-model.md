@@ -21,6 +21,12 @@ All content types are defined in `studio/schemaTypes/`. Sanity is the single sou
 
 `blockContent` is also registered, but it is an object type used for rich text bodies, not a document. `tableBlock` is likewise an object type, available inside any `blockContent` body.
 
+## Homepage strain selection
+
+The homepage’s “Latest Strains” section shows up to six published strains, newest first by Sanity `_createdAt`, with a “See all strains” link to `/strains`. Editing an existing strain does not move it to the front. With fewer than six strains, all are shown; with none, the section is omitted.
+
+Strains have no editor-controlled `featured` field. Legacy values in existing documents are ignored by the site.
+
 ## Block content
 
 `blockContent` is the shared rich-text array behind every body field. Beyond ordinary blocks it accepts:

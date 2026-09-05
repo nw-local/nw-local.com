@@ -22,13 +22,13 @@ Update an existing cannabis strain in the Northwest Local Cannabis catalog via S
 
 1. **Select strain:**
    - If a name was provided, query Sanity for that strain by name
-   - If no name, query all strains: `*[_type == "strain"] | order(name asc){_id, name, strainType, featured, available}` and present the list
+   - If no name, query all strains: `*[_type == "strain"] | order(name asc){_id, name, strainType, available}` and present the list
    - Fetch the full strain document once selected
 
 2. **Show current state** — render a readable summary:
    - Name, strain type, THC/CBD ranges
    - Effects and terpenes
-   - Featured and available status
+   - Available status
    - Hero image: show the Sanity CDN URL as a thumbnail link
    - Gallery: count of images with thumbnail URLs
    - Description: first ~150 characters as a preview
@@ -76,7 +76,7 @@ Update an existing cannabis strain in the Northwest Local Cannabis catalog via S
      - `effects` (array of strings)
      - `terpenes` (array of strings)
      - `description` (block content)
-     - `featured`, `available`
+     - `available`
      - `nextHarvestDate`
    - Ask which fields to change
    - For description changes, follow the same writing guidelines as `/new-strain`: original voice, inline links, Learn More section
@@ -91,7 +91,7 @@ Update an existing cannabis strain in the Northwest Local Cannabis catalog via S
    - **Verify by grepping built `dist/` HTML for the old name, not by trusting a GROQ result.** The build flattens every field onto one surface; a projection that looks exhaustive routinely misses sibling fields like `alt` and `caption`
    - The slug change 404s the old URL. Offer a `redirects` entry in `astro.config.mjs`, and **publish the Sanity rename before that PR merges** — the reverse order breaks both URLs. See the redirect invariant in `CLAUDE.md`
 
-8. **Ask if featured** — show current featured status and ask if it should be changed. Default to current value if the user declines.
+8. **Homepage placement is automatic** — the homepage shows the six newest strains by creation date. Editing a strain does not change its position. Do not ask about or write a `featured` field.
 
 9. **Preview and publish:**
    - Patch the strain document as a draft using `patch_document_from_json`

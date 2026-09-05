@@ -122,12 +122,6 @@ export const strainType = defineType({
       type: 'date',
     }),
     defineField({
-      name: 'featured',
-      title: 'Featured',
-      type: 'boolean',
-      initialValue: false,
-    }),
-    defineField({
       name: 'available',
       title: 'Available',
       type: 'boolean',

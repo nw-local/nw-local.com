@@ -155,7 +155,6 @@ export interface StrainSummary {
   cbdRange?: string;
   nextHarvestDate?: string;
   heroImage?: SanityImage;
-  featured?: boolean;
   available?: boolean;
 }
 
@@ -173,7 +172,7 @@ export async function getStrains() {
       _id, _createdAt, name, slug, strainType, lineage, effects, terpenes,
       thcRange, cbdRange, nextHarvestDate,
       heroImage { asset->, alt, crop, hotspot },
-      featured, available
+      available
     }`,
   );
 }
@@ -186,7 +185,7 @@ export async function getStrain( slug: string ) {
       effects, terpenes, thcRange, cbdRange, nextHarvestDate,
       heroImage { asset->, alt, crop, hotspot },
       gallery[] { asset->, alt, crop, hotspot },
-      featured, available
+      available
     }`,
     { slug },
   );
