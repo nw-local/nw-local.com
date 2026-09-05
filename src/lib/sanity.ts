@@ -5,6 +5,12 @@ import {
   type Coa,
   type CoaDestinationFetcher,
 } from "./coa.ts";
+import {
+  fetchPesticideDisclosureByCultiveraIdFromDestination,
+  fetchPesticideDisclosuresFromDestination,
+  type PesticideDisclosure,
+  type PesticideDisclosureFetcher,
+} from "./pesticide-disclosure.ts";
 import { assertDropCoas, DROP_COA_PROJECTION, type DropCoa } from "./drops.ts";
 import type { GlossaryCategory } from "../../shared/glossary-categories";
 import { validateGlossarySummaries, validateGlossaryTerm } from "./glossary";
@@ -14,6 +20,7 @@ export { AUTHOR_BASE_PATH } from "./routes";
 export { assertCoa } from "./coa.ts";
 export { normalizeCoa } from "./coa.ts";
 export { prepareCoaStaticPaths, resolveCoaRouteDocument } from "./coa.ts";
+export { preparePesticideDisclosureStaticPaths, resolvePesticideDisclosureRouteDocument } from "./pesticide-disclosure.ts";
 export type {
   Coa,
   CoaCertificate,
@@ -23,6 +30,7 @@ export type {
   CoaStatus,
   CoaStrain,
 } from "./coa.ts";
+export type { PesticideApplication, PesticideDisclosure } from "./pesticide-disclosure.ts";
 export type { DropCoa } from "./drops.ts";
 
 const SANITY_PROJECT_ID = import.meta.env.SANITY_PROJECT_ID;
@@ -42,6 +50,11 @@ export const sanityClient = createClient({
 });
 
 const fetchCoaDestination: CoaDestinationFetcher = ( query, parameters ) => {
+  if( parameters ) return sanityClient.fetch<unknown>( query, parameters );
+  return sanityClient.fetch<unknown>( query );
+};
+
+const fetchDisclosureDestination: PesticideDisclosureFetcher = ( query, parameters ) => {
   if( parameters ) return sanityClient.fetch<unknown>( query, parameters );
   return sanityClient.fetch<unknown>( query );
 };
@@ -109,6 +122,21 @@ export async function getCoas(): Promise<Coa[]> {
 
 export async function getCoaBySourceId( sourceId: string ): Promise<Coa | null> {
   return fetchCoaBySourceIdFromDestination( fetchCoaDestination, sourceId );
+}
+
+// --- Pesticide disclosures ---
+
+export async function getPesticideDisclosures(): Promise<PesticideDisclosure[]> {
+  return fetchPesticideDisclosuresFromDestination( fetchDisclosureDestination );
+}
+
+export async function getPesticideDisclosureByCultiveraId(
+  lotCultiveraId: string,
+): Promise<PesticideDisclosure | null> {
+  return fetchPesticideDisclosureByCultiveraIdFromDestination(
+    fetchDisclosureDestination,
+    lotCultiveraId,
+  );
 }
 
 // --- Shared types ---
