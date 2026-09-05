@@ -182,7 +182,6 @@ def pages_for_root(
     pages = [
         (page, page.parent.name)
         for page in sorted(route_directory.glob(f"*/{DISCLOSURE_PAGE_NAME}"))
-        if page.parent != route_directory
     ]
     return pages
 

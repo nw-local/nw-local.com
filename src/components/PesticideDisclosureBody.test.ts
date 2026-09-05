@@ -54,3 +54,14 @@ test( "renders a none-applied disclosure through the real component and passes t
 
   expect( result.status, result.stderr ).toBe( 0 );
 });
+
+test( "omits the grade attribute and separator entirely when grade is absent", async () => {
+  const disclosureFixture: unknown = { ...makePesticideDisclosureFixture(), grade: undefined };
+  assertPesticideDisclosure( disclosureFixture );
+  const container = await AstroContainer.create();
+  const body = await container.renderToString( PesticideDisclosureBody, { props: { disclosure: disclosureFixture } });
+
+  expect( body ).not.toContain( "data-disclosure-grade" );
+  expect( body ).not.toContain( " · " );
+  expect( body ).toContain( disclosureFixture.strain );
+});
