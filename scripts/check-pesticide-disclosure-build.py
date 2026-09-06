@@ -5,8 +5,12 @@ The fixture mode keeps two representative disclosures (one with pesticide
 applications, one with none applied) independent of Sanity so the checker can
 prove it rejects a page whose "none applied" summary contradicts its
 application blocks, or whose application data is not actually visible. Build
-mode checks every generated /pesticides/<lot Cultivera id>/ page and derives
-its route identity from the emitted page rather than a fixed content count.
+mode checks every generated /pesticides/<lot code>/ page and derives its route
+identity from the emitted page rather than a fixed content count.
+
+The public surface is vendor-neutral: it is keyed on the minted lot code
+(NWL-XXXXX), never a POS vendor's identifier, so the checker also refuses any
+disclosure page whose rendered body names the traceability vendor.
 """
 
 from __future__ import annotations
@@ -22,7 +26,7 @@ DISCLOSURE_ROUTE_DIRECTORY = "pesticides"
 DISCLOSURE_PAGE_NAME = "index.html"
 FIXTURE_PAGE_NAME = "pesticide-disclosure-page.html"
 FIXTURE_MODE_FLAG = "--fixture"
-LOT_CULTIVERA_ID_ATTRIBUTE = "data-disclosure-lot-cultivera-id"
+LOT_CODE_ATTRIBUTE = "data-disclosure-lot-code"
 STRAIN_ATTRIBUTE = "data-disclosure-strain"
 GRADE_ATTRIBUTE = "data-disclosure-grade"
 NONE_APPLIED_ATTRIBUTE = "data-disclosure-none-applied"
@@ -35,7 +39,8 @@ APPLICATION_TARGET_PEST_ATTRIBUTE = "data-disclosure-application-target-pest"
 VALID_NONE_APPLIED_VALUES = { "true", "false" }
 NONE_APPLIED_STATEMENT_SUBSTRING = "No pesticides were applied"
 APPLIED_ON_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
-EXPECTED_FIXTURE_LOT_CULTIVERA_ID = "2043117"
+VENDOR_NAME = "Cultivera"
+EXPECTED_FIXTURE_LOT_CODE = "NWL-4A7KP"
 EXPECTED_FIXTURE_STRAIN = "Blue Dream"
 EXPECTED_FIXTURE_GRADE = "Top Shelf"
 EXPECTED_FIXTURE_APPLICATIONS = (
@@ -66,26 +71,33 @@ def application_tuple(application: Element) -> tuple[str, str, str, str, str]:
     )
 
 
-def check_page(page: Path, expected_lot_cultivera_id: str | None = None) -> list[str]:
+def check_page(page: Path, expected_lot_code: str | None = None) -> list[str]:
     parser = parse_html_file(page)
     failures: list[str] = []
 
     landmark = expect_exactly_one(
-        elements_with_attribute(parser, LOT_CULTIVERA_ID_ATTRIBUTE),
+        elements_with_attribute(parser, LOT_CODE_ATTRIBUTE),
         "pesticide disclosure landmark",
         failures,
     )
     if landmark:
-        lot_cultivera_id = landmark.attributes[LOT_CULTIVERA_ID_ATTRIBUTE]
-        if not lot_cultivera_id:
-            failures.append("pesticide disclosure lot Cultivera id is empty")
-        if expected_lot_cultivera_id and lot_cultivera_id != expected_lot_cultivera_id:
+        lot_code = landmark.attributes[LOT_CODE_ATTRIBUTE]
+        if not lot_code:
+            failures.append("pesticide disclosure lot code is empty")
+        if expected_lot_code and lot_code != expected_lot_code:
             failures.append(
-                f"pesticide disclosure lot Cultivera id {lot_cultivera_id!r} does not match "
-                f"route {expected_lot_cultivera_id!r}"
+                f"pesticide disclosure lot code {lot_code!r} does not match "
+                f"route {expected_lot_code!r}"
             )
         if not landmark.attributes.get(STRAIN_ATTRIBUTE):
             failures.append("pesticide disclosure strain is empty")
+        # The public surface is vendor-neutral: the rendered disclosure body must
+        # never name the traceability vendor. landmark.text is the article's full
+        # descendant text, so this is scoped to the disclosure, not page chrome.
+        if VENDOR_NAME.casefold() in landmark.text.casefold():
+            failures.append(
+                f"pesticide disclosure page names the traceability vendor {VENDOR_NAME!r}"
+            )
 
     none_applied = expect_exactly_one(
         elements_with_attribute(parser, NONE_APPLIED_ATTRIBUTE),
@@ -149,9 +161,9 @@ def check_fixture(page: Path) -> list[str]:
     if none_applied_value != "false":
         return check_page(page)
 
-    failures = check_page(page, EXPECTED_FIXTURE_LOT_CULTIVERA_ID)
+    failures = check_page(page, EXPECTED_FIXTURE_LOT_CODE)
 
-    landmark_elements = elements_with_attribute(parser, LOT_CULTIVERA_ID_ATTRIBUTE)
+    landmark_elements = elements_with_attribute(parser, LOT_CODE_ATTRIBUTE)
     if landmark_elements:
         landmark = landmark_elements[0]
         if landmark.attributes.get(STRAIN_ATTRIBUTE, "") != EXPECTED_FIXTURE_STRAIN:
@@ -210,8 +222,8 @@ def main() -> int:
         return 0
 
     failures: list[str] = []
-    for page, expected_lot_cultivera_id in pages:
-        page_failures = check_fixture(page) if fixture_mode else check_page(page, expected_lot_cultivera_id)
+    for page, expected_lot_code in pages:
+        page_failures = check_fixture(page) if fixture_mode else check_page(page, expected_lot_code)
         relative_page = page.relative_to(build_root)
         failures.extend(f"{relative_page}: {failure}" for failure in page_failures)
 

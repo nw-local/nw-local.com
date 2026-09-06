@@ -51,10 +51,10 @@ export const pesticideDisclosureType = defineType({
   type: 'document',
   fields: [
     defineField({
-      name: 'lotCultiveraId',
-      title: 'Lot Cultivera ID',
+      name: 'publicCode',
+      title: 'Public Code',
       type: 'string',
-      description: `${MACHINE_OWNED_DESCRIPTION} The number printed on the jar; the public lookup key.`,
+      description: `${MACHINE_OWNED_DESCRIPTION} The lot code printed on the jar; the public lookup key.`,
       readOnly: true,
       validation: (rule) => rule.required(),
     }),
@@ -98,7 +98,7 @@ export const pesticideDisclosureType = defineType({
       return 'noneApplied must be true if and only if there are zero applications.'
     }),
   preview: {
-    select: { title: 'lotCultiveraId', strain: 'strain', grade: 'grade' },
+    select: { title: 'publicCode', strain: 'strain', grade: 'grade' },
     prepare: ({ title, strain, grade }) => ({
       title: title as string,
       subtitle: [strain, grade].filter(Boolean).join(' · '),

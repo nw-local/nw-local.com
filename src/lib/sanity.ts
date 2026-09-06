@@ -6,7 +6,7 @@ import {
   type CoaDestinationFetcher,
 } from "./coa.ts";
 import {
-  fetchPesticideDisclosureByCultiveraIdFromDestination,
+  fetchPesticideDisclosureByPublicCodeFromDestination,
   fetchPesticideDisclosuresFromDestination,
   type PesticideDisclosure,
   type PesticideDisclosureFetcher,
@@ -130,12 +130,12 @@ export async function getPesticideDisclosures(): Promise<PesticideDisclosure[]> 
   return fetchPesticideDisclosuresFromDestination( fetchDisclosureDestination );
 }
 
-export async function getPesticideDisclosureByCultiveraId(
-  lotCultiveraId: string,
+export async function getPesticideDisclosureByPublicCode(
+  publicCode: string,
 ): Promise<PesticideDisclosure | null> {
-  return fetchPesticideDisclosureByCultiveraIdFromDestination(
+  return fetchPesticideDisclosureByPublicCodeFromDestination(
     fetchDisclosureDestination,
-    lotCultiveraId,
+    publicCode,
   );
 }
 

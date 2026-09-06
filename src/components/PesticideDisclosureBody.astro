@@ -15,7 +15,7 @@ const EPA_LABEL = "EPA registration no.";
 const APPLIED_ON_LABEL = "Date applied";
 const TARGET_PEST_LABEL = "Target pest";
 const FOOTER_NOTE =
-  "Washington rules (WAC 314-55-105) require producers to disclose the pesticides applied to cannabis. This lists what was applied to the lot identified by its Cultivera inventory number.";
+  "Washington rules (WAC 314-55-105) require producers to disclose the pesticides applied to cannabis. This lists what was applied to the lot identified by its lot code.";
 
 const { disclosure }: Props = Astro.props;
 const appliedSummary = disclosure.noneApplied
@@ -26,7 +26,7 @@ const appliedSummary = disclosure.noneApplied
 <article
   class="disclosure"
   aria-labelledby="disclosure-title"
-  data-disclosure-lot-cultivera-id={disclosure.lotCultiveraId}
+  data-disclosure-lot-code={disclosure.publicCode}
   data-disclosure-strain={disclosure.strain}
   data-disclosure-grade={disclosure.grade}
 >
@@ -39,8 +39,8 @@ const appliedSummary = disclosure.noneApplied
         <dd>{disclosure.grade ? `${disclosure.strain} · ${disclosure.grade}` : disclosure.strain}</dd>
       </div>
       <div>
-        <dt>Lot (Cultivera no.)</dt>
-        <dd>{disclosure.lotCultiveraId}</dd>
+        <dt>Lot code</dt>
+        <dd>{disclosure.publicCode}</dd>
       </div>
     </dl>
   </header>

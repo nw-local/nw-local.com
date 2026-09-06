@@ -1,5 +1,5 @@
 export interface DisclosureSearchRecord {
-  lotCultiveraId: string;
+  publicCode: string;
   strain: string;
   grade?: string;
 }
@@ -16,7 +16,7 @@ export function normalizeDisclosureSearchText( value: string ): string {
 
 function disclosureSearchText( record: DisclosureSearchRecord ): string {
   return normalizeDisclosureSearchText(
-    [ record.lotCultiveraId, record.strain, record.grade ?? "" ].join( " " ),
+    [ record.publicCode, record.strain, record.grade ?? "" ].join( " " ),
   );
 }
 
@@ -27,5 +27,5 @@ export function filterPesticideDisclosures(
   const normalizedQuery = normalizeDisclosureSearchText( query );
   return records
     .filter( record => !normalizedQuery || disclosureSearchText( record ).includes( normalizedQuery ) )
-    .map( record => record.lotCultiveraId );
+    .map( record => record.publicCode );
 }

@@ -1,12 +1,13 @@
 import { describe, expect, test } from "vitest";
 import {
-  DISCLOSURE_LOT_CULTIVERA_ID,
+  DISCLOSURE_PUBLIC_CODE,
   DISCLOSURE_LOT_UUID,
   makeNoneAppliedDisclosureFixture,
   makePesticideDisclosureFixture,
 } from "../../scripts/fixtures/pesticide-disclosure.ts";
 import {
   assertPesticideDisclosure,
+  DISCLOSURE_BY_PUBLIC_CODE_QUERY,
   fetchPesticideDisclosuresFromDestination,
   normalizeDisclosureFetchResult,
   normalizeDisclosureFetchResults,
@@ -21,7 +22,7 @@ function makeDestinationDocument() {
     _rev: "revision-1",
     _createdAt: "2026-09-05T00:00:00Z",
     _updatedAt: "2026-09-05T00:00:00Z",
-    lotCultiveraId: DISCLOSURE_LOT_CULTIVERA_ID,
+    publicCode: DISCLOSURE_PUBLIC_CODE,
     strain: "Blue Dream",
     grade: "Top Shelf",
     noneApplied: false,
@@ -56,6 +57,11 @@ describe( "pesticide disclosure publication contract", () => {
   test( "requires the deterministic disclosure. id prefix", () => {
     expect( () => assertPesticideDisclosure({ ...makePesticideDisclosureFixture(), _id: "generated-id" }) )
       .toThrow( /_id must start with disclosure\./ );
+  });
+
+  test( "rejects a publicCode that is not NWL- plus five Crockford base32 chars", () => {
+    expect( () => assertPesticideDisclosure({ ...makePesticideDisclosureFixture(), publicCode: "2043117" }) )
+      .toThrow( /publicCode must be NWL-/ );
   });
 
   test( "rejects noneApplied true with applications present", () => {
@@ -94,10 +100,14 @@ describe( "pesticide disclosure publication contract", () => {
     expect( result ).toEqual( [ makePesticideDisclosureFixture() ] );
     expect( queries[0] ).toContain( '"disclosure": {' );
     expect( queries[0] ).toContain( '"destination": @' );
-    expect( queries[0] ).not.toContain( "$lotCultiveraId" ); // the list query, not the by-id query
+    expect( queries[0] ).not.toContain( "$publicCode" ); // the list query, not the by-code query
   });
 
-  test( "rejects duplicate lotCultiveraId returned by the list query", () => {
+  test( "looks a lot up by publicCode case-insensitively", () => {
+    expect( DISCLOSURE_BY_PUBLIC_CODE_QUERY ).toContain( "lower(publicCode) == lower($publicCode)" );
+  });
+
+  test( "rejects duplicate publicCode returned by the list query", () => {
     expect( () => normalizeDisclosureFetchResults( [ makeFetchResult(), makeFetchResult() ] ) )
       .toThrow( /duplicate pesticide disclosure list result/ );
   });
@@ -105,7 +115,7 @@ describe( "pesticide disclosure publication contract", () => {
   test( "prepares unique static paths and rejects duplicates", () => {
     const disclosure = makePesticideDisclosureFixture();
     expect( preparePesticideDisclosureStaticPaths( [ disclosure ] ) ).toEqual( [
-      { params: { cultiveraId: DISCLOSURE_LOT_CULTIVERA_ID }, props: { disclosure } },
+      { params: { code: DISCLOSURE_PUBLIC_CODE }, props: { disclosure } },
     ] );
     expect( () => preparePesticideDisclosureStaticPaths( [ disclosure, disclosure ] ) )
       .toThrow( /duplicate pesticide disclosure static route/ );
@@ -113,8 +123,8 @@ describe( "pesticide disclosure publication contract", () => {
 
   test( "validates route identity and returns the direct fetch", () => {
     const disclosure = makePesticideDisclosureFixture();
-    expect( () => resolvePesticideDisclosureRouteDocument( "9999999", disclosure ) )
+    expect( () => resolvePesticideDisclosureRouteDocument( "NWL-00000", disclosure ) )
       .toThrow( /build data drifted/ );
-    expect( resolvePesticideDisclosureRouteDocument( DISCLOSURE_LOT_CULTIVERA_ID, disclosure ) ).toBe( disclosure );
+    expect( resolvePesticideDisclosureRouteDocument( DISCLOSURE_PUBLIC_CODE, disclosure ) ).toBe( disclosure );
   });
 });

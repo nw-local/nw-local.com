@@ -8,7 +8,7 @@ export interface PesticideApplication {
 
 export interface PesticideDisclosure {
   _id: string;
-  lotCultiveraId: string;
+  publicCode: string;
   strain: string;
   grade?: string;
   noneApplied: boolean;
@@ -19,7 +19,7 @@ export const DISCLOSURE_DOCUMENT_ID_PREFIX = "disclosure.";
 
 const DISCLOSURE_FIELDS = new Set( [
   "_id",
-  "lotCultiveraId",
+  "publicCode",
   "strain",
   "grade",
   "noneApplied",
@@ -36,7 +36,7 @@ const SANITY_DOCUMENT_SYSTEM_FIELDS = [ "_id", "_type", "_rev", "_createdAt", "_
 const SANITY_ARRAY_OBJECT_SYSTEM_FIELDS = [ "_key", "_type" ];
 const DESTINATION_DOCUMENT_FIELDS = new Set( [
   ...SANITY_DOCUMENT_SYSTEM_FIELDS,
-  "lotCultiveraId",
+  "publicCode",
   "strain",
   "grade",
   "noneApplied",
@@ -54,11 +54,15 @@ const NULLABLE_DISCLOSURE_FIELDS = [ "grade" ];
 const FETCH_RESULT_FIELDS = new Set( [ "disclosure", "destination" ] );
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
+// The vendor-neutral public reference: NWL- + 5 Crockford base32 chars (alphabet
+// excludes I L O U). Minted and stored uppercase by nw-local-ops; the route
+// normalizes user input case before lookup.
+const PUBLIC_CODE_PATTERN = /^NWL-[0-9ABCDEFGHJKMNPQRSTVWXYZ]{5}$/;
 
 // The buyer projection is the whole document minus Sanity system noise. grade is
 // conditionally projected so an absent grade is omitted rather than sent as null.
 export const DISCLOSURE_BUYER_PROJECTION = `{
-  _id, lotCultiveraId, strain, noneApplied,
+  _id, publicCode, strain, noneApplied,
   defined(grade) => { "grade": grade },
   "applications": coalesce( applications[] {
     productName, activeIngredient, epaRegistrationNumber, appliedOn, targetPest
@@ -71,9 +75,11 @@ const DISCLOSURE_FETCH_PROJECTION = `{
 }`;
 
 export const DISCLOSURE_LIST_QUERY =
-  `*[_type == "pesticideDisclosure"] | order(lotCultiveraId asc) ${DISCLOSURE_FETCH_PROJECTION}`;
-export const DISCLOSURE_BY_CULTIVERA_ID_QUERY =
-  `*[_type == "pesticideDisclosure" && lotCultiveraId == $lotCultiveraId][0] ${DISCLOSURE_FETCH_PROJECTION}`;
+  `*[_type == "pesticideDisclosure"] | order(publicCode asc) ${DISCLOSURE_FETCH_PROJECTION}`;
+// Case-insensitive by-code lookup: a scanned uppercase code and a typed lowercase
+// code resolve to the same lot.
+export const DISCLOSURE_BY_PUBLIC_CODE_QUERY =
+  `*[_type == "pesticideDisclosure" && lower(publicCode) == lower($publicCode)][0] ${DISCLOSURE_FETCH_PROJECTION}`;
 
 export type PesticideDisclosureFetcher = (
   query: string,
@@ -142,7 +148,11 @@ export function assertPesticideDisclosure( value: unknown ): asserts value is Pe
     throw new Error( `${path}._id must be ${DISCLOSURE_DOCUMENT_ID_PREFIX}<lot uuid>.` );
   }
 
-  assertRequiredString( value[ "lotCultiveraId" ], `${path}.lotCultiveraId` );
+  const publicCode = value[ "publicCode" ];
+  assertRequiredString( publicCode, `${path}.publicCode` );
+  if( !PUBLIC_CODE_PATTERN.test( publicCode ) ) {
+    throw new Error( `${path}.publicCode must be NWL- followed by 5 Crockford base32 chars.` );
+  }
   assertRequiredString( value[ "strain" ], `${path}.strain` );
   if( value[ "grade" ] !== undefined ) assertRequiredString( value[ "grade" ], `${path}.grade` );
 
@@ -208,20 +218,20 @@ export function normalizeDisclosureFetchResult( value: unknown ): PesticideDiscl
   return normalized;
 }
 
-function assertUniqueLotCultiveraIds( disclosures: PesticideDisclosure[], description: string ): void {
+function assertUniquePublicCodes( disclosures: PesticideDisclosure[], description: string ): void {
   const seen = new Set<string>();
   for( const disclosure of disclosures ) {
-    if( seen.has( disclosure.lotCultiveraId ) ) {
-      throw new Error( `duplicate pesticide disclosure ${description} for lotCultiveraId ${disclosure.lotCultiveraId}.` );
+    if( seen.has( disclosure.publicCode ) ) {
+      throw new Error( `duplicate pesticide disclosure ${description} for publicCode ${disclosure.publicCode}.` );
     }
-    seen.add( disclosure.lotCultiveraId );
+    seen.add( disclosure.publicCode );
   }
 }
 
 export function normalizeDisclosureFetchResults( value: unknown ): PesticideDisclosure[] {
   if( !Array.isArray( value ) ) throw new Error( "Pesticide disclosure query must return an array." );
   const disclosures = value.map( normalizeDisclosureFetchResult );
-  assertUniqueLotCultiveraIds( disclosures, "list result" );
+  assertUniquePublicCodes( disclosures, "list result" );
   return disclosures;
 }
 
@@ -231,36 +241,36 @@ export async function fetchPesticideDisclosuresFromDestination(
   return normalizeDisclosureFetchResults( await fetcher( DISCLOSURE_LIST_QUERY ) );
 }
 
-export async function fetchPesticideDisclosureByCultiveraIdFromDestination(
+export async function fetchPesticideDisclosureByPublicCodeFromDestination(
   fetcher: PesticideDisclosureFetcher,
-  lotCultiveraId: string,
+  publicCode: string,
 ): Promise<PesticideDisclosure | null> {
-  const value = await fetcher( DISCLOSURE_BY_CULTIVERA_ID_QUERY, { lotCultiveraId });
+  const value = await fetcher( DISCLOSURE_BY_PUBLIC_CODE_QUERY, { publicCode });
   if( value === null ) return null;
   return normalizeDisclosureFetchResult( value );
 }
 
 export interface PesticideDisclosureStaticPath {
-  params: { cultiveraId: string };
+  params: { code: string };
   props: { disclosure: PesticideDisclosure };
 }
 
 export function preparePesticideDisclosureStaticPaths(
   disclosures: PesticideDisclosure[],
 ): PesticideDisclosureStaticPath[] {
-  assertUniqueLotCultiveraIds( disclosures, "static route" );
+  assertUniquePublicCodes( disclosures, "static route" );
   return disclosures.map( disclosure => ({
-    params: { cultiveraId: disclosure.lotCultiveraId },
+    params: { code: disclosure.publicCode },
     props: { disclosure },
   }) );
 }
 
 export function resolvePesticideDisclosureRouteDocument(
-  lotCultiveraId: string,
+  publicCode: string,
   disclosure: PesticideDisclosure,
 ): PesticideDisclosure {
-  if( disclosure.lotCultiveraId !== lotCultiveraId ) {
-    throw new Error( `pesticide disclosure build data drifted for lotCultiveraId ${lotCultiveraId}.` );
+  if( disclosure.publicCode !== publicCode ) {
+    throw new Error( `pesticide disclosure build data drifted for publicCode ${publicCode}.` );
   }
   return disclosure;
 }

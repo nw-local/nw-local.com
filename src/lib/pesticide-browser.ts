@@ -19,16 +19,16 @@ function collectDisclosureRows(): DisclosureRow[] {
       throw new Error( "Pesticide disclosure rows must be HTML elements." );
     }
 
-    const lotCultiveraId = element.dataset.disclosureRowId;
+    const publicCode = element.dataset.disclosureRowId;
     const strain = element.dataset.disclosureRowStrain;
     const grade = element.dataset.disclosureRowGrade;
-    if( !lotCultiveraId || !strain ) {
+    if( !publicCode || !strain ) {
       throw new Error( "Pesticide disclosure row is missing search metadata." );
     }
 
     return {
       element,
-      record: { lotCultiveraId, strain, grade: grade || undefined },
+      record: { publicCode, strain, grade: grade || undefined },
     };
   });
 }
@@ -77,7 +77,7 @@ export function initializePesticideBrowser(): void {
     );
 
     for( const row of rows ) {
-      row.element.hidden = !matchingIds.has( row.record.lotCultiveraId );
+      row.element.hidden = !matchingIds.has( row.record.publicCode );
     }
 
     const matchCount = matchingIds.size;
