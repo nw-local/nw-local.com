@@ -86,7 +86,7 @@ The public route is `/coas/<sourceId>/`. It renders the validated direct fetch, 
 
 ### Public pesticide disclosures are a second machine-owned contract
 
-`pesticideDisclosure` documents are written by Northwest Local OPS (SP2), not authored in Studio, mirroring `coa`. They key on `lotCultiveraId` — the number printed on the jar — rather than an internal id, because that is the only identifier a buyer holding the physical package can read off it. The public route is `/pesticides/<lotCultiveraId>/`, alongside a browsable `/pesticides` index with client-side search.
+`pesticideDisclosure` documents are written by Northwest Local OPS, not authored in Studio, mirroring `coa`. They key on `publicCode` — the vendor-neutral lot code (`NWL-XXXXX`) printed on the jar's branded back label — rather than an internal id or a POS vendor's number, because that is the only identifier a buyer holding the physical package can read off it, and NW Local runs two traceability platforms (Cultivera and Bamboo) so no vendor's id may be baked into a compliance surface. The public route is `/pesticides/<publicCode>/` (case-insensitive lookup), alongside a browsable `/pesticides` index with client-side search.
 
 Like `coa`, the type is registered but intentionally absent from the Studio sidebar in `structure.ts` — it is machine-owned, and `sanity.config.ts` auto-appends any unlisted document type under its raw type name rather than leaving it unreachable. And like the glossary and drop checks above, its content can change through a Sanity publish with no pull request, so `check-pesticide-disclosure-build.py` runs against the built `dist/` and gates `deploy.yml` before GitHub Pages receives the artifact.
 

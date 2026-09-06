@@ -5,12 +5,12 @@ import { getPesticideDisclosures } from "../../lib/sanity";
 
 const PAGE_TITLE = "Pesticide disclosures";
 const PAGE_SUBTITLE =
-  "Look up the pesticides applied to any Northwest Local Cannabis lot by its Cultivera inventory number.";
-const EMPTY_STATE_MESSAGE = "No lots match that search. Try another Cultivera number, strain, or grade.";
+  "Look up the pesticides applied to any Northwest Local Cannabis lot by its lot code.";
+const EMPTY_STATE_MESSAGE = "No lots match that search. Try another lot code, strain, or grade.";
 
 const disclosures = ( await getPesticideDisclosures() )
   .slice()
-  .sort( ( first, second ) => first.lotCultiveraId.localeCompare( second.lotCultiveraId ) );
+  .sort( ( first, second ) => first.publicCode.localeCompare( second.publicCode ) );
 ---
 
 <Layout
@@ -28,11 +28,11 @@ const disclosures = ( await getPesticideDisclosures() )
     >
       <div class="glossary-search-row">
         <div class="glossary-search-field">
-          <label for="disclosure-query">Search by lot number, strain, or grade</label>
+          <label for="disclosure-query">Search by lot code, strain, or grade</label>
           <input
             id="disclosure-query"
             type="search"
-            placeholder="Try 2043117 or Blue Dream"
+            placeholder="Try NWL-4A7KP or Blue Dream"
             autocomplete="off"
             aria-controls="disclosure-directory"
             data-disclosure-query
@@ -51,7 +51,7 @@ const disclosures = ( await getPesticideDisclosures() )
       </div>
 
       <div class="glossary-directory-columns" aria-hidden="true">
-        <span>Lot (Cultivera no.)</span>
+        <span>Lot code</span>
         <span>Strain</span>
         <span>Grade</span>
       </div>
@@ -61,11 +61,11 @@ const disclosures = ( await getPesticideDisclosures() )
           <div
             class="glossary-index-entry"
             data-disclosure-row
-            data-disclosure-row-id={disclosure.lotCultiveraId}
+            data-disclosure-row-id={disclosure.publicCode}
             data-disclosure-row-strain={disclosure.strain}
             data-disclosure-row-grade={disclosure.grade}
           >
-            <dt><a href={`/pesticides/${disclosure.lotCultiveraId}/`}>{disclosure.lotCultiveraId}</a></dt>
+            <dt><a href={`/pesticides/${disclosure.publicCode}/`}>{disclosure.publicCode}</a></dt>
             <dd class="glossary-index-definition">{disclosure.strain}</dd>
             <dd class="glossary-index-category">{disclosure.grade ?? "—"}</dd>
           </div>

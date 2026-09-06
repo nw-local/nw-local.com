@@ -2,7 +2,7 @@
 import Layout from "../../layouts/Layout.astro";
 import PesticideDisclosureBody from "../../components/PesticideDisclosureBody.astro";
 import {
-  getPesticideDisclosureByCultiveraId,
+  getPesticideDisclosureByPublicCode,
   getPesticideDisclosures,
   preparePesticideDisclosureStaticPaths,
   resolvePesticideDisclosureRouteDocument,
@@ -12,15 +12,16 @@ export async function getStaticPaths() {
   return preparePesticideDisclosureStaticPaths( await getPesticideDisclosures() );
 }
 
-const { cultiveraId } = Astro.params;
-if( !cultiveraId ) throw new Error( "Pesticide disclosure route requires a Cultivera id." );
+const { code } = Astro.params;
+if( !code ) throw new Error( "Pesticide disclosure route requires a lot code." );
+const normalizedCode = code.toUpperCase();
 
-const directlyFetched = await getPesticideDisclosureByCultiveraId( cultiveraId );
+const directlyFetched = await getPesticideDisclosureByPublicCode( normalizedCode );
 if( !directlyFetched ) return Astro.redirect( "/pesticides" );
-const disclosure = resolvePesticideDisclosureRouteDocument( cultiveraId, directlyFetched );
+const disclosure = resolvePesticideDisclosureRouteDocument( normalizedCode, directlyFetched );
 
-const pageTitle = `Pesticide disclosure: lot ${disclosure.lotCultiveraId}`;
-const description = `Pesticides applied to lot ${disclosure.lotCultiveraId} (${disclosure.strain}) from Northwest Local Cannabis.`;
+const pageTitle = `Pesticide disclosure: lot ${disclosure.publicCode}`;
+const description = `Pesticides applied to lot ${disclosure.publicCode} (${disclosure.strain}) from Northwest Local Cannabis.`;
 ---
 
 <Layout title={pageTitle} description={description}>
